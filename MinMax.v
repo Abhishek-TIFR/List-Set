@@ -73,7 +73,7 @@ Section Min_Max.
               unfold maxof. replace (a <=r a) with true. auto. symmetry;apply lr_refl. }
             { intros d a0. replace (maxin (a0 :: a :: l) d) with (maxof a0 (maxin (a::l) a0)).
               unfold maxof.
-              destruct (a0 <=r maxin (a :: l) a0) eqn:H; eauto with hint_list.
+              destruct (a0 <=r maxin (a :: l) a0) eqn:H; eauto.
               simpl;auto. } } Qed.
 
  Lemma maxin_spec (l:list A)(d:A)(a:A): In a l -> (a <=r (maxin l d)).
@@ -82,7 +82,7 @@ Section Min_Max.
           { intros d0 H. simpl. destruct H.
             { subst a; eauto. }  eauto. } } Qed.     
 
-   Hint Resolve maxin_spec maxin_elim maxin_elim1: hint_list.
+   Hint Resolve maxin_spec maxin_elim maxin_elim1: core.
 
     Definition minof (a b :A): A:= match a <=r b with
                                   |true => a
@@ -117,7 +117,7 @@ Section Min_Max.
               unfold minof. replace (a <=r a) with true. auto. symmetry;apply lr_refl. }
             { intros d a0. replace (minin (a0 :: a :: l) d) with (minof a0 (minin (a::l) a0)).
               unfold minof.
-              destruct (a0 <=r minin (a :: l) a0) eqn:H; eauto with hint_list.
+              destruct (a0 <=r minin (a :: l) a0) eqn:H; eauto.
               simpl;auto. } } Qed.
 
    Lemma minin_spec (l:list A)(d:A)(a:A): In a l -> ((minin l d) <=r a).
@@ -127,13 +127,13 @@ Section Min_Max.
             { subst a; eauto. }  eauto. } } Qed.
 
    
-   Hint Resolve minin_spec minin_elim minin_elim1: hint_list.
+   Hint Resolve minin_spec minin_elim minin_elim1: core.
 
 End Min_Max.
 
 
 
 Hint Resolve maxof_spec1 maxof_spec2 maxof_spec3 maxof_spec4: core.
-Hint Resolve maxin_spec maxin_elim maxin_elim1: hint_list.
+Hint Resolve maxin_spec maxin_elim maxin_elim1: core.
 Hint Resolve minof_spec1 minof_spec2 minof_spec3 minof_spec4: core.
-Hint Resolve minin_spec minin_elim minin_elim1: hint_list.
+Hint Resolve minin_spec minin_elim minin_elim1: core.
