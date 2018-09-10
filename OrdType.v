@@ -8,20 +8,20 @@
  
 
    Structure type: Type:= 
-       Pack { sort: Type;
-              eqb: sort-> sort -> bool;
-              ltb: sort-> sort -> bool;
+       Pack { E: Type;
+              eqb: E-> E -> bool;
+              ltb: E-> E -> bool;
               eq_P: forall x y, reflect (eq x y)(eqb x y);
               ltb_irefl: forall x, ltb x x=false;
               ltb_antisym: forall  x y, x<>y -> ltb x y = negb (ltb y x);
               ltb_trans: forall x y z, ltb x y -> ltb y z -> ltb x z }.
 
-  Definition sort:= Order.sort.
+  Definition E:= Order.E.
   Definition eqb  := Order.eqb.
   Definition ltb := Order.ltb.
   Definition leb (T:ordType) := fun (x y:T) => (ltb x y || eqb x y).
 
-  Notation "x == y":= (@eqb _ x y)(at level 70, no associativity): bool_scope.
+  Notation "x =b y":= (@eqb _ x y)(at level 70, no associativity): bool_scope.
   Notation "x <b y":= (@ltb _ x y)(at level 70, no associativity): bool_scope.
   Notation " x <=b y" := (@leb _ x y)(at level 70, no associativity): bool_scope.
 
@@ -36,7 +36,7 @@
   Lemma leP (x y: nat): reflect (x <= y) (Nat.leb x y).
 
   Canonical nat_ordType: ordType.
-  refine ( {| Order.sort:= nat; Order.eqb:= Nat.eqb; Order.ltb:= Nat.ltb;
+  refine ( {| Order.E:= nat; Order.eqb:= Nat.eqb; Order.ltb:= Nat.ltb;
             Order.eq_P:= nat_eqP; Order.ltb_irefl:= nat_ltb_irefl;
             Order.ltb_antisym := nat_ltb_antisym;
             Order.ltb_trans := nat_ltb_trans  |}). Defined.
@@ -46,67 +46,73 @@
  Ltac match_up a b := destruct (on_comp a b).
  
  Ltac conflict.                  
------------------------------- --------------- -------------------------------- *)
+------------------------------ --------------- -------------------------------------- *)
 
 From Coq Require Export ssreflect  ssrbool. 
-Require Export GenReflect Omega.
+Require Export GenReflect Omega DecType.
 
 (* The following two options can be unset to disable the incompatible rewrite syntax 
    and allow reserved identifiers to appear in scripts. *)
 
 Set Implicit Arguments.
 Unset Strict Implicit.
-Unset Printing Implicit Defensive.
+Unset Printing Implicit Defensive. Print  Decidable.type. 
 
 Module Order.
+  Definition E:= Decidable.E.
+  Definition eqb:= Decidable.eqb.
+  Definition eq_P:= Decidable.eqP.
+  
   Structure type: Type:= Pack {
-                             sort: Type;
-                             eqb: sort-> sort -> bool;
-                             ltb: sort-> sort -> bool;
-                             eq_P: forall x y, reflect (eq x y)(eqb x y);
+                             D : eqType;
+                             ltb: E D -> E D -> bool;
                              ltb_irefl: forall x, ltb x x=false;
                              ltb_antisym: forall  x y, x<>y -> ltb x y = negb (ltb y x);
                              ltb_trans: forall x y z, ltb x y -> ltb y z -> ltb x z }.
   Module Exports.
-    Coercion sort : type >-> Sortclass.
+    Coercion D : type >-> eqType.
     Notation ordType:= type.
     End Exports.
 End Order.
 Export Order.Exports.
 
-Check Order.eqb.
-Definition sort:= Order.sort.
+
+Definition E:= Order.E.
 Definition eqb  := Order.eqb.
 Definition ltb := Order.ltb. 
 Definition leb (T:ordType) := fun (x y:T) => (ltb x y || eqb x y).
 
-Notation "x == y":= (@eqb _ x y)(at level 70, no associativity): bool_scope.
+Notation "x =b y":= (@eqb _ x y)(at level 70, no associativity): bool_scope.
 Notation "x <b y":= (@ltb _ x y)(at level 70, no associativity): bool_scope.
 Notation " x <=b y" := (@leb _ x y)(at level 70, no associativity): bool_scope.
 
-Lemma eqP  (T:ordType)(x y:T): reflect (x=y)(eqb  x y). 
+Lemma eq_P  (T:ordType)(x y:T): reflect (x=y)(eqb  x y). 
 Proof. apply Order.eq_P. Qed.
 
 
-Hint Resolve eqP: hint_reflect.
+Hint Resolve eq_P: hint_reflect.
 
 Lemma eq_eqb (T:ordType)(x y:T): (x=y)-> (eqb  x y).
-Proof.  intro; apply /eqP; auto. Qed.
-Lemma eqb_eq (T:ordType) (x y:T): (x==y)-> (x=y).
-Proof. intro;apply /eqP; auto. Qed.
+Proof.  intro; apply /eq_P; auto. Qed.
+Lemma eqb_eq (T:ordType) (x y:T): (x =b y)-> (x=y).
+Proof. intro;apply /eq_P; auto. Qed.
 
 Hint Immediate eq_eqb eqb_eq: core.
 
-Lemma eq_ref (T: ordType)(x:T): x == x.
-Proof. apply /eqP; auto. Qed.
-Lemma eq_sym (T: ordType)(x y:T): (x==y)=(y==x).
-Proof. { case (x==y) eqn:H1; case (y==x) eqn:H2;  try(auto).
-       { assert (H3: x=y). apply /eqP;auto.
+Lemma eq_ref (T: ordType)(x:T): x =b x.
+Proof. apply /eq_P; auto. Qed.
+Lemma eq_sym (T: ordType)(x y:T): (x=b y)=(y =b x).
+Proof. { case (x=b y) eqn:H1; case (y=b x) eqn:H2;  try(auto).
+       { assert (H3: x=y). apply /eq_P;auto.
          rewrite H3 in H2; rewrite eq_ref in H2; inversion H2. }
-       { assert (H3: y= x). apply /eqP; auto.
+       { assert (H3: y= x). apply /eq_P; auto.
          rewrite H3 in H1; rewrite eq_ref in H1; inversion H1.  } } Qed.
 
 Hint Resolve eq_ref eq_sym: core.
+
+
+
+
 
 (* --------------------- properties of ltb -----------------------------------*)
 Lemma ltb_irefl (T:ordType)(x:T): ~ ltb x x.
@@ -134,10 +140,20 @@ Proof. { intros H H1. replace (ltb y x) with (negb(ltb x y)).
        symmetry; apply ltb_antisym0; auto.  } Qed. 
 Lemma ltb_trans (T:ordType)(x y z:T): ltb x y -> ltb y z -> ltb x z.
 Proof. apply Order.ltb_trans. Qed.
-
+Lemma ltb_trans1 (T:ordType)(x y z:T): ltb x y -> y=z -> ltb x z.
+Proof. intros;subst z;auto. Qed.
+Lemma ltb_trans2 (T:ordType)(x y z:T): x=y-> ltb y z -> ltb x z.
+Proof. intros;subst x;auto. Qed.
 
 Hint Resolve ltb_irefl ltb_not_eq eq_not_ltb ltb_antisym ltb_antisym2:core.
-Hint Resolve ltb_trans: core.
+
+Hint Extern 0 (is_true (?x <b ?z) ) =>
+match goal with
+| H: is_true (x <b ?y) |- _ => apply (@ltb_trans _ x y z)
+| H: is_true (?y <b z) |- _ => apply (@ltb_trans  _ x y z)                                   
+end.
+
+Hint Resolve ltb_trans1 ltb_trans2: core. 
 
 
 (*---------------------- properties of leb ----------------------------------*)
@@ -154,13 +170,13 @@ Lemma leb_antisym (T: ordType)(x y:T): x <=b y -> y <=b x -> x=y.
 Proof. unfold "<=b". move /orP. intro H; move /orP.
        intros H1. destruct H; destruct H1.
        cut (False); [tauto | eapply ltb_antisym; eauto].
-       all: apply /eqP; eauto. Qed.
+       all: apply /eq_P; eauto. Qed.
 
 
 Hint Resolve leb_refl eq_leb ltb_leb leb_antisym: core.
 
 Lemma leb_antisym1 (T: ordType)(x y:T): x <=b y = false -> y <=b x.
-Proof. move /orP. intro H. cut ((~ x <b y) /\( ~ x == y)).
+Proof. move /orP. intro H. cut ((~ x <b y) /\( ~ x =b y)).
        intro H1. destruct H1 as [H1 H2].  apply ltb_leb.
        apply ltb_antisym2; eauto. tauto. Qed.
 
@@ -181,12 +197,18 @@ Lemma leb_trans2 (T: ordType) (x y z:T): x <=b y -> y <=b z -> x <=b z.
 Proof. intros H H1. move /orP in H1.  destruct H1. eauto using leb_trans1.
        replace z with y;eauto. Qed.
 
+Hint Extern 0 (is_true (?x <=b ?z) ) =>
+match goal with
+| H: is_true (x <=b ?y) |- _ => apply (@leb_trans2 _ x y z)
+| H: is_true (?y <=b z) |- _ => apply (@leb_trans2 _ x y z)                                   
+end.
+
 Lemma leb_trans3 (T: ordType) (x y z:T): x <=b y -> y = z -> x <=b z.
 Proof. intros H H1. replace z with y. eauto. Qed.
 
 Lemma leb_trans4 (T: ordType) (x y z:T): x = y -> y <=b z -> x <=b z.
 Proof. intros H H1. replace x with y. eauto. Qed.
-Hint Resolve leb_trans leb_trans1 leb_trans2 leb_trans3 leb_trans4: core.
+Hint Resolve leb_trans leb_trans1 leb_trans3 leb_trans4: core.
 
 
 (*---------Ltac command for all the contradictory situations -------------*)
@@ -202,9 +224,9 @@ Ltac conflict:=
        => cut (False); [tauto | eapply ltb_antisym; eauto]
     | H: is_true (?x <=b ?y), H1: is_true (?y <b ?x)  |- _
        => cut (False); [tauto | eapply leb_not_gt; eauto]
-    | H: is_true (?x == ?y), H1: is_true (?x <b ?y)  |- _
+    | H: is_true (?x =b ?y), H1: is_true (?x <b ?y)  |- _
        => cut (False); [tauto | move /eqP in H; eapply ltb_not_eq; eauto]
-    | H: is_true (?y == ?x), H1: is_true (?x <b ?y)  |- _
+    | H: is_true (?y =b ?x), H1: is_true (?x <b ?y)  |- _
       => cut (False); [tauto | move /eqP in H; eapply ltb_not_eq; eauto]
     | H:  ?x = ?y, H1: is_true (?x <b ?y)  |- _
       => cut (False); [tauto | eapply ltb_not_eq; eauto]
@@ -281,8 +303,9 @@ Proof. intros H H1.  move /ltP in H;  move /ltP in H1; apply /ltP. omega. Qed.
 Hint Resolve nat_ltb_trans: core.
 
 Canonical nat_ordType: ordType.
-refine ( {| Order.sort:= nat; Order.eqb:= Nat.eqb; Order.ltb:= Nat.ltb;
-            Order.eq_P:= nat_eqP; Order.ltb_irefl:= nat_ltb_irefl;
+refine ( {| Order.D:= nat_eqType;
+            Order.ltb:= Nat.ltb;
+            Order.ltb_irefl:= nat_ltb_irefl;
             Order.ltb_antisym := nat_ltb_antisym;
             Order.ltb_trans := nat_ltb_trans  |}). Defined.
 
@@ -290,7 +313,7 @@ refine ( {| Order.sort:= nat; Order.eqb:= Nat.eqb; Order.ltb:= Nat.ltb;
 Section CompSpec.
   Variable T: ordType.
 
-  Definition comp (x y:T): comparison:= match (x==y) with
+  Definition comp (x y:T): comparison:= match (x=b y) with
                                         | true => Eq
                                         |false => match (ltb x y) with
                                                  | true => Lt
@@ -298,7 +321,7 @@ Section CompSpec.
                                                  end
                                         end.
   Lemma on_comp (x y:T): CompareSpec (x=y) (x <b y) (y <b x) (comp x y).
-  Proof. { unfold comp. case (x==y) eqn:H.
+  Proof. { unfold comp. case (x=b y) eqn:H.
          { constructor.  apply /eqP;auto. }
          { case (ltb x y) eqn:H1.
            constructor;auto. constructor. switch_in H1.
@@ -319,7 +342,8 @@ Section Min_Max.
                                    |Eq => a
                                    |Lt => b
                                    |Gt => a
-                                   end.
+                                    end.
+   Print max_of.
   
   Lemma max_of_spec1 (a b: A): a <b max_of a b \/ a = max_of a b.
   Proof. unfold max_of. destruct (on_comp a b); tauto. Qed.
@@ -341,6 +365,7 @@ Section Min_Max.
                                   |Lt => a
                                   |Gt => b
                                    end.
+   Print min_of.
    Lemma min_of_spec1 (a b: A): min_of a b <b a \/ min_of a b = a.
    Proof. unfold min_of. destruct (on_comp a b); tauto. Qed.
 
