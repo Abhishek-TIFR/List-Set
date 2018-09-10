@@ -5,7 +5,7 @@
 (* This file contains boolean functions corresponding to the different predicates
    commonly used in talking about sets. These boolean functions are connected to
    the corresponding predicates using the reflection technique by Gronthier et.al.
-   The type of elements in the set (lists) are from ordType.
+   The type of elements in the set (lists) are from eqType.
 
 
   Following is the boolean functions and their corresponding predicated  
@@ -24,13 +24,13 @@
 
 
 From Coq Require Export ssreflect  ssrbool Lists.List.
-Require Export SetSpecs GenReflect OrdType.
+Require Export SetSpecs GenReflect DecType.
 Set Implicit Arguments.
 
 Section SetReflections.
-Context { A:ordType }. (* to declare A as implicit for all functions in this section *)
+Context { A:eqType }. (* to declare A as implicit for all functions in this section *)
 Lemma decA: forall x y:A, {x=y}+{x<>y}.
-  Proof. intros. solve_dec. Qed.
+Proof. eauto. Qed.
 
   (*--------- set_mem (boolean function)  and its specification ---------*)
   Fixpoint mem (a:A)(l: list A){struct l}: bool:=
@@ -62,10 +62,10 @@ Lemma decA: forall x y:A, {x=y}+{x<>y}.
   Proof. apply reflect_intro. split.
          apply set_mem_correct2. apply set_mem_correct1. Qed.
   
-Hint Resolve memP : hint_reflect.
+Hint Resolve memP : core.
 
 Lemma In_EM: forall (a:A) (x: list A), In a x \/ ~ In a x.
-Proof. eauto with hint_reflect. Qed.
+Proof. eauto.  Qed.
 
 Definition IN := fun (x:A)(y:A)(l:list A) => In x l /\ In y l.
 Definition mem2 x y l := mem  x l && mem y l.
@@ -80,9 +80,9 @@ Proof. { apply reflect_intro. split.
 Lemma mem2_comute (x y: A)(l: list A): mem2 x y l = mem2 y x l.
 Proof. unfold mem2. case (mem  x l);case (mem y l); simpl;auto. Qed.
 
-Hint Resolve mem2P: hint_reflect.
+Hint Resolve mem2P: core.
 Lemma IN_EM: forall (a b:A)(x:list A), IN a b x \/ ~ IN a b x.
-Proof.  eauto with hint_reflect. Qed.
+Proof.  eauto. Qed.
 
 (*---------- noDup  (boolean function) and its specification ---------*)
 Fixpoint noDup (x: list A): bool:=
@@ -100,14 +100,14 @@ Proof. { split.
        simpl. case (mem a l) eqn: H1. discriminate.  intro H2.
        constructor. move /memP.  rewrite H1.  auto. tauto. }  } Qed. 
 Lemma nodupP l: reflect (NoDup l) (noDup l).
-Proof. {cut (NoDup l <-> noDup l). eauto with hint_reflect. apply NoDup_iff_noDup. } Qed.
+Proof. {cut (NoDup l <-> noDup l). eauto. apply NoDup_iff_noDup. } Qed.
 
-Hint Resolve nodupP : hint_reflect.
+Hint Resolve nodupP : core.
 
 Lemma NoDup_EM: forall l:list A, NoDup l \/ ~ NoDup l.
-Proof. eauto with hint_reflect. Qed.
+Proof. eauto. Qed.
 Lemma NoDup_dec: forall l:list A, {NoDup l} + { ~ NoDup l}.
-Proof. eauto with hint_reflect. Qed.
+Proof. eauto. Qed.
 
 Lemma nodup_spec: forall l:list A, NoDup (nodup decA l).
 Proof. intros. eapply NoDup_nodup. Qed.
@@ -122,9 +122,9 @@ Definition is_empty (x:list A) : bool := match x with
 
 Lemma emptyP l : reflect (Empty l) (is_empty l).
 Proof. { destruct l eqn:H. simpl.  constructor. unfold Empty; auto.
-       simpl. constructor. unfold Empty.  intro H1. specialize (H1 s).
-       apply H1. auto with hint_list. } Qed. 
-Hint Resolve emptyP : hint_reflect.
+       simpl. constructor. unfold Empty.  intro H1. specialize (H1 e).
+       apply H1. auto.  } Qed. 
+Hint Resolve emptyP : core.
 Lemma Empty_EM (l:list A): Empty l \/ ~ Empty l.
   Proof. solve_EM. Qed.  
 Lemma Empty_dec (l: list A): {Empty l} + {~Empty l}.
@@ -140,15 +140,15 @@ Fixpoint subset (s s': list A): bool:=
 Lemma subsetP s s': reflect (Subset s s') (subset s s').
 Proof. { induction s. simpl. constructor. intro. intros  H. absurd (In a nil); auto.
        apply reflect_intro. split.
-       { intro H. cut (In a s' /\ Subset s s'). Focus 2. auto with hint_list. simpl.
+       { intro H.  cut (In a s' /\ Subset s s'). Focus 2. split; eauto. simpl.
          intro H1; destruct H1 as [H1 H2].
          apply /andP. split. apply /memP;auto. apply /IHs;auto.  }
        { simpl.  move /andP. intro H; destruct H as [H1 H2]. unfold Subset.
          intros a0 H3. cut (a0= a \/ In a0 s). intro H4; destruct H4 as [H4 | H5].
          rewrite H4. apply /memP;auto. cut (Subset s s'). intro H6. auto. apply /IHs;auto.
-         eauto with hint_list.   }  } Qed.
+         eauto.   }  } Qed.
 
-Hint Resolve subsetP: hint_reflect.
+Hint Resolve subsetP: core.
 Lemma Subset_EM (s s': list A): Subset s s' \/ ~ Subset s s'.
 Proof. solve_EM. Qed.
 Lemma Subset_dec (s s': list A): {Subset s s'} + {~ Subset s s'}.
@@ -159,11 +159,12 @@ Definition equal (s s':list A): bool:= subset s s' && subset s' s.
 Lemma equalP s s': reflect (Equal s s') (equal s s').
 Proof. { apply reflect_intro.  split.
        { intro H. cut (Subset s s'/\ Subset s' s).
-       Focus 2. auto with hint_list. intro H1. unfold equal.
+       Focus 2. auto. intro H1. unfold equal.
        apply /andP. split; apply /subsetP; tauto. }
        { unfold equal. move /andP. intro H. apply Equal_intro; apply /subsetP; tauto. }
-       } Qed. 
-Hint Resolve equalP: hint_reflect.
+       } Qed.
+
+Hint Resolve equalP: core.
 Lemma Equal_EM (s s': list A): Equal s s' \/ ~ Equal s s'.
 Proof. solve_EM. Qed.
 Lemma Equal_dec (s s': list A): {Equal s s'} + {~ Equal s s'}.
@@ -188,7 +189,7 @@ Proof. solve_dec. Qed.
            simpl. apply /orP; right; apply /IHl; auto. }
          { simpl. move /orP. intro H1; destruct H1 as [H1| H2]. constructor. apply /H; auto.
            eapply Exists_cons_tl. apply /IHl; auto.  } } Qed.
-  Hint Resolve ExistsP: hint_reflect.      
+  Hint Resolve ExistsP: core.      
    Check Exists_dec.
   (* Exists_dec
      : forall (A : Type) (P : A -> Prop) (l : list A),
@@ -209,7 +210,7 @@ Proof. solve_dec. Qed.
   Lemma existsP P f l: (forall x:A, reflect (P x)(f x))-> reflect (exists x, In x l /\ P x)(existsb f l).
   Proof. { intro H. eapply iffP with (P:= Exists P l). eapply ExistsP. apply H.
            all: apply Exists_exists. } Qed.
-  Hint Resolve existsP: hint_reflect. 
+  Hint Resolve existsP: core. 
   Lemma exists_dec P l:
     (forall x:A, {P x} + {~ P x})-> { (exists x, In x l /\ P x) } + { ~ exists x, In x l /\ P x}.
   Proof. { intros. cut({Exists P l}+{ ~ Exists P l}). intro H;destruct H as [Hl |Hr].
@@ -245,7 +246,7 @@ Proof. solve_dec. Qed.
          { simpl. move /andP. intro H1; destruct H1 as [H1 H2]. constructor. apply /H; auto.
            apply /IHl; auto. } } Qed.
  
- Hint Resolve ForallP: hint_reflect.
+ Hint Resolve ForallP: core.
  Lemma Forall_EM P l:(forall x:A, P x \/ ~ P x ) -> Forall P l \/ ~ Forall P l.
  Proof.  { intros H. induction l. left. constructor. 
          cut( P a \/ ~ P a).  intro Ha. cut (Forall P l \/ ~ Forall P l). intro Hl.
@@ -291,10 +292,9 @@ Proof. solve_dec. Qed.
   
 End SetReflections.
 
-Hint Resolve memP mem2P nodupP emptyP subsetP equalP existsP ExistsP ForallP forallP  mem2_comute: hint_reflect.
-Hint Resolve mem2_comute: hint_list.
-Hint Resolve forall_exists_EM exists_forall_EM: hint_list.
-Hint Resolve forall_exists_EM exists_forall_EM: hint_reflect.
+Hint Resolve memP mem2P nodupP emptyP subsetP equalP
+     existsP ExistsP ForallP forallP  mem2_comute: core.
+Hint Resolve forall_exists_EM exists_forall_EM: core.
 
 
 
