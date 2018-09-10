@@ -5,8 +5,12 @@
 
 (* ------   In this file we formalize the concept of sorting in a list.  We consider lists
    of elements (on an arbitrary type A) with a boolean comparison operator (lr: A-> A-> bool).
-   Most of  the results in this file assumes only reflexive, transitive and complete nature of
-   the boolean operator lr. Only the last result (equality of head) assumes the antisymmetric
+   Most of  the results in this file assumes only   
+   1. reflexive, 
+   2. transitive and 
+   3. complete 
+   nature of the boolean operator lr. 
+   Only the last result (equality of head) assumes the antisymmetric
    property of lr. 
 
    Following are the concepts formalized in this file: 
