@@ -42,7 +42,7 @@ Lemma reflect_intro (P:Prop)(b:bool): Prop_bool_eq P b -> reflect P b.
 Proof. { intros. destruct H as  [H1 H2].
          destruct b. constructor;auto.
          constructor.  intro H. apply H1 in H;inversion H. } Qed.
-Hint Immediate  reflect_elim reflect_intro : hint_reflect. 
+Hint Immediate  reflect_elim reflect_intro. 
 Lemma reflect_dec P: forall b:bool, reflect P b -> {P} + {~P}.
 Proof. intros b H; destruct b; inversion H; auto.  Qed.
 Lemma reflect_EM P: forall b:bool, reflect P b -> P \/ ~P.
@@ -52,7 +52,7 @@ Lemma dec_EM P: {P}+{~P} -> P \/ ~P.
 Lemma pbe_EM P: forall b:bool, Prop_bool_eq P b -> P \/ ~P.
 Proof. { intros b H; cut( reflect P b).
          apply reflect_EM. apply reflect_intro;auto. } Qed.
-Hint Immediate reflect_EM reflect_dec: hint_reflect.
+Hint Immediate reflect_EM reflect_dec.
 About iffP.
 (* iffP : forall (P Q : Prop) (b : bool), reflect P b -> (P -> Q) -> (Q -> P) -> reflect Q b *)
 About idP.
@@ -83,14 +83,13 @@ Proof. intros H H1.  rewrite H1 in H. discriminate H. Qed.
 Lemma switch2(b:bool): ~ b -> b=false.
 Proof. intros H. case b eqn:H1. absurd (true);auto. auto. Qed.
 
-
-
 End GeneralReflections.
-Hint Immediate reflect_intro reflect_elim  reflect_EM reflect_dec dec_EM : hint_reflect.
 
 
-Ltac solve_dec := eapply reflect_dec; eauto with hint_reflect.
-Ltac solve_EM  := eapply reflect_EM; eauto with hint_reflect.
+Hint Immediate reflect_intro reflect_elim  reflect_EM reflect_dec dec_EM: core.
+
+Ltac solve_dec := eapply reflect_dec; eauto.
+Ltac solve_EM  := eapply reflect_EM; eauto.
 
 Ltac switch:=  (apply switch1||apply switch2).
 Ltac switch_in H:= (apply switch1 in H || apply switch2 in H).
