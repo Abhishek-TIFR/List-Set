@@ -56,7 +56,7 @@ Section Sorting.
 
 
   Lemma sorted_elim1 (a:A) (b:A) (l: list A): (sorted (a::b::l)) -> (a <=r b).
-  Proof. intro H. inversion H.  eapply H3. eauto with hint_list. Qed.
+  Proof. intro H. inversion H.  eapply H3. auto.  Qed.
   Lemma sorted_elim4 (a:A) (l:list A): sorted (a::l) ->(forall x, In x l -> a <=r x).
   Proof. intro H. inversion H. auto. Qed.
   Lemma sorted_elim2 (a:A) (l:list A)(Hrefl: reflexive lr):
@@ -68,7 +68,7 @@ Section Sorting.
   Proof. constructor. constructor. intros;simpl;contradiction. Qed.
 
   Hint Resolve sorted_elim1 sorted_elim2 sorted_elim3 sorted_elim4
-       sorted_single sorted_intro: hint_list.
+       sorted_single sorted_intro: core.
 
      
   Fixpoint putin (a: A) (l: list A) : list A:=
@@ -82,20 +82,16 @@ Section Sorting.
 
   Lemma putin_intro (a:A) (l: list A): forall x, In x l -> In x (putin a l).
   Proof. { intros x H. induction l. simpl in H. contradiction. simpl.
-           destruct ( a <=r a0).
-          destruct H. subst x. (eauto with hint_list).
-         eauto with hint_list. eauto with hint_list. destruct H. subst x;
-         eauto with hint_list. apply IHl in H as H1;eauto with hint_list. } Qed.
+           destruct ( a <=r a0). destruct H. subst x. all: auto.  destruct H. subst x; auto.
+          apply IHl in H as H1;auto.  } Qed.
          
   Lemma putin_intro1 (a:A) (l: list A): In a (putin a l).
-  Proof. { induction l. simpl. tauto. simpl. destruct ( a <=r a0). eauto with hint_list.
-         eauto with hint_list.  } Qed.
+  Proof. { induction l. simpl. tauto. simpl. destruct ( a <=r a0). all: auto.  } Qed.
 
   Lemma putin_elim (a:A) (l: list A): forall x, In x (putin a l) -> (x=a)\/(In x l).
   Proof. { intros x H. induction l. simpl in H. simpl. destruct H. left. auto. auto.
-         simpl in H. destruct ( a <=r a0).   destruct H. auto. auto.
-         destruct H. right;subst x ;auto. eauto with hint_list. apply IHl in H as H2.
-         destruct H2. auto. right. eauto with hint_list. } Qed.
+           simpl in H. destruct ( a <=r a0).   destruct H. auto. auto. destruct H.
+           right;subst x;auto. apply IHl in H as H2. destruct H2. auto. right. auto.  } Qed.
    
   Definition complete (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
  
@@ -103,27 +99,26 @@ Section Sorting.
     forall (a:A) (l: list A), sorted l -> sorted (putin a l).
   Proof. { intros a l. revert a.  induction l.
          { intros a1 H.  simpl. apply sorted_single. }
-         simpl. intros a1 H.  destruct ( a1 <=r a) eqn:H0.
-         {  eauto with hint_list. }
+           simpl. intros a1 H.  destruct ( a1 <=r a) eqn:H0.
+         {  auto.  }
          { cut ( a <=r a1 = true).
-           intro H1.  constructor. eauto with hint_list.
+           intro H1.  constructor. eauto. 
            intros x H2. apply putin_elim in H2 as H3. destruct H3.
-           subst x;auto. eauto with hint_list.  apply H_comp. eauto. } } Qed.
+           subst x;auto. eauto.  apply H_comp. eauto. } } Qed.
   
   Lemma nodup_putin (a:A)(l:list A): NoDup (a::l)-> NoDup (putin a l).
   Proof.  { revert a. induction l.
           { simpl. auto. }
-          { intros a0 H. assert (Ha: NoDup (a::l)). eauto with hint_list.
+          { intros a0 H. assert (Ha: NoDup (a::l)).  eauto. 
             simpl. destruct (a0 <=r a) eqn: H1. auto.
             constructor.
             { intro H2. assert ( H2a: a=a0 \/ In a l). eauto using putin_elim.
-              destruct H2a. subst a. inversion H. eauto with hint_list.
-              inversion Ha; contradiction. }
-            apply IHl. inversion H. constructor; eauto with hint_list. } } Qed.
+              destruct H2a. subst a. inversion H. eauto.  inversion Ha; contradiction. }
+            apply IHl. inversion H. constructor; eauto.  } } Qed.
 
   
   
-  Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin: hint_list.
+  Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin: core.
 
 
    Fixpoint sort (l: list A): list A:=
@@ -139,29 +134,34 @@ Section Sorting.
 
   Lemma sort_elim (l: list A): forall x, In x (sort l) -> In x l.
   Proof. { intros x H. induction l. simpl in H. contradiction.
-         simpl in H. apply putin_elim in H. destruct H. subst x;eauto with hint_list.
-         eauto with hint_list. } Qed.
+         simpl in H. apply putin_elim in H. destruct H. subst x;eauto. eauto. } Qed.
 
   Lemma sort_correct (H_trans: transitive lr)(H_comp: complete lr):
     forall(l: list A), sorted (sort l).
   Proof. induction l. simpl. constructor. simpl. eauto using putin_correct. Qed.
 
-  Hint Resolve sort_elim sort_intro sort_correct: hint_list.
+  Hint Resolve sort_elim sort_intro sort_correct: core.
   
   Lemma sort_equal (l: list A): Equal l (sort l).
-  Proof. split; eauto with hint_list. Qed.
+  Proof. split;intro; eauto. Qed.
+
+   Lemma sort_equal1 (l: list A): Equal (sort l) l.
+  Proof. split;intro; eauto. Qed.
+
+  Lemma sort_same_size (l: list A): |sort l| = |l|.
+  Proof. Admitted.
 
   Lemma sorted_equal (l l': list A): Equal l l' -> Equal l (sort l').
-  Proof. intro. cut (Equal l' (sort l')). eauto with hint_list.  apply sort_equal. Qed.
+  Proof. intro. cut (Equal l' (sort l')). eauto.  apply sort_equal. Qed.
   Lemma sorted_equal1(l l': list A): Equal l l' -> Equal (sort l) l'.
-  Proof. intro. cut (Equal l (sort l)). eauto with hint_list.  apply sort_equal. Qed.
+  Proof. intro. cut (Equal l (sort l)). eauto. apply sort_equal. Qed.
 
   Lemma nodup_sort (l: list A): NoDup l -> NoDup (sort l).
   Proof. { induction l. eauto.
-         {  simpl. intro H.  cut (NoDup (a::sort l)). eauto with hint_list.
+         {  simpl. intro H.  cut (NoDup (a::sort l)). eauto.
             constructor.
             { intro H1. absurd (In a l). inversion H; auto. eapply  sort_equal;auto. }
-            eauto with hint_list. } } Qed.
+            eauto. } } Qed.
 
   (*--upto this point only reflexive, transitive and complete property of <=r is needed--- *)
 
@@ -171,8 +171,8 @@ Section Sorting.
    Definition empty: list A:= nil.
   
   Lemma empty_equal_nil_l (l: list A): l [=] empty -> l = empty.
-  Proof. { case l. auto. intros s l0. unfold "[=]". intro H. specialize (H s).
-           destruct H as [H1 H2]. absurd (In s empty). all: eauto with hint_list. } Qed.
+  Proof. { case l. auto. intros s l0. unfold "[=]". intro H. 
+           destruct H as [H1 H2]. absurd (In s empty). all: eauto. } Qed.
 
 
   
@@ -181,22 +181,22 @@ Section Sorting.
     sorted (a::l)-> sorted (b::s)-> Equal (a::l) (b::s)-> a=b.
   Proof. { intros H H1 H2. 
          assert(H3: In b (a::l)).
-         unfold "[=]" in H2. apply H2. auto with hint_list.
-         assert (H3A: a <=r b). eapply sorted_elim2;eauto with hint_list.
+         unfold "[=]" in H2. apply H2. auto.
+         assert (H3A: a <=r b). eapply sorted_elim2;eauto.
          assert(H4: In a (b::s)).
-         unfold "[=]" in H2. apply H2. auto with hint_list. 
-         assert (H4A: b <=r a). eapply sorted_elim2;eauto with hint_list.
+         unfold "[=]" in H2. apply H2. auto.
+         assert (H4A: b <=r a). eapply sorted_elim2;eauto.
          eapply Hanti. split_;auto. } Qed.  
 
 End Sorting. 
 
 
 Hint Resolve sorted_elim1 sorted_elim2 sorted_elim3 sorted_elim4
-     sorted_single sorted_intro: hint_list.
-Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin : hint_list.
-Hint Resolve sort_elim sort_intro sort_correct  : hint_list.
-Hint Resolve sort_equal sorted_equal sorted_equal1 nodup_sort: hint_list.
-Hint Resolve empty_equal_nil_l head_equal_l: hint_list.
+     sorted_single sorted_intro: core.
+Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin : core.
+Hint Resolve sort_elim sort_intro sort_correct sort_same_size : core.
+Hint Resolve sort_equal sort_equal1 sorted_equal sorted_equal1 nodup_sort: core.
+Hint Resolve empty_equal_nil_l head_equal_l: core.
 
 
 
