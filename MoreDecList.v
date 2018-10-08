@@ -218,10 +218,10 @@ Section Permutation.
   Lemma nodup_subset_included (l s: list A): NoDup l -> l [<=] s -> included l s.
   Proof. Admitted.
   Lemma sorted_included_sublist (l s: list A)(lr: A->A-> bool):
-    sorted lr l-> sorted lr s-> included l s-> sublist l s.
+    Sorted lr l-> Sorted lr s-> included l s-> sublist l s.
   Proof. Admitted.
   Lemma first_in_ordered_sublists (a e:A)(l s: list A)(lr: A->A-> bool):
-    sorted lr (a::l)-> sorted lr (e::s)-> sublist (a::l)(e::s)-> lr e a.
+    Sorted lr (a::l)-> Sorted lr (e::s)-> sublist (a::l)(e::s)-> lr e a.
   Proof. Admitted.
 
 
