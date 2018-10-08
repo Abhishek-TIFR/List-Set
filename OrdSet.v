@@ -42,6 +42,15 @@ Require Export Omega.
 
 Set Implicit Arguments.
 
+
+
+Section Ord_sets.
+ 
+  Variable A: ordType.
+   Record set_on : Type := { S_of :> list A;
+                             IsOrd_S : IsOrd S_of }.  
+End Ord_sets.
+
 Section OrderedSet.
   Context { A: ordType }. (* to declare A as implicit outside the section *)
 
@@ -353,6 +362,9 @@ Section OrderedSet.
   Hint Resolve set_diff_IsOrd set_diff_nodup: core.
           
 End OrderedSet.
+
+
+
 
 
 
