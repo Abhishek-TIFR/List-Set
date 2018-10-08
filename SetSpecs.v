@@ -88,7 +88,10 @@ Section BasicSetFacts.
 
 
   (*-----------------------Subset (spec) and its properties ------------------------*)
-  
+  Lemma Subset_intro (a:A)(l s: list A): l [<=] s -> (a::l) [<=] (a::s).
+  Proof. intros H x H1.  destruct H1. subst a;auto. auto. Qed.
+  Lemma Subset_intro1 (a:A)(l s: list A): l [<=] s -> l [<=] (a::s).
+    Proof. intros H x H1. simpl;right;auto. Qed.
   Lemma Subset_elim1 (a:A) (s s':list A): Subset (a:: s) s'-> In a s'.
   Proof. { unfold Subset. intro H. apply H. auto. } Qed.
    Lemma Subset_elim2 (a:A) (s s':list A): Subset (a:: s) s'->  Subset s s'.
@@ -100,6 +103,8 @@ Section BasicSetFacts.
 
   Lemma Subset_nil (l: list A): nil [<=] l.
   Proof. unfold "[<=]"; simpl; intros; contradiction. Qed.
+  Lemma Subset_of_nil (l: list A): l [<=] nil -> l=nil.
+    Proof. induction l. auto. intro H. absurd (In a nil); auto. Qed.
 
   Lemma Subset_trans (l1 l2 l3: list A): l1 [<=] l2 -> l2 [<=] l3 -> l1 [<=] l3.
   Proof. intros H H1 x Hx1. eauto. Qed. 
@@ -132,6 +137,24 @@ end.
   Proof. intro; subst s; apply Eq_refl; auto. Qed.
   Lemma Equal_elim ( s s': list A): s [=] s' ->  s [<=] s' /\ s' [<=] s.
   Proof. unfold_spec; unfold iff. intros H; split; intro a;apply H. Qed.
+
+  (* ---------------- introduction and elimination for filter operation---------- *)
+  (* Check filter :  forall A : Type, (A -> bool) -> list A -> list A *)
+  (* Check filter_In : forall (A : Type) (f : A -> bool) (x : A) (l : list A),
+       In x (filter f l) <-> In x l /\ f x = true *)
+  Lemma filter_elim1 (f: A->bool)(l: list A)(x: A): In x (filter f l)-> In x l.
+  Proof. apply filter_In. Qed.
+  Lemma filter_elim2 (f: A->bool)(l: list A)(x: A): In x (filter f l)-> (f x).
+  Proof. apply filter_In. Qed.
+  Lemma filter_intro (f: A->bool)(l: list A)(x: A): In x l -> (f x)-> In x (filter f l).
+  Proof. intros; apply filter_In; split;auto. Qed.
+
+  Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
+  (*----------- Properties of set cardinality------------------------------------*)
+  Lemma subset_cardinal_less (l s: list A): l [<=] s -> NoDup l -> |l| <= |s|.
+  Proof. Admitted.
+    
+  
  
 End BasicSetFacts.
 
@@ -156,7 +179,11 @@ end.
 
 
 Hint Immediate Eq_refl Eq_sym Equal_elim Equal_intro Equal_intro1: core.
-Hint Immediate Subset_elim1 Subset_elim2 Subset_nil : core.
+Hint Immediate  Subset_elim1 Subset_elim2 Subset_nil Subset_of_nil: core.
 Hint Resolve  self_incl: core.
+Hint Resolve Subset_intro Subset_intro1: core.
+
+Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
+Hint Resolve subset_cardinal_less: core.
 
 
