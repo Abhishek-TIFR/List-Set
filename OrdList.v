@@ -16,7 +16,7 @@
  Some of the useful results in this file are:
 
  Lemma IsOrd_NoDup (l: list A): IsOrd l -> NoDup l.
- Lemma IsOrdP (l:list A): reflect(IsOrd l)(isOrd l).
+ Lemma isOrdP (l:list A): reflect(IsOrd l)(isOrd l).
  
  Lemma head_equal (a b: A)(l s: list A): 
             IsOrd (a::l)-> IsOrd (b::s)-> Equal (a::l) (b::s)-> a=b.
@@ -113,7 +113,7 @@ Section OrderedLists.
 
    Hint Resolve isOrd_elim isOrd_elim1 isOrd_elim0: core.
 
-  Lemma IsOrdP (l:list A): reflect(IsOrd l)(isOrd l).
+  Lemma isOrdP (l:list A): reflect(IsOrd l)(isOrd l).
   Proof. { apply reflect_intro. split.
          { intro H. induction l. 
          { simpl;auto. }
@@ -123,7 +123,7 @@ Section OrderedLists.
             constructor. constructor. eauto.
             apply IHl. eapply isOrd_elim. apply H.  } } Qed.
 
-  Hint Resolve IsOrdP: core.
+  Hint Resolve isOrdP: core.
 
   Lemma NoDup_elim1(a:A)(l:list A): NoDup (a::l) -> ~ In a l.
   Proof. eapply NoDup_cons_iff. Qed.
@@ -185,8 +185,27 @@ Section OrderedLists.
 
   Hint Resolve head_equal tail_equal set_equal length_equal: core.
 
+  (*----------Misc property on ordList-------------------------------*)
+  Lemma nodup_Subset_elim(a:A)(l s: list A):
+    NoDup (a::l)-> NoDup (a::s)-> a::l [<=] a::s -> l [<=] s.
+  Proof. { intros H H1 H2 x H3. assert (Hs: In x (a::s)). apply H2; auto.
+         destruct Hs. subst x; absurd (In a l); auto. auto. } Qed.
 
-
+  Lemma IsOrd_Subset_elim1 (e a: A)(l s: list A):
+    IsOrd (e::l)-> IsOrd (a::s) -> e::l [<=] a::s -> a <=b e.
+  Proof. intros H H1 H2. match_up a e. subst a;auto. auto. absurd (In e (a::s)); auto.  Qed.
+  
+  Lemma IsOrd_Subset_elim2 (e a: A)(l s: list A):
+    IsOrd (e::l)-> IsOrd (a::s) -> e::l [<=] a::s -> e<>a -> e::l [<=] s.
+  Proof. { intros H H1 H2 H3 x Hl.
+         destruct Hl.
+         { subst x. cut (In e (a::s)). intro H4. destruct H4.
+           symmetry in H0. contradiction. auto. auto. }
+         { assert(H4: In x (a::s)). auto. destruct H4. subst x.
+           assert (H4: e <b a). eauto.
+           assert (H5: a <=b e). eapply IsOrd_Subset_elim1;eauto.
+           by_conflict. auto. } } Qed.
+  
 
 End OrderedLists.
 
@@ -195,11 +214,13 @@ End OrderedLists.
 Hint Resolve IsOrd_elim IsOrd_elim1 IsOrd_elim0 IsOrd_intro: core.
 Hint Resolve IsOrd_elim2a IsOrd_elim3 IsOrd_elim4 IsOrd_elim5: core. 
 Hint Resolve isOrd_elim isOrd_elim1 isOrd_elim0: core.
-Hint Resolve IsOrdP: core.
+Hint Resolve isOrdP: core.
 
 Hint Resolve NoDup_elim1 NoDup_elim2 NoDup_intro: core.
 Hint Immediate head_equal tail_equal set_equal length_equal: core.
 Hint Resolve IsOrd_NoDup: core.
+
+Hint Resolve nodup_Subset_elim IsOrd_Subset_elim1 IsOrd_Subset_elim2:core.
 
 
 
