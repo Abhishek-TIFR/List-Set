@@ -9,7 +9,7 @@
 
    Structure type: Type:= 
        Pack { E: Type;
-              eqb: E-> E -> bool;
+             
               ltb: E-> E -> bool;
               eq_P: forall x y, reflect (eq x y)(eqb x y);
               ltb_irefl: forall x, ltb x x=false;
@@ -223,7 +223,7 @@ Ltac conflict:=
     | H: is_true (?x <b ?y), H1: is_true (?y <b ?x)  |- _
        => cut (False); [tauto | eapply ltb_antisym; eauto]
     | H: is_true (?x <=b ?y), H1: is_true (?y <b ?x)  |- _
-       => cut (False); [tauto | eapply leb_not_gt; eauto]
+       => cut (False); [tauto | eapply leb_not_gt; eauto ]
     | H: is_true (?x =b ?y), H1: is_true (?x <b ?y)  |- _
        => cut (False); [tauto | move /eqP in H; eapply ltb_not_eq; eauto]
     | H: is_true (?y =b ?x), H1: is_true (?x <b ?y)  |- _
@@ -231,29 +231,14 @@ Ltac conflict:=
     | H:  ?x = ?y, H1: is_true (?x <b ?y)  |- _
       => cut (False); [tauto | eapply ltb_not_eq; eauto]
     | H:  ?y = ?x, H1: is_true (?x <b ?y)  |- _
-       => cut (False); [tauto | eapply ltb_not_eq; eauto]                 
+      => cut (False); [tauto | eapply ltb_not_eq; eauto]
+    | H: is_true ( ?x <b ?x) |- _
+      => absurd (x <b x);auto                      
     end.
-                                                              
+
+Ltac by_conflict :=  (conflict_eq || conflict ).
 
 (*--------- Natural numbers is an instance of ordType---------------------*)
-
-Lemma nat_eqb_ref (x:nat): Nat.eqb x x = true.
-Proof. induction x;simpl;auto. Qed.
-Hint Resolve nat_eqb_ref:core.
-
-Lemma nat_eqb_elim (x y:nat):  Nat.eqb x y -> x = y.
-Proof. { revert y. induction x.
-       { intro y. case y. tauto. simpl; intros n H; inversion H. }
-       intro y. case y. simpl; intro H; inversion H. simpl. eauto. } Qed.
-Hint Resolve nat_eqb_elim: core.
-
-Lemma nat_eqb_intro (x y:nat): x=y -> Nat.eqb x y.
-Proof. intro H. subst x. eauto. Qed.
-Hint Resolve nat_eqb_intro: core.
-
-Lemma nat_eqP (x y:nat): reflect (x=y)(Nat.eqb x y).
-Proof. apply reflect_intro. split;eauto. Qed. 
-Hint Resolve nat_eqP: core.
 
 Lemma nat_ltb_irefl (x : nat): Nat.ltb x x = false.
 Proof. induction x; unfold "<?"; auto. Qed.
@@ -296,7 +281,7 @@ Proof. { apply reflect_intro. split.
          intro n. replace (S x <=? S n) with ( x <=? n).
          intro H; apply IHx in H. omega. simpl;auto. } } Qed.
 
-Hint Resolve leP ltP nat_eqP: hint_reflect.
+Hint Resolve leP ltP nat_eqP: core.
 
 Lemma nat_ltb_trans (x y z:nat):  Nat.ltb x y -> Nat.ltb y z -> Nat.ltb x z.
 Proof. intros H H1.  move /ltP in H;  move /ltP in H1; apply /ltP. omega. Qed. 
@@ -308,6 +293,15 @@ refine ( {| Order.D:= nat_eqType;
             Order.ltb_irefl:= nat_ltb_irefl;
             Order.ltb_antisym := nat_ltb_antisym;
             Order.ltb_trans := nat_ltb_trans  |}). Defined.
+
+Lemma lebP (x y: nat): reflect (x <= y) (leb x y).
+Proof. { apply reflect_intro. split.
+       { intro H. unfold "<=b". apply /orP.
+         destruct H. right. auto. left. apply /ltP. omega. }
+       { unfold "<=b". move /orP. intro H.
+         destruct H. move /ltP in H; omega. move /eqP in H.
+         subst x;auto. } } Qed.
+Hint Resolve lebP:core.
 
 
 Section CompSpec.
