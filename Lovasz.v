@@ -2,14 +2,12 @@
 
 
 
-Require Export Dec_UG.
+Require Export DecUG.
 
 Set Implicit Arguments.
 
 Section Repeat_edg.
 
-
-  Set Implicit Arguments.
   Variable A: Type.
   Hypothesis decA: forall x y:A, {x=y}+{x<>y}.
   Open Scope type_scope.
