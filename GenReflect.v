@@ -87,6 +87,7 @@ End GeneralReflections.
 
 
 Hint Immediate reflect_intro reflect_elim  reflect_EM reflect_dec dec_EM: core.
+Hint Resolve idP impP impP1: core.
 
 Ltac solve_dec := eapply reflect_dec; eauto.
 Ltac solve_EM  := eapply reflect_EM; eauto.
