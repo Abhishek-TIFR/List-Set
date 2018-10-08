@@ -19,8 +19,21 @@
   Equal s s'                   <->    equal s s'             equalP
   Exists P l                   <->    existsb f l            ExistsP
   exists x, (In x l /\ P x)    <->    existsb f l            existsP
+  exists x, (In x l /\ f x)    <->    existsb f l            existsbP
   Forall P l                   <->    forallb f l            ForallP
-  forall x, (In x l -> P x)    <->    forallb f l            forallP   ------------*)
+  forall x, (In x l -> P x)    <->    forallb f l            forallP
+  forall x, (In x l -> f x)    <->    forallb f l            forallbP 
+
+  forall_em_exists f: (forall x, In x l -> f x) \/ (exists x, In x l /\ ~ f x).  
+  exists_em_forall f: (exists x, In x l /\ f x) \/ (forall x, In x l -> ~ f x).
+
+  Definition forall_xyb g l := forallb (fun x => (forallb ( fun y=> g x y) l)) l.
+  Definition forall_yxb g l := forallb (fun y => (forallb ( fun x=> g x y) l)) l.
+
+  forall_xyP g l: reflect (forall x y, In x l-> In y l-> g x y) (forall_xyb g l).
+  forall_yxP g l: reflect (forall x y, In x l-> In y l-> g x y) (forall_yxb g l).
+
+   ------------*)
 
 
 From Coq Require Export ssreflect  ssrbool Lists.List.
@@ -62,7 +75,8 @@ Proof. eauto. Qed.
   Proof. apply reflect_intro. split.
          apply set_mem_correct2. apply set_mem_correct1. Qed.
   
-Hint Resolve memP : core.
+  Hint Resolve memP : core.
+  Hint Immediate set_mem_correct1 set_mem_correct2: core.
 
 Lemma In_EM: forall (a:A) (x: list A), In a x \/ ~ In a x.
 Proof. eauto.  Qed.
@@ -98,7 +112,14 @@ Proof. { split.
        symmetry. apply /memP. auto. } 
        { induction l. constructor.
        simpl. case (mem a l) eqn: H1. discriminate.  intro H2.
-       constructor. move /memP.  rewrite H1.  auto. tauto. }  } Qed. 
+       constructor. move /memP.  rewrite H1.  auto. tauto. }  } Qed.
+Lemma noDup_intro l: NoDup l -> noDup l.
+Proof. apply NoDup_iff_noDup. Qed.
+Lemma noDup_elim l: noDup l -> NoDup l.
+Proof. apply NoDup_iff_noDup. Qed.
+
+Hint Immediate noDup_elim noDup_intro: core.
+
 Lemma nodupP l: reflect (NoDup l) (noDup l).
 Proof. {cut (NoDup l <-> noDup l). eauto. apply NoDup_iff_noDup. } Qed.
 
@@ -128,7 +149,13 @@ Hint Resolve emptyP : core.
 Lemma Empty_EM (l:list A): Empty l \/ ~ Empty l.
   Proof. solve_EM. Qed.  
 Lemma Empty_dec (l: list A): {Empty l} + {~Empty l}.
-  Proof. solve_dec. Qed.  
+Proof. solve_dec. Qed.
+Lemma empty_intro l : Empty l -> is_empty l.
+Proof. move /emptyP. auto. Qed.
+Lemma empty_elim l: is_empty l -> Empty l.
+Proof. move /emptyP. auto. Qed.
+
+Hint Immediate empty_elim empty_intro: core.
 
 (*----------- subset (boolean function) and its specification--------------------*)
 Fixpoint subset (s s': list A): bool:=
@@ -154,6 +181,13 @@ Proof. solve_EM. Qed.
 Lemma Subset_dec (s s': list A): {Subset s s'} + {~ Subset s s'}.
 Proof. solve_dec. Qed.
 
+Lemma subset_intro s s': Subset s s' -> subset s s'.
+Proof. move /subsetP. auto. Qed.
+Lemma subset_elim s s': subset s s' -> Subset s s'.
+Proof. move /subsetP. auto. Qed.
+
+Hint Immediate subset_intro subset_elim: core.
+
 (*----------- equal (boolean function) and its specifications--------------------*)
 Definition equal (s s':list A): bool:= subset s s' && subset s' s.
 Lemma equalP s s': reflect (Equal s s') (equal s s').
@@ -169,6 +203,40 @@ Lemma Equal_EM (s s': list A): Equal s s' \/ ~ Equal s s'.
 Proof. solve_EM. Qed.
 Lemma Equal_dec (s s': list A): {Equal s s'} + {~ Equal s s'}.
 Proof. solve_dec. Qed.
+
+Lemma equal_intro s s': Equal s s' -> equal s s'.
+Proof. move /equalP. auto. Qed.
+Lemma equal_elim s s': equal s s' -> Equal s s'.
+Proof. move /equalP. auto. Qed.
+
+Hint Immediate equal_elim equal_intro: core.
+
+(*---------- Index (idx) function to locate the first position of element in list----- *)
+Fixpoint idx (x:A)(l: list A):= match l with
+                                |nil => 0
+                                |a::l' => match (x==a) with
+                                        | true => 1
+                                        |false => match (mem x l') with
+                                                 |true => S (idx x l')
+                                                 |false => 0
+                                                 end
+                                         end
+                                end.
+Lemma absnt_idx_zero (x:A)(l:list A): ~ In x l -> (idx x l)=0.
+Proof. Admitted.
+Lemma idx_zero_absnt (x:A)(l:list A): (idx x l)=0 -> ~ In x l.
+Proof. Admitted.
+
+Lemma diff_index (x y:A)(l: list A): In x l -> In y l -> x<>y -> (idx x l <> idx y l).
+Proof. Admitted.
+Lemma same_index (x y:A)(l: list A): In x l -> In y l -> (idx x l = idx y l) -> x=y.
+Proof. Admitted.
+
+Lemma nodup_idx (x a: A)(l: list A): In x (a::l)-> NoDup (a::l)-> idx x (a::l)= S (idx x l).
+Proof. Admitted.
+
+Hint Immediate absnt_idx_zero idx_zero_absnt: core.
+Hint Resolve diff_index same_index: core.
 
 (*----------- existsb (boolean function) and its specifications-------------------*)
   Print existsb.
@@ -210,7 +278,10 @@ Proof. solve_dec. Qed.
   Lemma existsP P f l: (forall x:A, reflect (P x)(f x))-> reflect (exists x, In x l /\ P x)(existsb f l).
   Proof. { intro H. eapply iffP with (P:= Exists P l). eapply ExistsP. apply H.
            all: apply Exists_exists. } Qed.
-  Hint Resolve existsP: core. 
+  Hint Resolve existsP: core.
+  Lemma existsbP (f:A->bool) l: reflect (exists x, In x l /\ f x)(existsb f l).
+  Proof. apply existsP. intros. apply idP. Qed.
+  
   Lemma exists_dec P l:
     (forall x:A, {P x} + {~ P x})-> { (exists x, In x l /\ P x) } + { ~ exists x, In x l /\ P x}.
   Proof. { intros. cut({Exists P l}+{ ~ Exists P l}). intro H;destruct H as [Hl |Hr].
@@ -258,7 +329,10 @@ Proof. solve_dec. Qed.
          all: auto.  } Qed.
  Lemma forallP P f l: (forall x:A, reflect (P x) (f x) ) -> reflect (forall x, In x l -> P x) (forallb f l).
  Proof. { intro H. eapply iffP with (P:= Forall P l). eapply ForallP. apply H.
-        all: apply Forall_forall. } Qed.
+          all: apply Forall_forall. } Qed.
+
+ Lemma forallbP (f: A->bool) (l: list A): reflect (forall x:A, In x l -> (f x)) (forallb f l).
+ Proof. apply forallP. intros. apply idP. Qed.
  
  Lemma forall_dec P  l:
    (forall x:A, {P x} + { ~ P x}) -> { (forall x, In x l -> P x) } + { ~ forall x, In x l -> P x}.
@@ -288,14 +362,47 @@ Proof. solve_dec. Qed.
         intro H1; destruct H1 as [Hl | Hr].
         left. apply Exists_exists. auto. right.
         cut(Forall (fun x : A => ~ P x) l). eapply Forall_forall.
-        apply Forall_Exists_neg. all:auto. } Qed. 
-  
+        apply Forall_Exists_neg. all:auto. } Qed.
+   Lemma forall_em_exists (f: A-> bool) (l: list A): (forall x, In x l -> f x) \/ (exists x, In x l /\ ~ f x).
+   Proof. apply forall_exists_EM; intro x;destruct (f x); auto. Qed.
+   Lemma exists_em_forall (f: A-> bool) (l: list A): (exists x, In x l /\ f x) \/ (forall x, In x l ->  ~ f x).
+   Proof. apply exists_forall_EM; intro x; destruct (f x); auto. Qed.
+     
 End SetReflections.
 
 Hint Resolve memP mem2P nodupP emptyP subsetP equalP
-     existsP ExistsP ForallP forallP  mem2_comute: core.
+     existsP existsbP ExistsP ForallP forallP forallbP mem2_comute: core.
 Hint Resolve forall_exists_EM exists_forall_EM: core.
+Hint Resolve forall_em_exists exists_em_forall: core.
+
+Hint Immediate set_mem_correct1 set_mem_correct2: core.
+Hint Immediate noDup_elim noDup_intro: core.
+Hint Immediate empty_elim empty_intro: core.
+Hint Immediate subset_intro subset_elim: core.
+Hint Immediate equal_elim equal_intro: core.
+
+Hint Immediate absnt_idx_zero idx_zero_absnt: core.
+Hint Resolve diff_index same_index: core.
 
 
+
+Section MoreReflection.
+  Context { A:eqType }.
+
+  Definition forall_xyb (g:A->A->bool)(l:list A):=  (forallb (fun x=> (forallb (fun y => g x y) l )) l).
+  Definition forall_yxb (g:A->A->bool)(l:list A) :=  (forallb (fun y=> (forallb (fun x => g x y) l )) l).
+  
+  Lemma forall_xyP (g:A->A->bool) (l:list A):
+    reflect (forall x y, In x l-> In y l-> g x y)  (forall_xyb g l).
+  Proof. eapply iffP with (P:= (forall x, In x l -> (forall y, In y l -> g x y))).
+         unfold forall_xyb; auto. all: auto. Qed.
+  Lemma forall_yxP (g:A->A->bool) (l:list A):
+    reflect (forall x y, In x l-> In y l-> g x y)  (forall_yxb g l).
+  Proof. eapply iffP with (P:= (forall y, In y l -> (forall x, In x l -> g x y))).
+         unfold forall_yxb; auto. all: auto. Qed.
+  
+End MoreReflection.
+
+Hint Resolve forall_xyP forall_yxP: core.
 
 
