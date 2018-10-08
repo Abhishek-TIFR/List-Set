@@ -15,19 +15,19 @@
 
    Following are the concepts formalized in this file: 
 
-   sorted l      <==> l is sorted w.r.t comp operator lr 
+   Sorted l      <==> l is sorted w.r.t comp operator lr 
    putin a l      ==> puts the element a into a sorted list at its correct position w.r.t lr
    sort l         ==> sorts the list l w.r.t the comp operator lr 
 
    Some of the useful results in this file are:
 
    Lemma putin_correct (H_trans: transitive lr)(H_comp: complete lr):
-    forall (a:A) (l: list A), sorted l -> sorted (putin a l).
+    forall (a:A) (l: list A), Sorted l -> Sorted (putin a l).
 
    Lemma nodup_putin (a:A)(l:list A): NoDup (a::l)-> NoDup (putin a l).
 
    Lemma sort_correct (H_trans: transitive lr)(H_comp: complete lr):
-    forall(l: list A), sorted (sort l).
+    forall(l: list A), Sorted (sort l).
 
    Lemma sort_equal (l: list A): Equal l (sort l).
 
@@ -49,30 +49,30 @@ Section Sorting.
   
  (* ------------- sorting a list of elements by lr relation ------------------------------*)
   
-  Inductive  sorted : list A-> Prop:=
-  | nil_sorted: sorted nil
-  | cons_sorted (a:A)(l: list A): sorted l -> (forall x, (In x l -> (a <=r x))) -> sorted (a::l).
+  Inductive  Sorted : list A-> Prop:=
+  | nil_Sorted: Sorted nil
+  | cons_Sorted (a:A)(l: list A): Sorted l -> (forall x, (In x l -> (a <=r x))) -> Sorted (a::l).
 
-  Lemma sorted_intro (a:A)(b:A)(l: list A)(Htrans: transitive lr):
-    a <=r b -> sorted (b::l)-> sorted (a::b::l).
+  Lemma Sorted_intro (a:A)(b:A)(l: list A)(Htrans: transitive lr):
+    a <=r b -> Sorted (b::l)-> Sorted (a::b::l).
   Proof. { intros H H0. constructor. auto. intros x H1. destruct H1. subst x. auto.
          eapply Htrans with (y:=b). eauto. inversion H0. eauto. } Qed.
 
 
-  Lemma sorted_elim1 (a:A) (b:A) (l: list A): (sorted (a::b::l)) -> (a <=r b).
+  Lemma Sorted_elim1 (a:A) (b:A) (l: list A): (Sorted (a::b::l)) -> (a <=r b).
   Proof. intro H. inversion H.  eapply H3. auto.  Qed.
-  Lemma sorted_elim4 (a:A) (l:list A): sorted (a::l) ->(forall x, In x l -> a <=r x).
+  Lemma Sorted_elim4 (a:A) (l:list A): Sorted (a::l) ->(forall x, In x l -> a <=r x).
   Proof. intro H. inversion H. auto. Qed.
-  Lemma sorted_elim2 (a:A) (l:list A)(Hrefl: reflexive lr):
-    sorted (a::l) ->(forall x, In x (a::l) -> a <=r x).
+  Lemma Sorted_elim2 (a:A) (l:list A)(Hrefl: reflexive lr):
+    Sorted (a::l) ->(forall x, In x (a::l) -> a <=r x).
   Proof. intro H. inversion H. intros. destruct H4. subst x. eauto. eauto. Qed.
-  Lemma sorted_elim3 (a:A) (l:list A): (sorted (a::l)) -> sorted l.
+  Lemma Sorted_elim3 (a:A) (l:list A): (Sorted (a::l)) -> Sorted l.
   Proof. intro H. inversion H;auto. Qed.
-  Lemma sorted_single (a:A) : (sorted (a::nil)).
+  Lemma Sorted_single (a:A) : (Sorted (a::nil)).
   Proof. constructor. constructor. intros;simpl;contradiction. Qed.
 
-  Hint Resolve sorted_elim1 sorted_elim2 sorted_elim3 sorted_elim4
-       sorted_single sorted_intro: core.
+  Hint Resolve Sorted_elim1 Sorted_elim2 Sorted_elim3 Sorted_elim4
+       Sorted_single Sorted_intro: core.
 
      
   Fixpoint putin (a: A) (l: list A) : list A:=
@@ -100,9 +100,9 @@ Section Sorting.
   Definition complete (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
  
   Lemma putin_correct (H_trans: transitive lr)(H_comp: complete lr):
-    forall (a:A) (l: list A), sorted l -> sorted (putin a l).
+    forall (a:A) (l: list A), Sorted l -> Sorted (putin a l).
   Proof. { intros a l. revert a.  induction l.
-         { intros a1 H.  simpl. apply sorted_single. }
+         { intros a1 H.  simpl. apply Sorted_single. }
            simpl. intros a1 H.  destruct ( a1 <=r a) eqn:H0.
          {  auto.  }
          { cut ( a <=r a1 = true).
@@ -141,7 +141,7 @@ Section Sorting.
          simpl in H. apply putin_elim in H. destruct H. subst x;eauto. eauto. } Qed.
 
   Lemma sort_correct (H_trans: transitive lr)(H_comp: complete lr):
-    forall(l: list A), sorted (sort l).
+    forall(l: list A), Sorted (sort l).
   Proof. induction l. simpl. constructor. simpl. eauto using putin_correct. Qed.
 
   Hint Resolve sort_elim sort_intro sort_correct: core.
@@ -155,9 +155,9 @@ Section Sorting.
   Lemma sort_same_size (l: list A): |sort l| = |l|.
   Proof. Admitted.
 
-  Lemma sorted_equal (l l': list A): Equal l l' -> Equal l (sort l').
+  Lemma Sorted_equal (l l': list A): Equal l l' -> Equal l (sort l').
   Proof. intro. cut (Equal l' (sort l')). eauto.  apply sort_equal. Qed.
-  Lemma sorted_equal1(l l': list A): Equal l l' -> Equal (sort l) l'.
+  Lemma Sorted_equal1(l l': list A): Equal l l' -> Equal (sort l) l'.
   Proof. intro. cut (Equal l (sort l)). eauto. apply sort_equal. Qed.
 
   Lemma nodup_sort (l: list A): NoDup l -> NoDup (sort l).
@@ -170,7 +170,7 @@ Section Sorting.
   (*--upto this point only reflexive, transitive and complete property of <=r is needed--- *)
 
  
-  (* ---------------------head in sorted lists l and l'-------------------------- *)
+  (* ---------------------head in Sorted lists l and l'-------------------------- *)
 
    Definition empty: list A:= nil.
   
@@ -182,24 +182,24 @@ Section Sorting.
   
    (*-------- antisymmetric requirement is only needed in the following lemma--------*)
   Lemma head_equal_l (a b: A)(l s: list A)(Href: reflexive lr)(Hanti: antisymmetric lr):
-    sorted (a::l)-> sorted (b::s)-> Equal (a::l) (b::s)-> a=b.
+    Sorted (a::l)-> Sorted (b::s)-> Equal (a::l) (b::s)-> a=b.
   Proof. { intros H H1 H2. 
          assert(H3: In b (a::l)).
          unfold "[=]" in H2. apply H2. auto.
-         assert (H3A: a <=r b). eapply sorted_elim2;eauto.
+         assert (H3A: a <=r b). eapply Sorted_elim2;eauto.
          assert(H4: In a (b::s)).
          unfold "[=]" in H2. apply H2. auto.
-         assert (H4A: b <=r a). eapply sorted_elim2;eauto.
+         assert (H4A: b <=r a). eapply Sorted_elim2;eauto.
          eapply Hanti. split_;auto. } Qed.  
 
 End Sorting. 
 
 
-Hint Resolve sorted_elim1 sorted_elim2 sorted_elim3 sorted_elim4
-     sorted_single sorted_intro: core.
+Hint Resolve Sorted_elim1 Sorted_elim2 Sorted_elim3 Sorted_elim4
+     Sorted_single Sorted_intro: core.
 Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin : core.
 Hint Resolve sort_elim sort_intro sort_correct sort_same_size : core.
-Hint Resolve sort_equal sort_equal1 sorted_equal sorted_equal1 nodup_sort: core.
+Hint Resolve sort_equal sort_equal1 Sorted_equal Sorted_equal1 nodup_sort: core.
 Hint Resolve empty_equal_nil_l head_equal_l: core.
 
 
