@@ -129,11 +129,58 @@ Section Min_Max.
    
    Hint Resolve minin_spec minin_elim minin_elim1: core.
 
-End Min_Max.
+   (*---------------- Existence of Minimum and Maximum in the non-empty list------------- *)
 
+   Lemma min_exists (l: list A): l<>nil -> exists min, In min l /\ (forall x, In x l -> min <=r x).
+   Proof. intro H. case l eqn:H1. destruct H;auto.
+          exists (minin (a::l0) a). split. auto. intro x. auto. Qed.
+   Lemma max_exists (l: list A): l<>nil -> exists max, In max l /\ (forall x, In x l -> x <=r max).
+   Proof.  intro H. case l eqn:H1. destruct H;auto.
+           exists (maxin (a::l0) a). split. auto. intro x. auto. Qed.
+   
+   Lemma min_withP_exists (l: list A)(P: A->bool):
+     (exists a, In a l /\ P a) -> (exists min, In min l /\ P min /\ (forall x, In x l -> P x -> min <=r x)).
+   Proof. { intro H.
+          assert (Hl: l <> nil).
+          { destruct H as [a H]. destruct H as [H H0]. intro H1.
+            subst l. inversion H.  }
+          set (lP:= filter P l).
+          assert (HlP: lP <> nil).
+          { destruct H as [a H]. destruct H as [H H0]. intro H1.
+            absurd (In a lP). rewrite H1. auto.  unfold lP. auto. }
+          destruct (lP) eqn: HP. destruct HlP;auto.
+          exists (minin (a::l0) a). split. 
+          { cut  (In (minin (a :: l0) a) lP). unfold lP;eauto.
+            rewrite HP. auto. } split.
+          { rewrite <- HP. cut (In (minin lP a) (lP)).
+            eauto. rewrite HP. auto. }
+          { intros x H1 H2. assert (H3: In x (filter P l) ). auto.
+            rewrite <-HP. unfold lP. auto. } } Qed.
+   Lemma max_withP_exists (l: list A)(P: A->bool):
+     (exists a, In a l /\ P a) -> (exists max, In max l /\ P max /\ (forall x, In x l -> P x -> x <=r max)).
+   Proof. { intro H.
+          assert (Hl: l <> nil).
+          { destruct H as [a H]. destruct H as [H H0]. intro H1.
+            subst l. inversion H.  }
+          set (lP:= filter P l).
+          assert (HlP: lP <> nil).
+          { destruct H as [a H]. destruct H as [H H0]. intro H1.
+            absurd (In a lP). rewrite H1. auto.  unfold lP. auto. }
+          destruct (lP) eqn: HP. destruct HlP;auto.
+          exists (maxin (a::l0) a). split. 
+          { cut  (In (maxin (a :: l0) a) lP). unfold lP;eauto.
+            rewrite HP. auto. } split.
+          { rewrite <- HP. cut (In (maxin lP a) (lP)).
+            eauto. rewrite HP. auto. }
+          { intros x H1 H2. assert (H3: In x (filter P l) ). auto.
+            rewrite <-HP. unfold lP. auto. } } Qed.
+          
+End Min_Max.
 
 
 Hint Resolve maxof_spec1 maxof_spec2 maxof_spec3 maxof_spec4: core.
 Hint Resolve maxin_spec maxin_elim maxin_elim1: core.
 Hint Resolve minof_spec1 minof_spec2 minof_spec3 minof_spec4: core.
 Hint Resolve minin_spec minin_elim minin_elim1: core.
+
+Hint Immediate min_exists max_exists min_withP_exists max_withP_exists: core.
