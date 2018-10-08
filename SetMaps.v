@@ -9,22 +9,7 @@ Require Export OrdList.
 Require Export OrdSet.
 
 
-(*
-Hint Resolve set_add_nodup set_remove_nodup: hint_nodup.
-Hint Resolve set_union_nodup set_inter_nodup set_diff_nodup: hint_nodup. *)
-
 Set Implicit Arguments.
-
-Section Ord_sets.
-  Context { A: ordType }. (* to declare A as implicit outside the section *)
-   Lemma decA: forall x y: A, {x=y}+{x<>y}.
-   Proof. intros; eapply reflect_dec with (b:= eqb x y); apply eqP. Qed.
-   Record set_on : Type := { S_of :> list A;
-                          S_IsOrd : IsOrd S_of }.
-  
-End Ord_sets.
-
-Print set_on.
 
 Section Set_maps.
   Context { A B: ordType }.    
@@ -155,6 +140,20 @@ Section Set_maps.
              intro H2. unfold negb in H.
              replace (mem (f a) (s_map f l)) with true in H. inversion H.
              symmetry; apply /memP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
+
+  (*--------- Some more properties of s_maps-----------------------------------*)
+  Lemma s_map_subset (l s: list A)(f: A->B): l [<=] s -> (s_map f l) [<=] (s_map f s).
+  Proof. Admitted.
+
+  Lemma s_map_size_less (l: list A)(f: A->B): |s_map f l| <= |l|.
+  Proof. Admitted.
+  Lemma s_map_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| s_map f l|.
+  Proof. Admitted.
+  Lemma s_map_strict_less (l: list A)(f: A->B):
+    NoDup l -> (|s_map f l| < |l|) -> ~ one_one_on l f.
+  Proof. Admitted.
+  
+  
   
   
 End Set_maps.
@@ -165,3 +164,4 @@ Hint Immediate one_oneP1: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
 Hint Immediate one_one_on_intro one_one_on_intro1: core.
 Hint Resolve one_one_onP: core.
+Hint Resolve s_map_subset s_map_size_less s_map_size_same s_map_strict_less : core.
