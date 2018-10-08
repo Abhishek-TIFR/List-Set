@@ -69,24 +69,54 @@ Proof. intro H. subst x. eauto. Qed.
 Hint Resolve nat_eqb_intro: core.
 
 Lemma nat_eqP (x y:nat): reflect (x=y)(Nat.eqb x y).
-Proof. apply reflect_intro. split;eauto. Qed. 
+Proof. apply reflect_intro.  split; eauto. Qed. 
 Hint Resolve nat_eqP: core.
 
 
 Canonical nat_eqType: eqType:= {| Decidable.E:= nat; Decidable.eqb:= Nat.eqb;
-            Decidable.eqP:= nat_eqP |}.
+                                  Decidable.eqP:= nat_eqP |}.
+
+(*--------- Bool as an instance of eqType --------------------------------*)
+Lemma bool_eqb_ref (x:bool): Bool.eqb x x = true.
+Proof. destruct x; simpl; auto. Qed.
+Hint Resolve bool_eqb_ref: core.
+
+Lemma bool_eqb_elim (x y:bool): (Bool.eqb x y) -> x = y.
+Proof. destruct x; destruct y; simpl; try (auto || tauto). Qed.
+
+Lemma bool_eqb_intro (x y:bool): x = y -> (Bool.eqb x y).
+Proof. intros; subst y; destruct x; simpl; auto. Qed.
+
+Hint Immediate bool_eqb_elim bool_eqb_intro: core.
+
+Lemma bool_eqP (x y:bool): reflect (x=y)(Bool.eqb x y).
+Proof. apply reflect_intro.
+       split. apply bool_eqb_intro. apply bool_eqb_elim. Qed.
+Hint Resolve bool_eqP: core.
+
+Canonical bool_eqType: eqType:= {| Decidable.E:= bool; Decidable.eqb:= Bool.eqb;
+                                  Decidable.eqP:= bool_eqP |}.
 
 Ltac conflict_eq :=
     match goal with
     | H:  (?x == ?x)= false  |- _
-      => switch_in H; cut(False);auto
+      => switch_in H; cut(False);[tauto |auto]
     | H: ~(is_true (?x == ?x)) |- _
-      => cut(False);auto             
+      => cut(False);[tauto |auto]             
     | H: ~ (?x = ?x) |- _
       => cut(False);tauto
     | H: (?x == ?y) = true, H1: ?x <> ?y |- _
       => absurd (x = y);auto
+    | H:  is_true (?x == ?y), H1: ?x <> ?y |- _
+      => absurd (x = y);auto                     
+    | H: (?x == ?y) = true, H1: ?y <> ?x |- _
+      => absurd (y = x);[auto | (symmetry;auto)]
+    | H: is_true (?x == ?y), H1: ?y <> ?x |- _
+      => absurd (y = x);[auto | (symmetry;auto)]                     
     | H: (?x == ?y) = false, H1: ?x = ?y |- _
       => switch_in H; absurd (x=y); auto
+    | H: (?x == ?y) = false, H1: ?y = ?x |- _
+      => switch_in H; symmetry in H1; absurd (x=y); auto
     end.
+
 
