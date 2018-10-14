@@ -31,7 +31,7 @@ Set Implicit Arguments.
 
 Section GeneralReflections.
 Definition Prop_bool_eq (P: Prop) (b: bool):= P <-> b=true.
-Check reflect. Print Bool.reflect.
+
 (* Inductive reflect (P : Prop) : bool -> Set :=  
    ReflectT : P -> reflect P true | ReflectF : ~ P -> reflect P false *)
 Lemma reflect_elim (P:Prop)(b: bool): reflect P b -> Prop_bool_eq P b.
@@ -53,17 +53,17 @@ Lemma pbe_EM P: forall b:bool, Prop_bool_eq P b -> P \/ ~P.
 Proof. { intros b H; cut( reflect P b).
          apply reflect_EM. apply reflect_intro;auto. } Qed.
 Hint Immediate reflect_EM reflect_dec.
-About iffP.
+
 (* iffP : forall (P Q : Prop) (b : bool), reflect P b -> (P -> Q) -> (Q -> P) -> reflect Q b *)
-About idP.
+
 (* idP : forall b1 : bool, reflect b1 b1 *)
-Check negP.
+
 (* negP
      : reflect (~ ?b1) (~~ ?b1) *)
-Check andP.
+
 (* andP
      : reflect (?b1 /\ ?b2) (?b1 && ?b2) *)
-Check orP.
+
 (*orP
      : reflect (?b1 \/ ?b2) (?b1 || ?b2) *)
 Lemma impP(p q:bool): reflect (p->q)((negb p) || q).
