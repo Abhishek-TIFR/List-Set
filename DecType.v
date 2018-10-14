@@ -1,9 +1,42 @@
 
 
 
+(* -------------------------Description--------------------------------------
 
+   In this file we capture the notion of ordType. This type has
+   elements with decidable equality. This is almost same and inspired by
+   ssreflect library.  
+   We also connect natural numbers and booleans to this type by creating
+   canonical instances nat_eqType and bool_eqType. 
+ 
 
+   Structure type: Type:=  Pack {
+                             E: Type;
+                             eqb: E-> E -> bool;
+                             eqP: forall x y, reflect (eq x y)(eqb x y) }.
 
+ 
+  Notation "x == y":= (@Decidable.eqb _ x y)(at level 70, no associativity).
+
+ 
+
+  Some important results are:
+  
+  Lemma eqP  (T:ordType)(x y:T): reflect (x=y)(eqb  x y). 
+  Lemma nat_eqP (x y:nat): reflect (x=y)(Nat.eqb x y).
+
+  Canonical nat_eqType: eqType:=
+                              {| Decidable.E:= nat; Decidable.eqb:= Nat.eqb;
+                                  Decidable.eqP:= nat_eqP |}.
+
+  Lemma bool_eqP (x y:bool): reflect (x=y)(Bool.eqb x y). 
+  
+  Canonical bool_eqType: eqType:= 
+                             {| Decidable.E:= bool; Decidable.eqb:= Bool.eqb;
+                                  Decidable.eqP:= bool_eqP |}.
+
+  
+   ------------------------------------------------------------------------- *)
 
 From Coq Require Export ssreflect  ssrbool. 
 Require Export  GenReflect Omega.
