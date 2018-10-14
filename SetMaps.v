@@ -1,7 +1,25 @@
 
 
 
+(*-------------Description ------------------------------------------------------  
 
+This file implements maps on lists. Here we define functions to calculate range 
+of a function on list l. We also define one-one function predicate and its boolean
+counterpart. 
+
+Following are the notions defined in this file:
+
+ s_map f l                  : range set of f on list l
+ one_one_on l f             : f is one one on l
+ one_one_onb l f            : boolean counterpart of (one_one_on l f)
+
+Lemma one_one_onP (l:list A) (f: A->B)(Hl: NoDup l):
+    reflect (one_one_on l f)(one_one_onb l f).
+
+Furthermore, we have results relating the cardinality of domain and range 
+for various kinds of functions (many one/one one).
+
+---------------------------------------------------------------------------------*)
 
 
 Require Export SetReflect.
@@ -24,7 +42,6 @@ Section Set_maps.
                                         | nil => nil
                                         | a1::l1 => add (f a1) (s_map f l1)
                                               end.
-  Print s_map.
 
   Lemma IsOrd_s_map (f:A->B) (l:list A):  IsOrd (s_map f l).
   Proof. { induction l. simpl. constructor. simpl. eauto. } Qed.
@@ -75,8 +92,6 @@ Section Set_maps.
   Hint Immediate one_oneP1: core.
   
   Definition one_one_on (l: list A) (f: A-> B):Prop:= forall x y, In x l-> In y l ->  x<>y -> f x <> f y.
-
-  Print one_one_on.
   
   Lemma one_one_on_elim (l:list A)(f: A-> B): one_one_on l f ->
                                          (forall x y, In x l-> In y l-> f x = f y -> x = y). 
