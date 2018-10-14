@@ -8,7 +8,7 @@
    Most of  the results in this file assumes only   
    1. reflexive, 
    2. transitive and 
-   3. complete 
+   3. comparable 
    nature of the boolean operator lr. 
    Only the last result (equality of head) assumes the antisymmetric
    property of lr. 
@@ -21,12 +21,12 @@
 
    Some of the useful results in this file are:
 
-   Lemma putin_correct (H_trans: transitive lr)(H_comp: complete lr):
+   Lemma putin_correct (H_trans: transitive lr)(H_comp: comparable lr):
     forall (a:A) (l: list A), Sorted l -> Sorted (putin a l).
 
    Lemma nodup_putin (a:A)(l:list A): NoDup (a::l)-> NoDup (putin a l).
 
-   Lemma sort_correct (H_trans: transitive lr)(H_comp: complete lr):
+   Lemma sort_correct (H_trans: transitive lr)(H_comp: comparable lr):
     forall(l: list A), Sorted (sort l).
 
    Lemma sort_equal (l: list A): Equal l (sort l).
@@ -97,9 +97,9 @@ Section Sorting.
            simpl in H. destruct ( a <=r a0).   destruct H. auto. auto. destruct H.
            right;subst x;auto. apply IHl in H as H2. destruct H2. auto. right. auto.  } Qed.
    
-  Definition complete (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
+  Definition comparable (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
  
-  Lemma putin_correct (H_trans: transitive lr)(H_comp: complete lr):
+  Lemma putin_correct (H_trans: transitive lr)(H_comp: comparable lr):
     forall (a:A) (l: list A), Sorted l -> Sorted (putin a l).
   Proof. { intros a l. revert a.  induction l.
          { intros a1 H.  simpl. apply Sorted_single. }
@@ -140,7 +140,7 @@ Section Sorting.
   Proof. { intros x H. induction l. simpl in H. contradiction.
          simpl in H. apply putin_elim in H. destruct H. subst x;eauto. eauto. } Qed.
 
-  Lemma sort_correct (H_trans: transitive lr)(H_comp: complete lr):
+  Lemma sort_correct (H_trans: transitive lr)(H_comp: comparable lr):
     forall(l: list A), Sorted (sort l).
   Proof. induction l. simpl. constructor. simpl. eauto using putin_correct. Qed.
 
@@ -167,7 +167,7 @@ Section Sorting.
             { intro H1. absurd (In a l). inversion H; auto. eapply  sort_equal;auto. }
             eauto. } } Qed.
 
-  (*--upto this point only reflexive, transitive and complete property of <=r is needed--- *)
+  (*--upto this point only reflexive, transitive and comparable property of <=r is needed--- *)
 
  
   (* ---------------------head in Sorted lists l and l'-------------------------- *)
