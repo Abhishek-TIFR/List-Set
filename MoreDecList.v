@@ -44,9 +44,9 @@ Section Permutation.
               { destruct (a==a0) eqn: H1.
                 move /eqP in H1. subst a0.
                 replace (count a (a :: putin lr b l)) with (S(count a (putin lr b l))).
-                all: eauto.
+                 eauto. symmetry. auto. 
                 replace (count a (a0 :: putin lr b l)) with (count a (putin lr b l)).
-                eauto. move /eqP in H1. symmetry;eauto. }  } } Qed.
+                auto. move /eqP in H1. symmetry;auto. }  } } Qed.
    
   Lemma count_in_sorted (a: A)(l: list A)(lr: A-> A-> bool): count a l = count a (sort lr l). 
   Proof. { induction l. simpl; auto.
@@ -88,11 +88,16 @@ Section Permutation.
          { auto. }
          { intros a0 l. 
            simpl. destruct (a0 == a) eqn:H.
-           { destruct l. auto. destruct (e == a) eqn:H1; eauto. }
-           { destruct l. auto. destruct (e == a) eqn:H1; eauto. } } } Qed.
+           { destruct l. auto.  destruct (e == a) eqn:H1.
+             apply IHs. auto.  }
+           { destruct l. auto.  destruct (e == a) eqn:H1.
+             { intro H2. assert (H2a: sublist (e::l) s). eapply IHs;exact H2.
+               eapply IHs; exact H2a. }
+             { apply IHs. }
+         } } } Qed.
   
   Lemma sublist_elim3a (a e: A)(l s: list A): sublist (a::l)(e::s)-> sublist l s.
-  Proof. simpl. destruct (a==e) eqn:H. auto.  eauto using sublist_elim3. Qed.
+  Proof. simpl. destruct (a==e) eqn:H. auto.   eauto using sublist_elim3. Qed.
   
    Lemma sublist_intro1 (a:A)(l s: list A): sublist l s -> sublist l (a::s).
    Proof.  { revert s;revert a. induction l.
