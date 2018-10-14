@@ -2,7 +2,9 @@
 
 
 
-(* 
+(*-------------- Description -----------------------------------------------------
+
+ 
  Lemma insert_nodup (a:A)(l: list A): NoDup l -> NoDup (insert a l).
 
 
