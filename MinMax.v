@@ -5,17 +5,35 @@
    of an arbitrary type (A: Type) with a boolean comparison operator (lr: A-> A-> bool).
    
 
-  The results in this file are prooved under the following three assumptions:
+  The results in this file are prooved under the following three assumptions
+  on the comparison operator lr:
 
   Hypothesis lr_refl : reflexive lr.      (*  forall x : A, lr x x *)
   Hypothesis lr_trans: transitive lr.     (*  forall y x z : A, lr x y -> lr y z -> lr x z *) 
-  Hypothesis lr_complete: complete lr.    (*  forall x y : A, lr x y=false -> lr y x   *)
+  Hypothesis lr_comparable: comparable lr.    (*  forall x y : A, lr x y=false -> lr y x   *)
   
   Functions defined are: 
   maxof a b   => returns maximum among a and b
   maxin l d   => returns the maximum value in the list l (returns d if l is nil) 
   minof a b   => returns minimum among a and b
-  minin l d   => returns the minimum value in the list l (returns d if l is nil)  --- -- *)
+  minin l d   => returns the minimum value in the list l (returns d if l is nil) 
+
+ Furthermore, we also prove some results about the existence of min and maximum the list l
+ with respect to the lr relation as well as min and max with property P.
+
+ Lemma min_exists (l: list A):
+                       l<>nil -> exists min, In min l /\ (forall x, In x l -> min <=r x).
+
+ Lemma max_exists (l: list A): 
+                       l<>nil -> exists max, In max l /\ (forall x, In x l -> x <=r max).
+
+ Lemma min_withP_exists (l: list A)(P: A->bool): (exists a, In a l /\ P a) -> 
+                (exists min, In min l /\ P min /\ (forall x, In x l -> P x -> min <=r x)).
+
+ Lemma max_withP_exists (l: list A)(P: A->bool): (exists a, In a l /\ P a) -> 
+                (exists max, In max l /\ P max /\ (forall x, In x l -> P x -> x <=r max)).
+  
+ ---------------------------------------------------------------------------------------- *)
 
 
 Require Export Lists.List.
@@ -31,7 +49,7 @@ Section Min_Max.
 
   Variable lr: A->A-> bool.
   Notation " a <=r b":= (lr a b)(at level 70, no associativity).
-  Definition complete (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
+  Definition comparable (lr: A->A-> bool) := forall x y, lr x y=false -> lr y x.
   
  (*-----------Partial functions on lists ( maxin and minin ) ---------------------------  *)
 
@@ -41,16 +59,18 @@ Section Min_Max.
                                   |false => a           
                                   end.
 
+
+  (* reflexive: forall x : T, R x x *)
   
   Hypothesis lr_refl : reflexive lr.
-  Print reflexive. (*  forall x : T, R x x *)
+  
   Hypothesis lr_trans: transitive lr.
-  Hypothesis lr_complete: complete lr.
+  Hypothesis lr_comparable: comparable lr.
   
   Lemma maxof_spec1 (a b: A): a <=r maxof a b.
   Proof. unfold maxof. destruct (a <=r b) eqn:H; eauto using lr_refl. Qed. (* refl *)
   Lemma maxof_spec2 (a b: A): b <=r maxof a b. 
-  Proof. unfold maxof. destruct (a <=r b) eqn:H; eauto. Qed. (* refl and complete *)
+  Proof. unfold maxof. destruct (a <=r b) eqn:H; eauto. Qed. (* refl and comparable *)
   Lemma maxof_spec3 (a b c:A): c <=r a -> c <=r maxof a b.
   Proof.  unfold maxof. destruct (a <=r b) eqn:H. all: try tauto. intro; eauto. Qed.
   Lemma maxof_spec4 (a b c:A): c <=r b -> c <=r maxof a b.
