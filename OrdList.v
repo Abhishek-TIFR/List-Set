@@ -8,10 +8,6 @@
  IsOrd l           <==> l is an strictly increasing list
  isOrd l           ==> boolean function to check if the list is strictly increasing
 
- insert a l        => adds a to the list l (even if l is not ordered )
- 
- del_all a l       => removes all occurences of a in l
-
 
  Some of the useful results in this file are:
 
@@ -67,9 +63,9 @@ Section OrderedLists.
          { intros a H x H0. inversion H0.  }
          { intros a0 H x H0.
            assert (H1: x=a \/ In x l); auto.
-           destruct H1 as [H1 | H1]. rewrite H1. eauto.
+           destruct H1 as [H1 | H1]. rewrite H1. eapply IsOrd_elim1; exact H.
            assert (H2: a <b x). apply IHl; eauto.
-           assert (H3 : a0 <b a). eauto. eauto.  } } Qed.
+           assert (H3 : a0 <b a). eapply IsOrd_elim1;exact H. eauto.   } } Qed.
   
    Lemma IsOrd_elim2a(l:list A)(a x:A): IsOrd (a::l)-> In x l -> ltb a x.
   Proof. { intros H H1. eapply (@IsOrd_elim2 l a) in H. exact H. auto. } Qed. 
@@ -118,9 +114,9 @@ Section OrderedLists.
          { intro H. induction l. 
          { simpl;auto. }
          { simpl. case l eqn:H1.  auto. apply /andP.
-           split. eauto. apply IHl; eauto. } }
+           split. eapply IsOrd_elim1;exact H. apply IHl. eauto. } }
          {  intro H. induction l. constructor. case l eqn:H1.
-            constructor. constructor. eauto.
+            constructor. constructor. eapply isOrd_elim1;exact H.
             apply IHl. eapply isOrd_elim. apply H.  } } Qed.
 
   Hint Resolve isOrdP: core.
@@ -149,9 +145,9 @@ Section OrderedLists.
   Proof. { intros H H1 H2.
          assert(H3: In b (a::l)).
          unfold "[=]" in H2. apply H2. auto.   
-         assert(H3A: b=a \/ a <b b). eauto.  
+         assert(H3A: b=a \/ a <b b).  eapply IsOrd_elim5; eauto. 
          assert(H4: In a (b::s)). unfold "[=]" in H2. apply H2. auto. 
-         assert(H4A: a = b \/ b <b a). eauto.
+         assert(H4A: a = b \/ b <b a). eapply IsOrd_elim5; eauto. 
          destruct H3A; destruct H4A.
          auto. symmetry;auto. auto. absurd (b <b a); auto. } Qed.
          
@@ -160,12 +156,13 @@ Section OrderedLists.
   Proof. { intros H H1 H2. unfold "[=]". 
          assert(H0: a = b). eapply head_equal;eauto. subst b.
          split; intro x.
-         { intro H3. assert (H3A: a <b x). eauto.
+         { intro H3. assert (H3A: a <b x).
+           eapply IsOrd_elim2a. exact H. auto. 
            assert (H3B: In x (a::l)). auto.
            assert (H3C: x=a \/ In x s).
            { cut (In x (a::s)). eauto. apply H2;auto. }
            destruct H3C. absurd (a <b x); eauto. auto. }
-          { intro H3. assert (H3A: a <b x). eauto. 
+          { intro H3. assert (H3A: a <b x). eapply IsOrd_elim2a. exact H1. auto.  
            assert (H3B: In x (a::s)). auto.
            assert (H3C: x=a \/ In x l).
            { cut (In x (a::l)). auto.  apply H2;auto. }
@@ -177,7 +174,7 @@ Section OrderedLists.
          { intros; symmetry; apply empty_equal_nil; unfold empty; auto.  }
          { intros; apply empty_equal_nil; unfold empty; auto. }
          { intros H H1 H2. replace a0 with a. replace s with l.
-           auto. apply IHl. all: eauto. 
+           auto. apply IHl. eauto. eauto. 
            eapply tail_equal; eauto. eapply head_equal;eauto. } } Qed.  
   
   Lemma length_equal (l s: list A): IsOrd l -> IsOrd s -> Equal l s -> |l|=|s|.
@@ -202,7 +199,9 @@ Section OrderedLists.
          { subst x. cut (In e (a::s)). intro H4. destruct H4.
            symmetry in H0. contradiction. auto. auto. }
          { assert(H4: In x (a::s)). auto. destruct H4. subst x.
-           assert (H4: e <b a). eauto.
+           assert (H4: e <b a).
+           { apply leb_antisym2. exact H3. apply ltb_leb; eapply IsOrd_elim2a.
+             exact H. auto. }
            assert (H5: a <=b e). eapply IsOrd_Subset_elim1;eauto.
            by_conflict. auto. } } Qed.
   
