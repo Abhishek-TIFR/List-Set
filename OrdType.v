@@ -2,16 +2,14 @@
 
 (* -------------------------Description--------------------------------------
 
-   In this file we try to capture the notion of ordType. This type has
+   In this file we  capture the notion of ordType. This type has
    elements with decidable equality and a less than relation with certain 
    properties. We also connect natural numbers to this type. 
  
 
    Structure type: Type:= 
-       Pack { E: Type;
-             
+       Pack { D: Type;
               ltb: E-> E -> bool;
-              eq_P: forall x y, reflect (eq x y)(eqb x y);
               ltb_irefl: forall x, ltb x x=false;
               ltb_antisym: forall  x y, x<>y -> ltb x y = negb (ltb y x);
               ltb_trans: forall x y z, ltb x y -> ltb y z -> ltb x z }.
@@ -34,6 +32,7 @@
   Lemma nat_eqP (x y:nat): reflect (x=y)(Nat.eqb x y).
   Lemma ltP (x y:nat): reflect (x < y) (Nat.ltb x y).
   Lemma leP (x y: nat): reflect (x <= y) (Nat.leb x y).
+  Lemma lebP (x y: nat): reflect (x <= y) (leb x y).
 
   Canonical nat_ordType: ordType.
   refine ( {| Order.E:= nat; Order.eqb:= Nat.eqb; Order.ltb:= Nat.ltb;
@@ -56,7 +55,7 @@ Require Export GenReflect Omega DecType.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
-Unset Printing Implicit Defensive. Print  Decidable.type. 
+Unset Printing Implicit Defensive.
 
 Module Order.
   Definition E:= Decidable.E.
@@ -337,7 +336,7 @@ Section Min_Max.
                                    |Lt => b
                                    |Gt => a
                                     end.
-   Print max_of.
+  
   
   Lemma max_of_spec1 (a b: A): a <b max_of a b \/ a = max_of a b.
   Proof. unfold max_of. destruct (on_comp a b); tauto. Qed.
@@ -359,7 +358,7 @@ Section Min_Max.
                                   |Lt => a
                                   |Gt => b
                                    end.
-   Print min_of.
+   
    Lemma min_of_spec1 (a b: A): min_of a b <b a \/ min_of a b = a.
    Proof. unfold min_of. destruct (on_comp a b); tauto. Qed.
 
