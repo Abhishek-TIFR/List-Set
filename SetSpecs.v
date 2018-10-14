@@ -58,18 +58,18 @@ Hint Immediate nodup_elim1  nodup_elim2  nodup_intro : core.
 Section SetSpec.
   Variable A:Type.
   Definition Empty (s:list A):Prop := forall a : A, ~ In a s.
-  (* Definition Equal (s s': list A) := forall a : A, In a s <-> In a s'. *)
+  
   Definition Subset (s s': list A) := forall a : A, In a s -> In a s'.
   Definition Equal (s s': list A):= Subset s s' /\ Subset s' s.
-  Print Forall.
+  
   (* Inductive Forall (A : Type) (P : A -> Prop) : list A -> Prop := 
      | Forall_nil : Forall P nil 
      | Forall_cons : forall (x : A) (l : list A), P x -> Forall P l -> Forall P (x :: l)  *)
-  Print Exists.
+  
   (* Inductive Exists (A : Type) (P : A -> Prop) : list A -> Prop :=
       |Exists_cons_hd : forall (x : A) (l : list A), P x -> Exists P (x :: l) 
       | Exists_cons_tl : forall (x : A) (l : list A), Exists P l -> Exists P (x :: l) *)
-  Print NoDup.
+  
   (* Inductive NoDup (A : Type) : list A -> Prop := 
       | NoDup_nil : NoDup nil 
       | NoDup_cons : forall (x : A) (l : list A), ~ In x l -> NoDup l -> NoDup (x :: l) *)
@@ -78,14 +78,14 @@ End SetSpec.
 Ltac unfold_spec := try(unfold Equal);try(unfold Subset);try(unfold Empty).
 
 
-Section BasicSetFacts.
-  Variable A:Type.
 
   Notation "s [=] t" := (Equal s t) (at level 70, no associativity).
   Notation "s [<=] t" := (Subset s t) (at level 70, no associativity).
   Notation "| s |":= (length s) (at level 70, no associativity).
   
 
+Section BasicSetFacts.
+  Variable A:Type.
 
   (*-----------------------Subset (spec) and its properties ------------------------*)
   Lemma Subset_intro (a:A)(l s: list A): l [<=] s -> (a::l) [<=] (a::s).
@@ -158,11 +158,6 @@ end.
  
 End BasicSetFacts.
 
-
-
- Notation "s [=] t" := (Equal s t) (at level 70, no associativity).
- Notation "s [<=] t" := (Subset s t) (at level 70, no associativity).
- Notation "| s |":= (length s) (at level 70, no associativity).
 
    
 Hint Extern 0 (?x [<=] ?z)  =>
