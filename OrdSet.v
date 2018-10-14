@@ -84,9 +84,9 @@ Section OrderedSet.
            { intros H1 H2. subst b. intro H3. subst a.
              absurd (In a0 l); eauto. }
            { intros H1 H2. destruct H2. intro. subst a0; subst a.
-             absurd (b <b b); eauto. eauto. }
+             absurd (b <b b); eauto. apply IHl. eapply nodup_elim1;  eauto. auto. }
            { intros H1 H2. destruct H2. intro. subst a0; subst a.
-             absurd (b <b b); eauto. eauto. } } } Qed.
+             absurd (b <b b); eauto.  apply IHl. eapply nodup_elim1;  eauto. auto.  } } } Qed.
   
   Lemma set_rmv_intro (a b: A)(l:list A): In a l -> a<>b -> In a (rmv b l).
   Proof. { induction l. simpl.  auto.
@@ -106,12 +106,11 @@ Section OrderedSet.
          { intro H. simpl. destruct (on_comp a a0).
            { eauto. }
            { apply IsOrd_intro. eauto. intros x H1.
-             cut(In x l); eauto.  }
+             cut(In x l).
+             { intro H2.  eapply IsOrd_elim2a. exact H. auto. }
+             { eauto.  } }
             { apply IsOrd_intro. eauto. intros x H1.
               cut(In x l). intros; eapply IsOrd_elim2a; eauto. eauto. } } } Qed.
-
-  
-           
   
   Lemma set_rmv_nodup (a:A)(l: list A): NoDup l -> NoDup (rmv a l).
   Proof.  { induction l. simpl. constructor.
@@ -241,12 +240,13 @@ Section OrderedSet.
          { simpl.  assert (H1: IsOrd (inter x y)). apply set_inter_IsOrd.
            destruct (mem a y); auto. } } Qed.
 
-  Hint Resolve set_inter_intro set_inter_elim1 set_inter_elim2: core.
+  Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
   Hint Resolve set_inter_IsOrd set_inter_nodup: core.
   
   Lemma set_inter_comm (x y:list A): Equal (inter x y) (inter y x).
   Proof.  { split; intros a H.
-         assert (H1: In a x /\ In a y). split;eauto.
+            assert (H1: In a x /\ In a y).
+            { apply set_inter_elim. auto. } 
          destruct H1; auto.
          assert (H1: In a y /\ In a x). split;eauto.
          destruct H1; auto. }  Qed.
@@ -376,7 +376,8 @@ Hint Resolve set_add_intro set_add_intro1 set_add_intro2 set_add_intro3: core.
 Hint Resolve set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup: core.
 
-Hint Resolve set_inter_intro set_inter_elim1 set_inter_elim2 set_inter_comm: core.
+Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
+Hint Resolve set_inter_comm: core.
 Hint Resolve set_inter_IsOrd set_inter_nodup : core.
 
 Hint Resolve set_union_intro1 set_union_intro2 set_union_elim set_union_comm: core.
