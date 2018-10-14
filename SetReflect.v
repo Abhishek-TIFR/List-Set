@@ -3,12 +3,12 @@
 
 
 (* This file contains boolean functions corresponding to the different predicates
-   commonly used in talking about sets. These boolean functions are connected to
-   the corresponding predicates using the reflection technique by Gronthier et.al.
-   The type of elements in the set (lists) are from eqType.
+   commonly used in reasoning about sets. These boolean functions are connected to
+   the corresponding predicates using the reflection lemmas (similar to ssreflect).
+   The type of elements in the set (or lists) are from eqType.
 
 
-  Following is the boolean functions and their corresponding predicated  
+  Following are the boolean functions and their corresponding predicated  
  
   Propositions                        Boolean functions      Connecting Lemma 
   In a l                       <->    mem a l                memP
@@ -23,6 +23,9 @@
   Forall P l                   <->    forallb f l            ForallP
   forall x, (In x l -> P x)    <->    forallb f l            forallP
   forall x, (In x l -> f x)    <->    forallb f l            forallbP 
+
+  We also define index function (idx a l), which returns the location of an element
+  a in the list l. 
 
   forall_em_exists f: (forall x, In x l -> f x) \/ (exists x, In x l /\ ~ f x).  
   exists_em_forall f: (exists x, In x l /\ f x) \/ (forall x, In x l -> ~ f x).
@@ -239,16 +242,17 @@ Hint Immediate absnt_idx_zero idx_zero_absnt: core.
 Hint Resolve diff_index same_index: core.
 
 (*----------- existsb (boolean function) and its specifications-------------------*)
-  Print existsb.
+  
   (* fix existsb (l : list A) : bool :=
   match l with
   | nil => false
   | a :: l0 => f a || existsb l0
   end *)
-  Print Exists.
-(* Inductive Exists (A : Type) (P : A -> Prop) : list A -> Prop :=
+  
+  (* Inductive Exists (A : Type) (P : A -> Prop) : list A -> Prop :=
     Exists_cons_hd : forall (x : A) (l : list A), P x -> Exists P (x :: l)
   | Exists_cons_tl : forall (x : A) (l : list A), Exists P l -> Exists P (x :: l) *)
+
   Lemma ExistsP P f l: (forall x:A, reflect (P x) (f x) ) -> reflect (Exists P l) (existsb f l).
   Proof.  { intro H. eapply reflect_intro.
          induction l. simpl. constructor; intro H1; inversion H1.
@@ -257,11 +261,13 @@ Hint Resolve diff_index same_index: core.
            simpl. apply /orP; right; apply /IHl; auto. }
          { simpl. move /orP. intro H1; destruct H1 as [H1| H2]. constructor. apply /H; auto.
            eapply Exists_cons_tl. apply /IHl; auto.  } } Qed.
+  
   Hint Resolve ExistsP: core.      
-   Check Exists_dec.
+  
   (* Exists_dec
      : forall (A : Type) (P : A -> Prop) (l : list A),
-       (forall x : A, {P x} + {~ P x}) -> {Exists P l} + {~ Exists P l} *)   
+       (forall x : A, {P x} + {~ P x}) -> {Exists P l} + {~ Exists P l} *)
+  
    Lemma Exists_EM P l:(forall x:A, P x \/ ~ P x )-> Exists P l \/ ~ Exists P l.
   Proof. { intros H. induction l. right. intro H1.  inversion H1.
          cut( P a \/ ~ P a).  intro Ha. cut (Exists P l \/ ~ Exists P l). intro Hl.
@@ -271,10 +277,11 @@ Hint Resolve diff_index same_index: core.
            right. intro H1. inversion H1. all:contradiction. }
          all: auto.  } Qed.
   
-  Check Exists_exists.
+  
   (* Exists_exists
      : forall (A : Type) (P : A -> Prop) (l : list A),
        Exists P l <-> (exists x : A, In x l /\ P x) *)
+  
   Lemma existsP P f l: (forall x:A, reflect (P x)(f x))-> reflect (exists x, In x l /\ P x)(existsb f l).
   Proof. { intro H. eapply iffP with (P:= Exists P l). eapply ExistsP. apply H.
            all: apply Exists_exists. } Qed.
@@ -297,13 +304,13 @@ Hint Resolve diff_index same_index: core.
   
     
 (*----------- forallb ( boolean function) and its specifications----------------- *)
- Print forallb.
+ 
  (* fix forallb (l : list A) : bool :=
     match l with
      | nil => true
      | a :: l0 => f a && forallb l0
     end *)
- Print Forall.
+ 
  (* Inductive Forall (A : Type) (P : A -> Prop) : list A -> Prop :=
     Forall_nil : Forall P nil
   | Forall_cons : forall (x : A) (l : list A), P x -> Forall P l -> Forall P (x :: l) *)
