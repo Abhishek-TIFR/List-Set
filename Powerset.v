@@ -1,25 +1,62 @@
 
 
+(*-------------Description ------------------------------------------------------  
+
+This file implements powersets for ordered set of elements on ordered type.
+Let A be an OrdType. We first define ordering on lists of elements from A.
+Hence we connect the domain (list A) to the OrdType. Then we define and operation
+to append an element a in front of each list present in a collection of lists.
+Using this append (app) function we define a function (pw l) to generate a
+list containing all the subsets of list l.
+ 
+
+Following are the notions defined in this file:
+
+ Fixpoint pw (l: list A): list (list A):=
+                                       match l with
+                                          |nil => nil::nil
+                                          |a::l' => union (a [::] (pw l')) (pw l')
+                                       end.
 
 
+ Predicate                  Boolean function                  Connecting Lemma
+ Max_sub_in G I P           max_sub_in G I P                  max_sub_inP 
+ Min_sub_in G I P           min_sub_in G I P                  min_sub_inP
 
 
+Furthermore, we have results on existence of largest and smallest subsets with 
+the property P
+
+Lemma exists_largest_inb (G: list A)(B: list A-> bool):
+    (exists X, In X (pw G) /\ B X) ->
+    (exists I, In I (pw G) /\ B I /\ forall Y, In Y (pw G)-> B Y -> |Y| <=b |I|).
+
+Lemma exists_largest_in (G: list A)(B: list A-> bool):
+    (exists X, In X (pw G) /\ B X) ->
+    (exists I, In I (pw G) /\ B I /\ forall Y, In Y (pw G)-> B Y -> |Y| <= |I|).
+
+Lemma exists_smallest_inb (G: list A)(B: list A-> bool):
+    (exists X, In X (pw G) /\ B X) ->
+    (exists I, In I (pw G) /\ B I /\ forall Y, In Y (pw G)-> B Y -> |I| <=b |Y|).
+
+Lemma exists_smallest_in (G: list A)(B: list A-> bool):
+    (exists X, In X (pw G) /\ B X) ->
+    (exists I, In I (pw G) /\ B I /\ forall Y, In Y (pw G)-> B Y -> |I| <= |Y|).
 
 
+---------------------------------------------------------------------------------*)
 
 Require Export Lists.List.
 Require Export MinMax.
 Require Export GenReflect SetSpecs OrdType.
 Require Export SetReflect OrdList.
 Require Export Omega.
-
 Require Export OrdSet.
-
 
 Set Implicit Arguments.
 
-
 Section OrderOnLists.
+
   Context { A: ordType }.
 
   (* ------------ Definition of decidable equality on list of elements from A ----------- *)
@@ -78,6 +115,7 @@ Proof. { revert y. induction x.
          subst a; apply IHx; intro H2; subst x;  apply H; auto.
          all: (try (subst a; by_conflict) || by_conflict).
          all: try (simpl;auto).  } } Qed.
+
 Hint Resolve ltbl_antisym: core.
 
 
@@ -89,7 +127,7 @@ Proof. { revert y z. induction x.
          destruct z. simpl in H1; inversion H1.
          simpl; simpl in H; simpl in H1.
          match_up e e0.
-         { subst e. match_up a e0. eauto. auto. inversion H. }
+         { subst e. match_up a e0. eapply IHx; [exact H | exact H1]. auto. inversion H. }
          { match_up a e0.
            { subst e0. match_up a e. subst a; by_conflict. by_conflict. inversion H. }
            { auto. }
@@ -193,7 +231,8 @@ Section PowerSet.
                simpl. cut (In (a::x) (a[::] pw l)). auto.
                assert (H2a: x [<=] l). eauto.
                apply app_intro; apply IHl; eauto. }
-             { assert (H2a: e::x [<=] l).  move /eqP in Hea. eauto.
+             { assert (H2a: e::x [<=] l).  move /eqP in Hea.
+               eapply IsOrd_Subset_elim2. all: auto. auto. 
                simpl. cut(In (e::x) (pw l)). auto. apply IHl;eauto. } } } } Qed.
                  
 End PowerSet.
@@ -207,10 +246,10 @@ Lemma length_refl (A:Type): reflexive ( fun (l s:list A) => |l| <=b |s|).
 Proof. unfold reflexive. intros. auto. Qed.
 Lemma length_trans (A:Type): transitive ( fun (l s:list A) => |l| <=b |s|).
 Proof.  unfold transitive. auto. Qed.
-Lemma length_complete (A:Type): complete  ( fun (l s:list A) => |l| <=b |s|).
-Proof.  unfold complete. auto. Qed.
+Lemma length_comparable (A:Type): comparable  ( fun (l s:list A) => |l| <=b |s|).
+Proof.  unfold comparable. auto. Qed.
 
-Hint Resolve length_refl length_trans length_complete: core.
+Hint Resolve length_refl length_trans length_comparable: core.
 
 Section PowerReflect.
   
@@ -367,4 +406,4 @@ Hint Resolve min_sub_inbP min_sub_inP: core.
 
 Hint Resolve max_sub_same_size min_sub_same_size: core.
 
-Eval compute in (pw (1::2::3::nil)).
+(* Eval compute in (pw (1::2::3::nil)). *)
