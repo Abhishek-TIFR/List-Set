@@ -18,16 +18,16 @@ Section DecidableGraphs.
   Definition irefl (E: A -> A-> bool):= forall x, E x x = false.
   Definition sym (E: A -> A-> bool):= forall x y, E x y = E y x.
   
-  Definition only_at (K: list A)(E: A-> A-> bool):= forall x y, E x y -> (In x K /\ In y K).
-  Notation "E 'is_at' K":= (only_at K E) (at level 70).
-  Hint Unfold only_at.
+  Definition edg_only_at (K: list A)(E: A-> A-> bool):= forall x y, E x y -> (In x K /\ In y K).
+  Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
+  Hint Unfold edg_only_at.
 
   (* ---------- UG := finite undirected simple graph ----------------------------*)
   Record UG:Type:= { nodes :> list A;
                         nodes_IsOrd : IsOrd nodes;
                         edg: A-> A -> bool;
                         edg_irefl: irefl edg;
-                        no_edg: edg is_at nodes;
+                        no_edg: edg only_at nodes;
                         edg_sym: sym edg
                    }.
   
@@ -129,10 +129,10 @@ Section DecidableGraphs.
    Proof. { intros x y. unfold E_res_to. destruct (mem2 x y K)  eqn: H.
           intro H1. assert(H2: IN x y K). apply /mem2P. eauto. auto.
           intro H1. inversion H1. } Qed. 
-   Lemma is_at_inv_for_E_at_K1 (E: A-> A-> bool)(K: list A): (E at_ K) is_at K.
-   Proof. unfold "is_at". eapply no_edg_E_at_K. Qed.
-   Lemma is_at_inv_for_E_at_K (G: UG)(K: list A): ((edg G) at_ K) is_at K.
-   Proof. simpl. apply is_at_inv_for_E_at_K1. Qed.
+   Lemma only_at_inv_for_E_at_K1 (E: A-> A-> bool)(K: list A): (E at_ K) only_at K.
+   Proof. unfold "only_at". eapply no_edg_E_at_K. Qed.
+   Lemma only_at_inv_for_E_at_K (G: UG)(K: list A): ((edg G) at_ K) only_at K.
+   Proof. simpl. apply only_at_inv_for_E_at_K1. Qed.
 
 
    (*------  E at_ K preserves the irreflexive and symmetric property of relation----------- *)
@@ -147,12 +147,12 @@ Section DecidableGraphs.
           replace (mem2 y x K) with (mem2 x y K).
           rewrite H1;simpl; auto. eauto.  } Qed.
 
-   (*--------- mk_irefl and mk_sym preserves the " E is_at K" property of relation-----------*)
-   Lemma is_at_inv_for_mk_irefl(E:A-> A-> bool)(K:list A): E is_at K -> (mk_irefl E) is_at K.
-   Proof. { unfold "is_at". intro H. intros x y. unfold mk_irefl. case (x == y).
+   (*--------- mk_irefl and mk_sym preserves the " E only_at K" property of relation-----------*)
+   Lemma only_at_inv_for_mk_irefl(E:A-> A-> bool)(K:list A): E only_at K -> (mk_irefl E) only_at K.
+   Proof. { unfold "only_at". intro H. intros x y. unfold mk_irefl. case (x == y).
           intros H2. inversion H2. intros H1. apply H;auto. } Qed.
-   Lemma is_at_inv_for_mk_sym(E: A-> A-> bool)(K:list A): E is_at K -> (mk_sym E) is_at K.
-   Proof. { unfold "is_at". intros H x y. unfold mk_sym. move /orP. intro H1.
+   Lemma only_at_inv_for_mk_sym(E: A-> A-> bool)(K:list A): E only_at K -> (mk_sym E) only_at K.
+   Proof. { unfold "only_at". intros H x y. unfold mk_sym. move /orP. intro H1.
             elim H1. auto.  intro H2. cut (In y K /\ In x K). tauto. auto. } Qed.
 
    (*-------compl inverts a relation at every point while preserving irreflexivity-------- *)
@@ -186,8 +186,8 @@ Section DecidableGraphs.
    Hint Resolve mk_ireflP mk_symP complP complP1: core.
    Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
    Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl sym_inv_for_E_at_K: core.
-   Hint Resolve  is_at_inv_for_E_at_K is_at_inv_for_E_at_K1: core.
-   Hint Resolve is_at_inv_for_mk_irefl is_at_inv_for_mk_sym: core.
+   Hint Resolve  only_at_inv_for_E_at_K only_at_inv_for_E_at_K1: core.
+   Hint Resolve only_at_inv_for_mk_irefl only_at_inv_for_mk_sym: core.
    Hint Resolve edg_equal_at_K: core.
 
 
@@ -259,16 +259,16 @@ Section DecidableGraphs.
 
     (*------------ Complement of a graph G and its edge relation--------------------- *)
 
-  Lemma is_at_inv_for_compl1 (E:A-> A-> bool)(K:list A): ((compl E) at_ K) is_at K.
-  Proof. { unfold "is_at". intros x y. unfold compl. unfold "at_".
+  Lemma only_at_inv_for_compl1 (E:A-> A-> bool)(K:list A): ((compl E) at_ K) only_at K.
+  Proof. { unfold "only_at". intros x y. unfold compl. unfold "at_".
          case (mem2 x y K) eqn: H.
          intro H1. cut (IN x y K). unfold IN;tauto. apply /mem2P; eauto.
          intro H1; discriminate H1. } Qed.
-  Lemma is_at_inv_for_compl (G:UG): ((compl (edg G)) at_ G) is_at G.
-  Proof. eapply is_at_inv_for_compl1. Qed.
+  Lemma only_at_inv_for_compl (G:UG): ((compl (edg G)) at_ G) only_at G.
+  Proof. eapply only_at_inv_for_compl1. Qed.
   
   
-  Hint Resolve is_at_inv_for_compl is_at_inv_for_compl1: core.
+  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
   Definition Compl (G: UG): UG.
     refine ({|nodes:= G.(nodes);
@@ -290,16 +290,16 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
  Hint Resolve mk_ireflP mk_symP complP complP1: core.
  Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
  Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl sym_inv_for_E_at_K: core.
- Hint Resolve  is_at_inv_for_E_at_K is_at_inv_for_E_at_K1: core.
- Hint Resolve is_at_inv_for_mk_irefl is_at_inv_for_mk_sym: core.
+ Hint Resolve  only_at_inv_for_E_at_K only_at_inv_for_E_at_K1: core.
+ Hint Resolve only_at_inv_for_mk_irefl only_at_inv_for_mk_sym: core.
  Hint Resolve edg_equal_at_K: core.
 
  Hint Resolve subgraphP ind_subgraphP: core.
  Hint Resolve induced_fact1 self_is_induced induced_is_subgraph: core.
 
- Hint Resolve is_at_inv_for_compl is_at_inv_for_compl1: core.
+ Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
-Notation "E 'is_at' K":= (only_at K E) (at level 70).
+Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
 Notation "E 'at_' K":= (E_res_to K E)(at level 70).
 Notation "G 'res_to' K":= (Ind_at K G) (at level 70).
 
