@@ -1,8 +1,41 @@
  
 
+(* ------------------ Descriptions--------------------------------------------------
 
+ This file implements the notion of finite undirected graphs representaed as UG
+ 
+  Record UG:Type:= { nodes :> list A;
+                        nodes_IsOrd : IsOrd nodes;
+                        edg: A-> A -> bool;
+                        edg_irefl: irefl edg;
+                        no_edg: edg only_at nodes;
+                        edg_sym: sym edg
+                   }.
 
+ In order to be lazy while declaring an instance for UG we provide functions such as
+ mk_irefl, mk_sym and E_res_to  which can be used to convert any graph into
+ the exact specifications of an undirected graph (UG). 
+ Moreover, we prove that these functions work well when used together. They do not 
+ disturb the properties established by each other. 
 
+ We also define the concept of Subgraph, Ind_Subgraph and Complement of a Graph.
+ 
+ Predicate              Boolean function       Joining Lemma
+ Subgraph G1 G2         subgraph G1 G2         subgraphP
+ Ind_Subgraph G1 G2     ind_subgraph G1 G2     ind_subgraphP
+
+ Definition Ind_at (K: (set_on A))(G:UG): UG.
+     refine {|nodes:= K; nodes_IsOrd := K.(IsOrd_S);
+              edg:= (G.(edg) at_ K); |}. all: auto. Defined.
+
+   Notation "G 'res_to' K":= (Ind_at K G) (at level 70).   
+
+ Definition Compl (G: UG): UG.
+    refine ({|nodes:= G.(nodes);
+             nodes_IsOrd := G.(nodes_IsOrd);
+             edg:= ((compl G.(edg)) at_ G); |}). all: auto. Defined.
+
+---------------------------------------------------------------------------------------*)
 
 Require Export SetMaps.
 Require Export Powerset.
