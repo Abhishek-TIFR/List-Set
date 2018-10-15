@@ -2,10 +2,42 @@
 
 
 
+(* ------------------ Descriptions--------------------------------------------------
+
+ In this file we define the concept of Stable Set, Cliq and Coloring for an undirected
+ graph.  We also define boolean functions to check these properties. We connect these 
+ properties with boolean functions using reflection lemmas.
+ 
+ Predicate              Boolean function       Joining Lemma
+ Stable G I             stable G I             stableP
+ Max_I_in G I           max_I_in G I           max_I_inP
+ Cliq G K               cliq G K               cliqP
+ Max_K_in G K           max_K_in G K           max_K_inP
+ Coloring_of G f        coloring_of G f        coloring_ofP
+
+
+ (Max_I_in G I) declares that I is a maximum size stable set in G. 
+ (Max_K_in G I) declares that K is a maximum size cliq in G. 
+
+ Definition Stable_in (G: UG)(I: list A):= I [<=] G /\ IsOrd I /\ Stable G I.
+ Definition Cliq_in (G:UG)(K: list A):Prop := K [<=] G /\ IsOrd K /\ Cliq G K.
+
+ Definition i_num (G:UG)(n:nat):= exists I, Max_I_in G I /\ |I|=n.
+ Definition cliq_num (G:UG)(n:nat):= exists K, Max_K_in G K /\ |K|=n.
+
+ Definition clrs_of (f:A->nat) (l:list A): list nat:= (s_map f l).
+ Definition chrom_num (G: UG) (n: nat):= 
+                              exists f, Best_coloring_of G f /\ | clrs_of f G | = n.
+
+ We also define the notion of a perfect graph as follows:
+ 
+ Definition Is_nice (G: UG): Prop:= forall n, cliq_num G n -> chrom_num G n.
+ Definition Is_perfect (G: UG): Prop:= forall G1, Ind_subgraph G1 G -> Is_nice G1.
+ 
+---------------------------------------------------------------------------------------*)
 
 
 Require Export DecUG.
-
 
 Set Implicit Arguments.
 
@@ -259,12 +291,7 @@ Section MoreOnDecidableGraphs.
             
   Hint Resolve perfect_is_nice: core.
    
- 
-
-  
-
 End MoreOnDecidableGraphs.
-
 
 
  Hint Resolve stableP nil_is_stable: core.
