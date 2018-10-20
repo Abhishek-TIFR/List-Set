@@ -111,8 +111,7 @@ Lemma NoDup_iff_noDup l: NoDup l <-> noDup l.
 Proof. { split. 
        { induction l.  auto.
        intro H; inversion H;  simpl.
-       replace (mem a l) with false; auto.
-       symmetry. apply /memP. auto. } 
+       replace (mem a l) with false; auto. } 
        { induction l. constructor.
        simpl. case (mem a l) eqn: H1. discriminate.  intro H2.
        constructor. move /memP.  rewrite H1.  auto. tauto. }  } Qed.
