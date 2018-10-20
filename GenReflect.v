@@ -83,11 +83,18 @@ Proof. intros H H1.  rewrite H1 in H. discriminate H. Qed.
 Lemma switch2(b:bool): ~ b -> b=false.
 Proof. intros H. case b eqn:H1. absurd (true);auto. auto. Qed.
 
+Lemma bool_fun_equal (B1 B2: bool): (B1-> B2)-> (B2-> B1)-> B1=B2.
+    Proof. intros H1 H2. destruct B1; destruct B2; auto.
+           replace false with true. auto. symmetry; auto. Qed.
+
+    Hint Resolve bool_fun_equal: core.
+
 End GeneralReflections.
 
 
 Hint Immediate reflect_intro reflect_elim  reflect_EM reflect_dec dec_EM: core.
 Hint Resolve idP impP impP1: core.
+Hint Resolve bool_fun_equal: core.
 
 Ltac solve_dec := eapply reflect_dec; eauto.
 Ltac solve_EM  := eapply reflect_EM; eauto.
