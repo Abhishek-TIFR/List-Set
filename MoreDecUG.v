@@ -31,8 +31,8 @@
 
  We also define the notion of a perfect graph as follows:
  
- Definition Is_nice (G: UG): Prop:= forall n, cliq_num G n -> chrom_num G n.
- Definition Is_perfect (G: UG): Prop:= forall G1, Ind_subgraph G1 G -> Is_nice G1.
+ Definition Nice (G: UG): Prop:= forall n, cliq_num G n -> chrom_num G n.
+ Definition Perfect (G: UG): Prop:= forall G1, Ind_subgraph G1 G -> Nice G1.
  
 ---------------------------------------------------------------------------------------*)
 
@@ -244,11 +244,11 @@ Section MoreOnDecidableGraphs.
 
    
    (*-------- Concepts of nice graph and  perfect graphs -------------------------------- *)
-   Definition Is_nice (G: UG): Prop:= forall n, cliq_num G n -> chrom_num G n.
-   Definition Is_perfect (G: UG): Prop:= forall G1, Ind_subgraph G1 G -> Is_nice G1.
+   Definition Nice (G: UG): Prop:= forall n, cliq_num G n -> chrom_num G n.
+   Definition Perfect (G: UG): Prop:= forall G1, Ind_subgraph G1 G -> Nice G1.
       
-   Lemma perfect_is_nice (G: UG): Is_perfect G -> Is_nice G.
-   Proof.  unfold Is_perfect. intros H; apply H. auto.  Qed.
+   Lemma perfect_is_nice (G: UG): Perfect G -> Nice G.
+   Proof.  unfold Perfect. intros H; apply H. auto.  Qed.
    
    (*---------  More colors needed than the largest cliq size --------------------------*)
    Lemma more_clrs_than_cliq_size (G: UG)(K: list A)(f: A->nat):
@@ -279,7 +279,7 @@ Section MoreOnDecidableGraphs.
    (*---------Some elimination and introduction  property of nice--------------------------*)
 
    Lemma nice_intro (G: UG)(n:nat):
-     cliq_num G n -> (exists f, Coloring_of G f /\ |clrs_of f G|= n)-> Is_nice G.
+     cliq_num G n -> (exists f, Coloring_of G f /\ |clrs_of f G|= n)-> Nice G.
    Proof. { intros H H1 m H2. assert (Hnm: n=m); eauto; subst m. clear H2.
           destruct H1 as [f H1].
           unfold chrom_num. exists f.
