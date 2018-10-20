@@ -91,7 +91,7 @@ Section DecidableGraphs.
     Proof. rewrite edg_sym; auto. Qed.
 
     Hint Resolve no_edg2 no_edg1 no_self_edg no_self_edg1 : core.
-    Hint Immediate sym_edg: core.
+    Hint Immediate edg_sym sym_edg: core.
   
   (*---------- function  mk_refl to make a relation reflexive ------------------------------*)
 
@@ -131,10 +131,14 @@ Section DecidableGraphs.
            destruct (E x y); destruct (E y x); simpl; auto. } Qed.
   Lemma Exy_inv_for_mk_sym (E: A->A->bool)(x y:A): E x y-> (mk_sym E) x y.
   Proof. unfold mk_sym. intro H. apply /orP.  tauto. Qed.
+  Lemma Exy_inv_for_mk_sym1 (E: A->A->bool)(x y:A): E x y-> (mk_sym E) y x.
+  Proof. unfold mk_sym. intro H. apply /orP.  tauto. Qed.
+  
   Lemma negExy_inv_for_mk_sym (E: A->A->bool)(x y:A): ~ E x y-> ~ E y x -> ~(mk_sym E) x y.
   Proof.  unfold mk_sym. case( E x y); case(E y x);simpl; tauto. Qed.
 
-
+  Hint Resolve Exy_inv_for_mk_irefl1 Exy_inv_for_mk_sym Exy_inv_for_mk_sym1: core.
+  
   (*--------------- mk_irefl and mk_sym are invariant over each other ---------------------*)
   Lemma irefl_inv_for_mk_sym (E: A-> A-> bool): irefl E -> irefl (mk_sym E).
   Proof. { unfold irefl. intro H. intro x. unfold mk_sym.
@@ -156,12 +160,32 @@ Section DecidableGraphs.
    Lemma edg_equal_at_K (K: list A)(E: A-> A-> bool)(x y: A):
      In x K -> In y K -> E x y = (E at_ K) x y.
    Proof. { intros H1 H2. assert (H3: mem2 x y K).
-          apply /mem2P. split; auto. unfold E_res_to. rewrite H3. reflexivity. } Qed.
+            apply /mem2P. split; auto. unfold E_res_to. rewrite H3. reflexivity. } Qed.  
    
    Lemma no_edg_E_at_K (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> (In x K /\ In y K).
    Proof. { intros x y. unfold E_res_to. destruct (mem2 x y K)  eqn: H.
           intro H1. assert(H2: IN x y K). apply /mem2P. eauto. auto.
-          intro H1. inversion H1. } Qed. 
+          intro H1. inversion H1. } Qed.
+   Lemma no_edg_E_at_K1 (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> In x K.
+   Proof. intros x y H; apply no_edg_E_at_K in H; tauto.  Qed.
+   Lemma no_edg_E_at_K2 (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> In y K.
+   Proof. intros x y H; apply no_edg_E_at_K in H; tauto.  Qed.
+   
+   Hint Immediate no_edg_E_at_K1 no_edg_E_at_K2 : core.
+   
+   Lemma Exy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A):
+     In x K -> In y K -> E x y -> (E at_ K) x y.
+   Proof. Admitted.
+   Lemma Exy_inv_for_at_K1 (K: list A)(E: A-> A-> bool)(x y: A): (E at_ K) x y -> E x y.
+   Proof. Admitted.
+   Lemma negExy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A): ~ E x y -> ~ (E at_ K) x y.
+   Proof. Admitted.
+
+   
+   Hint Resolve Exy_inv_for_at_K : core.
+
+   Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
+   
    Lemma only_at_inv_for_E_at_K1 (E: A-> A-> bool)(K: list A): (E at_ K) only_at K.
    Proof. unfold "only_at". eapply no_edg_E_at_K. Qed.
    Lemma only_at_inv_for_E_at_K (G: UG)(K: list A): ((edg G) at_ K) only_at K.
@@ -316,9 +340,15 @@ End DecidableGraphs.
 Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
 
  Hint Resolve no_edg2 no_edg1 no_self_edg no_self_edg1 : core.
- Hint Immediate sym_edg: core.
+ Hint Immediate edg_sym sym_edg: core.
  
  Hint Resolve IsOrd_S: core.
+
+ Hint Resolve Exy_inv_for_mk_irefl1 Exy_inv_for_mk_sym Exy_inv_for_mk_sym1: core.
+ Hint Immediate no_edg_E_at_K1 no_edg_E_at_K2: core.
+ Hint Resolve Exy_inv_for_at_K: core.
+
+ Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
   
  Hint Resolve mk_ireflP mk_symP complP complP1: core.
  Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
