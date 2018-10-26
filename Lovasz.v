@@ -11,6 +11,9 @@ Section Repeat_node.
    Context { A: ordType }.
  
    (*---------- Repeating a vertex a as a' in a graph G-----------------------------------*)
+
+   (* Write comment about the following lazy description of new edge relation and its 
+      essential properties  *)
    
    Definition nw_edg (G: @UG A)(a a': A):=
      fun (x y: A) => match (x == a), (y == a') with
@@ -73,6 +76,9 @@ Section Repeat_node.
              
   Hint Resolve nw_edg_a_a' nw_edg_xa_xa' nw_edg_xy_xy nw_edg_xy_xy1: core.
   Hint Resolve nw_edg_xy_xy2 nw_edg_xy_xy3 nw_edg_xy_xy4 nw_edg_xy_xy5: core.
+
+  (* Comment on the following exact definition of edg relation which is sym, 
+     irefl and restricted to the new vertex set *)
    
    Definition ex_edg (G: @UG A)(a a': A):= mk_sym (mk_irefl ((nw_edg G a a') at_ (add a' G))).
 
@@ -137,8 +143,25 @@ Section Repeat_node.
            absurd (edg G x y). switch;auto. apply E'xy_Exy1;auto.
            auto. } Qed.
 
+    Lemma E'xy_Exy2 (x y:A)(P: In a G)(P': ~In a' G):
+      x<>a'-> y<>a'-> edg G' x y -> edg G x y.
+    Proof. { intros H1 H2. apply /impP.
+           destruct (edg G x y) eqn: Hxy.
+           { right_;auto. }
+           { left_. switch_in Hxy. apply /negP.
+             unfold G'. simpl. unfold ex_edg.
+             assert (Hyx: ~ edg G y x). auto.
+             assert (H3: ~ nw_edg G a a' x y).
+             { replace (nw_edg G a a' x y) with (edg G x y).
+               auto. auto. }
+             assert (H3b: ~ nw_edg G a a' y x).
+             { replace (nw_edg G a a' y x) with (edg G y x).
+               auto. auto. }
+             auto. } } Qed.
+             
+
     Hint Resolve edge_aa' edg_xa_xa': core.
-    Hint Immediate Exy_E'xy E'xy_Exy E'xy_Exy1 In_xy_G: core.
+    Hint Immediate Exy_E'xy E'xy_Exy E'xy_Exy1  E'xy_Exy2 In_xy_G: core.
 
     Lemma edg_G'G1(x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G' x a -> edg G x a.
     Proof. { intros H1 H2. simpl.  unfold ex_edg.
@@ -169,16 +192,21 @@ Section Repeat_node.
 
    
     
-   Lemma edg_G_G'(x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G x a = edg G' x a'.
+   Lemma edg_G_G'1(x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G x a = edg G' x a'.
    Proof. { intros H1 H2.
           assert (H3: edg G x a -> edg G' x a'). auto.
           assert (H4: edg G' x a' -> edg G x a). auto using edg_G'G2. auto. } Qed.
           
   
-  Lemma edg_G_G'1 (y:A)(P: In a G)(P': ~In a' G): y<>a -> y<> a' -> edg G a y = edg G' a' y.
+  Lemma edg_G_G'2 (y:A)(P: In a G)(P': ~In a' G): y<>a -> y<> a' -> edg G a y = edg G' a' y.
   Proof. { replace (edg G a y) with (edg G y a);
            replace (edg G' a' y) with (edg G' y a');
-           (eapply edg_G_G'|| eapply edg_sym); auto. } Qed. 
+           (eapply edg_G_G'1|| eapply edg_sym); auto. } Qed.
+
+  Lemma edg_G_G'(x y:A)(P: In a G)(P': ~In a' G): x <> a'-> y<> a'->  edg G x y = edg G' x y.
+  Proof. { intros H1 H2.
+         assert (H3: edg G x y -> edg G' x y). auto.
+         assert (H4: edg G' x y -> edg G x y). auto. auto. } Qed.
 
     Lemma edg_G'1 (x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G' x a -> edg G' x a'.
     Proof.  auto using edg_G'G1. Qed.
@@ -194,7 +222,7 @@ Section Repeat_node.
          { absurd (edg G' x a). switch;auto. auto using edg_G'2. } } Qed.
 
    Lemma edg_G'4 (y:A) (P: In a G)(P': ~In a' G): y<>a -> y<> a'-> edg G' a y = edg G' a' y.
-  Proof. { intros H1 H2.
+   Proof. { intros H1 H2.
            replace (edg G' a y) with (edg G' y a);
              replace (edg G' a' y) with (edg G' y a').
            auto using edg_G'3. all: apply edg_sym. } Qed.
