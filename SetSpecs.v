@@ -151,7 +151,10 @@ end.
 
   Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
   (*----------- Properties of set cardinality------------------------------------*)
-  Lemma subset_cardinal_less (l s: list A): l [<=] s -> NoDup l -> |l| <= |s|.
+  Lemma subset_cardinal_le (l s: list A): l [<=] s -> NoDup l -> |l| <= |s|.
+  Proof. Admitted.
+  Lemma subset_cardinal_lt (l s: list A)(a: A):
+    NoDup l -> l [<=] s->  In a s -> ~ In a l -> |l| < |s|.
   Proof. Admitted.
     
   
@@ -179,6 +182,6 @@ Hint Resolve  self_incl: core.
 Hint Resolve Subset_intro Subset_intro1: core.
 
 Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
-Hint Resolve subset_cardinal_less: core.
+Hint Resolve subset_cardinal_le subset_cardinal_lt: core.
 
 
