@@ -53,6 +53,15 @@ Section MoreOnDecidableGraphs.
     (forall_xyb (fun x y => edg G x y == false) I).
 
   Definition Stable_in (G: UG)(I: list A):= I [<=] G /\ IsOrd I /\ Stable G I.
+
+  Lemma Stable_elim (G:UG)(I: list A)(x y:A): Stable G I -> In x I-> In y I-> edg G x y = false.
+  Proof. { intros H Hx Hy.  unfold Stable in H. specialize (H x y Hx Hy) as H'. auto. } Qed.
+  Lemma Stable_in_elim (G:UG)(I: list A): Stable_in G I -> Stable G I.
+  Proof. intro H; apply H. Qed.
+  Lemma Stable_in_elim1 (G:UG)(I: list A): Stable_in G I -> I [<=] G.
+  Proof. intro H; apply H. Qed.
+  Lemma Stable_in_elim2 (G:UG)(I: list A): Stable_in G I -> IsOrd I.
+  Proof. intro H; apply H. Qed.
   
   Lemma stableP (G: UG)(I: list A): reflect (Stable G I) (stable G I).
   Proof. { apply reflect_intro. split;unfold stable; unfold Stable.
@@ -60,7 +69,9 @@ Section MoreOnDecidableGraphs.
          {  intro H. move /forall_xyP in H. intros x y H1 H2; apply /eqP; auto. } } Qed.
   Lemma nil_is_stable (G: UG): stable G nil.
   Proof. unfold stable. apply /forall_xyP. auto. Qed.
+
   
+  Hint Resolve Stable_in_elim Stable_in_elim1 Stable_in_elim2: core.
   Hint Resolve stableP nil_is_stable: core.
   
   Definition Max_I_in (G: UG)(I: list A):= Max_sub_in G I (fun I => stable G I).
@@ -97,10 +108,18 @@ Section MoreOnDecidableGraphs.
   Lemma Max_I_in_elim2 (G: UG)(I: list A): Max_I_in G I -> Stable_in G I.
   Proof. intro H. unfold Stable_in. split. eauto.  split. eauto. apply /stableP. apply H.  Qed.
   
-  Lemma Max_I_in_elim (G: UG)(I X: list A):
+  Lemma Max_I_in_elim3 (G: UG)(I X: list A):
     Max_I_in G I ->  IsOrd X -> X [<=] G-> Stable G X -> |X| <= |I|.
   Proof. { intros H H1 H2 H3. destruct H as [Ha H]; destruct H as [Hb H].
            apply H; auto. apply /stableP;auto.  } Qed.
+
+  Lemma Max_I_in_elim (G: UG)(I X: list A):
+    Max_I_in G I ->  Stable_in G X -> |X| <= |I|.
+  Proof. Admitted.
+  
+  Lemma Max_I_in_intro (G: UG)( I: list A):
+    Stable_in G I -> (forall I', Stable_in G I' -> |I'| <= |I|) -> Max_I_in G I.
+  Proof. Admitted.
 
    Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
   
@@ -110,7 +129,7 @@ Section MoreOnDecidableGraphs.
            cut (n<=m /\ m<=n). omega.
            destruct Hn as [Hn1 Hn2]. destruct Hm as [Hm1 Hm2].
            unfold Max_I_in in Hn1.  unfold Max_I_in in Hm1.
-           split; subst n; subst m; eapply Max_I_in_elim;eauto. } Qed.
+           split; subst n; subst m; eapply Max_I_in_elim3;eauto. } Qed.
 
   Hint Resolve i_num_same:core.
     
@@ -178,10 +197,19 @@ Section MoreOnDecidableGraphs.
   Proof. intro H. apply /cliqP. apply H.  Qed.
   Lemma Max_K_in_elim2 (G: UG)(K: list A): Max_K_in G K -> Cliq_in G K.
   Proof. intro H. unfold Cliq_in. split. eauto.  split. eauto. apply /cliqP. apply H.  Qed.
-  Lemma Max_K_in_elim (G: UG)(K X: list A):
+  Lemma Max_K_in_elim3 (G: UG)(K X: list A):
     Max_K_in G K ->  IsOrd X -> X [<=] G-> Cliq G X -> |X| <= |K|.
   Proof. { intros H H1 H2 H3. destruct H as [Ha H]; destruct H as [Hb H].
            apply H; auto. apply /cliqP;auto. } Qed.
+  
+  Lemma Max_K_in_elim (G: UG)(K X: list A):
+    Max_K_in G K ->  Cliq_in G X -> |X| <= |K|.
+  Proof. Admitted.
+  
+  Lemma Max_K_in_intro (G: UG)( K: list A):
+    Cliq_in G K -> (forall K', Cliq_in G K' -> |K'| <= |K|) -> Max_K_in G K.
+  Proof. Admitted.
+  
   
 
   Hint Resolve max_K_inP exists_Max_K_in Max_K_in_elim1 Max_K_in_elim2 : core.
@@ -192,7 +220,7 @@ Section MoreOnDecidableGraphs.
            cut (n<=m /\ m<=n). omega.
            destruct Hn as [Hn1 Hn2]. destruct Hm as [Hm1 Hm2].
            unfold Max_K_in in Hn1.  unfold Max_K_in in Hm1.
-           split; subst n; subst m; eapply Max_K_in_elim;eauto. } Qed.
+           split; subst n; subst m; eapply Max_K_in_elim3;eauto. } Qed.
 
   Hint Resolve cliq_num_same:core.
  
@@ -294,6 +322,9 @@ Section MoreOnDecidableGraphs.
 End MoreOnDecidableGraphs.
 
 
+
+
+ Hint Resolve Stable_in_elim Stable_in_elim1 Stable_in_elim2: core.
  Hint Resolve stableP nil_is_stable: core.
  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
  Hint Resolve i_num_same:core.
