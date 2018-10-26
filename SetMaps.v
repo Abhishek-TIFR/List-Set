@@ -75,10 +75,19 @@ Section Set_maps.
          split; auto. assert (H4: In (f a) (s_map f l)). eapply s_map_elim2.
          eapply H1. exact H3b. assert (H5: exists y : A, In y l /\ f a = f y). eauto.
          destruct H5 as [y0 H5]. exists y0. split;  simpl. tauto. tauto.
-         eapply EM_B. } Qed. 
+         eapply EM_B. } Qed.
+  Lemma s_map_elim4 (f: A->B)(l: list A)(b:B): In b (s_map f l)-> (exists a, In a l /\ b = f a).
+  Proof. { induction l.
+         { simpl. tauto. }
+         { intro H. apply s_map_elim in H as H1. destruct H1.
+           { exists a. split;auto. }
+           { apply IHl in H0 as H1.
+             destruct H1 as [a' H1]; destruct H1 as [H1 H2].
+             exists a'. split;auto. } } } Qed.
         
   Hint Resolve IsOrd_s_map NoDup_s_map : core.
-  Hint Resolve s_map_intro1 s_map_intro2 s_map_elim s_map_elim2 s_map_elim3: core.
+  Hint Resolve s_map_intro1 s_map_intro2 s_map_elim: core.
+  Hint Resolve s_map_elim2 s_map_elim3 s_map_elim4: core.
   
   Lemma funP (f: A->B)(x y: A): f x <> f y -> x <> y.
   Proof. intros H H1. apply H;rewrite H1; auto. Qed.
@@ -164,19 +173,70 @@ Section Set_maps.
   Proof. Admitted.
   Lemma s_map_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| s_map f l|.
   Proof. Admitted.
+
+  Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
+  
   Lemma s_map_strict_less (l: list A)(f: A->B):
     NoDup l -> (|s_map f l| < |l|) -> ~ one_one_on l f.
   Proof. Admitted.
+
+  Hint Immediate s_map_strict_less : core.
   
-  
-  
+  Lemma one_one_on_intro2 (l: list A)(f: A->B):
+    NoDup l -> (|s_map f l| = |l|)->  one_one_on l f.
+  Proof. Admitted.
+
+  Lemma one_one_on_intro3 (l s: list A)(f: A-> B): s [<=] l -> one_one_on l f -> one_one_on s f.
+  Proof. Admitted.
+
+  Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
   
 End Set_maps.
 
 Hint Resolve IsOrd_s_map NoDup_s_map : core.
-Hint Resolve s_map_intro1 s_map_intro2 s_map_elim s_map_elim2 s_map_elim3: core.
+Hint Resolve s_map_intro1 s_map_intro2 s_map_elim: core.
+Hint Resolve s_map_elim2 s_map_elim3 s_map_elim4 : core.
 Hint Immediate one_oneP1: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
 Hint Immediate one_one_on_intro one_one_on_intro1: core.
 Hint Resolve one_one_onP: core.
-Hint Resolve s_map_subset s_map_size_less s_map_size_same s_map_strict_less : core.
+
+Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
+Hint Immediate s_map_strict_less : core.
+
+Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
+
+Section Map_composition.
+
+  Context {A B C: ordType}.
+
+  (*-------------------------  A  --f-->  B  --g-->  C    --------------------------------*)
+
+  Lemma range_of_range (l:list A)(f: A->B)(g: B->C):
+    s_map g (s_map f l) = s_map ( fun x => g (f x)) l.
+  Proof. { assert (H: Equal  (s_map g (s_map f l)) (s_map ( fun x => g (f x)) l) ).
+         { unfold Equal.
+           split.
+           { unfold Subset. intros c Hc.
+             assert (Hb: exists b, In b (s_map f l) /\ c = g b). auto.
+             destruct Hb as [b Hb]. destruct Hb as [Hb Hb1].
+             assert (Ha: exists a, In a l /\ b = f a). auto.
+             destruct Ha as [a Ha]. destruct Ha as [Ha Ha1].
+             rewrite Hb1. set (gf := (fun x : A => g (f x))).
+             rewrite Ha1. 
+             assert (H: (g (f a)) = (gf a)). unfold gf. auto.
+             rewrite H. eapply s_map_intro2. auto. }
+           { unfold Subset. intros c Hc.
+             assert (Ha: exists a, In a l /\ c = g (f a)). auto.
+             destruct Ha as [a Ha]. destruct Ha as [Ha1 Ha2].
+             subst c. auto. } }  auto. } Qed.
+
+  Hint Resolve range_of_range: core.
+End Map_composition.
+
+ Hint Resolve range_of_range: core.
+
+
+
+
+ 
