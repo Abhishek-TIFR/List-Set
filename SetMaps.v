@@ -139,6 +139,7 @@ Section Set_maps.
   
   Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
   Hint Immediate one_one_on_intro one_one_on_intro1: core.
+   
 
   Fixpoint one_one_onb (l: list A) (f: A->B): bool:=
     match l with
@@ -166,6 +167,11 @@ Section Set_maps.
              symmetry; apply /memP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
 
   (*--------- Some more properties of s_maps-----------------------------------*)
+
+  Lemma one_one_s_map_elim (l: list A)(f: A->B)(x: A):
+    one_one_on l f -> In (f x) (s_map f l) -> In x l.
+  Proof. Admitted.
+  
   Lemma s_map_subset (l s: list A)(f: A->B): l [<=] s -> (s_map f l) [<=] (s_map f s).
   Proof. Admitted.
 
@@ -173,14 +179,16 @@ Section Set_maps.
   Proof. Admitted.
   Lemma s_map_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| s_map f l|.
   Proof. Admitted.
+  
 
   Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
+
   
   Lemma s_map_strict_less (l: list A)(f: A->B):
     NoDup l -> (|s_map f l| < |l|) -> ~ one_one_on l f.
   Proof. Admitted.
 
-  Hint Immediate s_map_strict_less : core.
+  Hint Immediate one_one_s_map_elim s_map_strict_less : core.
   
   Lemma one_one_on_intro2 (l: list A)(f: A->B):
     NoDup l -> (|s_map f l| = |l|)->  one_one_on l f.
@@ -190,6 +198,7 @@ Section Set_maps.
   Proof. Admitted.
 
   Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
+ 
   
 End Set_maps.
 
@@ -202,7 +211,7 @@ Hint Immediate one_one_on_intro one_one_on_intro1: core.
 Hint Resolve one_one_onP: core.
 
 Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
-Hint Immediate s_map_strict_less : core.
+Hint Immediate one_one_s_map_elim s_map_strict_less : core.
 
 Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
 
