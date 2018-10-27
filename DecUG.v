@@ -23,12 +23,7 @@
  Predicate              Boolean function       Joining Lemma
  Subgraph G1 G2         subgraph G1 G2         subgraphP
  Ind_Subgraph G1 G2     ind_subgraph G1 G2     ind_subgraphP
-
- Definition Ind_at (K: (set_on A))(G:UG): UG.
-     refine {|nodes:= K; nodes_IsOrd := K.(IsOrd_S);
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined.
-
-   Notation "G 'res_to' K":= (Ind_at K G) (at level 70).   
+  
 
  Definition Compl (G: UG): UG.
     refine ({|nodes:= G.(nodes);
@@ -182,7 +177,7 @@ Section DecidableGraphs.
    Proof. Admitted.
 
    
-   Hint Resolve Exy_inv_for_at_K : core.
+   Hint Resolve Exy_inv_for_at_K edg_equal_at_K: core.
 
    Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
    
@@ -238,8 +233,6 @@ Section DecidableGraphs.
             case (x == y) eqn:H1; case (y == x) eqn:H2.
             auto. move /eqP in H1. by_conflict. move /eqP in H2. by_conflict.  auto. } Qed.
   
-
-   
    Hint Resolve mk_ireflP mk_symP complP complP1: core.
    Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
    Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl sym_inv_for_E_at_K: core.
@@ -248,23 +241,20 @@ Section DecidableGraphs.
    Hint Resolve edg_equal_at_K: core.
 
 
-   (* Section Ord_sets.
- 
-     Variable A: ordType.
-     Record set_on : Type := { S_of :> list A;
-                             IsOrd_S : IsOrd S_of }.  
-     End Ord_sets. *)
-
    (*------Concepts of Subgraph and the Induced Subgraph of a given  graph G ---------- *)
    Definition Subgraph (G1 G2: UG): Prop := G1 [<=] G2 /\ (forall x y, edg G1 x y-> edg G2 x y).
    Definition Ind_subgraph ( G1 G2: UG): Prop :=
      G1 [<=] G2 /\ (forall x y, In x G1-> In y G1-> edg G1 x y = edg G2 x y).
-   
-   Definition Ind_at (K: (set_on A))(G:UG): UG.
-     refine {|nodes:= K; nodes_IsOrd := K.(IsOrd_S);
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined.
 
-   Notation "G 'res_to' K":= (Ind_at K G) (at level 70).
+   Lemma Ind_subgraph_elim1 (G1 G2:UG) (x y:A):
+     Ind_subgraph G1 G2 ->  In x G1 -> In y G1 -> edg G1 x y = edg G2 x y.
+   Proof. intros H Hx Hy. destruct H as [H1 H2]. auto. Qed.
+   
+    Lemma Ind_subgraph_elim2 (G1 G2:UG) (x y:A):
+     Ind_subgraph G1 G2 -> G1 [<=] G2.
+    Proof. intros H. apply H. Qed.
+
+    Hint Immediate Ind_subgraph_elim1 Ind_subgraph_elim2: core.
 
    Lemma Subgraph_iff (G1 G2: UG):
      Subgraph G1 G2 <->  G1 [<=] G2 /\ (forall x y, In x G1 -> In y G1-> edg G1 x y-> edg G2 x y).
@@ -298,10 +288,7 @@ Section DecidableGraphs.
             { move /andP. intro H. destruct H as [H H0].
               split. auto. move /forall_xyP in H0.
               intros x y H1 H2; apply /eqP; auto. } } Qed.
-              
-  Lemma induced_fact1: forall (K:set_on A) (G:UG),  K[<=]G -> Ind_subgraph (G res_to K) G.
-   Proof. { intros K G H. split. assumption. simpl;intros;symmetry;auto. }  Qed.
-
+           
    Lemma self_is_induced (G: UG): Ind_subgraph G G.
    Proof. split; auto. Qed.
    
@@ -312,7 +299,7 @@ Section DecidableGraphs.
           apply H2; apply H4. } Qed.
    
    Hint Resolve subgraphP ind_subgraphP: core.
-   Hint Resolve induced_fact1 self_is_induced induced_is_subgraph: core.
+   Hint Resolve self_is_induced induced_is_subgraph: core.
 
     (*------------ Complement of a graph G and its edge relation--------------------- *)
 
@@ -332,8 +319,6 @@ Section DecidableGraphs.
              nodes_IsOrd := G.(nodes_IsOrd);
              edg:= ((compl G.(edg)) at_ G); |}). all: auto. Defined.
   
-
-
 End DecidableGraphs.
 
 
@@ -346,7 +331,7 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
 
  Hint Resolve Exy_inv_for_mk_irefl1 Exy_inv_for_mk_sym Exy_inv_for_mk_sym1: core.
  Hint Immediate no_edg_E_at_K1 no_edg_E_at_K2: core.
- Hint Resolve Exy_inv_for_at_K: core.
+ Hint Resolve Exy_inv_for_at_K edg_equal_at_K: core.
 
  Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
   
@@ -357,14 +342,17 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
  Hint Resolve only_at_inv_for_mk_irefl only_at_inv_for_mk_sym: core.
  Hint Resolve edg_equal_at_K: core.
 
+ Hint Immediate Ind_subgraph_elim1 Ind_subgraph_elim2: core.
+
  Hint Resolve subgraphP ind_subgraphP: core.
- Hint Resolve induced_fact1 self_is_induced induced_is_subgraph: core.
+ Hint Resolve self_is_induced induced_is_subgraph: core.
 
  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
 Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
 Notation "E 'at_' K":= (E_res_to K E)(at level 70).
-Notation "G 'res_to' K":= (Ind_at K G) (at level 70).
+
+
 
 
 
