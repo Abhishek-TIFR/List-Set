@@ -255,6 +255,17 @@ Section DecidableGraphs.
     Proof. intros H. apply H. Qed.
 
     Hint Immediate Ind_subgraph_elim1 Ind_subgraph_elim2: core.
+    Lemma Ind_subgraph_trans (G1 G2 G3: UG): Ind_subgraph G1 G2-> Ind_subgraph G2 G3->
+                                             Ind_subgraph G1 G3.
+    Proof. { unfold Ind_subgraph. intros H1 H2.
+             destruct H1 as [H1a H1b]; destruct H2 as [H2a H2b].
+             split. auto. intros x y Hx Hy. replace (edg G3 x y) with (edg G2 x y).
+             all: auto. } Qed.
+    Lemma Subgraph_trans (G1 G2 G3: UG): Subgraph G1 G2 -> Subgraph G2 G3-> Subgraph G1 G3.
+    Proof. unfold Subgraph. intros H1 H2.
+           destruct H1 as [H1a H1b]; destruct H2 as [H2a H2b]. split; auto. Qed.
+
+    Hint Immediate Ind_subgraph_trans Subgraph_trans: core.
 
    Lemma Subgraph_iff (G1 G2: UG):
      Subgraph G1 G2 <->  G1 [<=] G2 /\ (forall x y, In x G1 -> In y G1-> edg G1 x y-> edg G2 x y).
@@ -343,6 +354,9 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
  Hint Resolve edg_equal_at_K: core.
 
  Hint Immediate Ind_subgraph_elim1 Ind_subgraph_elim2: core.
+
+ Hint Immediate Ind_subgraph_trans Subgraph_trans: core.
+ 
 
  Hint Resolve subgraphP ind_subgraphP: core.
  Hint Resolve self_is_induced induced_is_subgraph: core.
