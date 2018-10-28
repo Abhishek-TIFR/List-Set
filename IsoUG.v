@@ -75,9 +75,6 @@ Following definition represents the Graph G restricted to the vertex set K:
 
 ------------------------------------------------------------------------------------------*)
 
-
-
-
 Require Export MoreDecUG.
 
 Set Implicit Arguments.
