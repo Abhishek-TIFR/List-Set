@@ -131,7 +131,14 @@ Section MoreOnDecidableGraphs.
            unfold Max_I_in in Hn1.  unfold Max_I_in in Hm1.
            split; subst n; subst m; eapply Max_I_in_elim3;eauto. } Qed.
 
-  Hint Resolve i_num_same:core.
+  Hint Resolve i_num_same : core.
+
+  Lemma Stable_in_HG (H G:UG)(I: list A): Ind_subgraph H G-> Stable_in H I-> Stable_in G I.
+  Proof. Admitted.
+  Lemma i_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> i_num H m -> i_num G n-> m<=n.
+  Proof. Admitted.
+   
+  Hint Immediate Stable_in_HG i_num_HG:core.
     
   (*-----  Cliq and the Cliq number for a given graph G ----------------------*)
   
@@ -223,6 +230,13 @@ Section MoreOnDecidableGraphs.
            split; subst n; subst m; eapply Max_K_in_elim3;eauto. } Qed.
 
   Hint Resolve cliq_num_same:core.
+
+  Lemma Cliq_in_HG (H G:UG)(K: list A): Ind_subgraph H G-> Cliq_in H K-> Cliq_in G K.
+  Proof. Admitted.
+  Lemma cliq_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> cliq_num H m -> cliq_num G n-> m<=n.
+  Proof. Admitted.
+   
+  Hint Immediate Cliq_in_HG cliq_num_HG:core.
  
    
    (*------ Concepts of Coloring and the chromatic number of a graph G ------------------*)
@@ -267,6 +281,13 @@ Section MoreOnDecidableGraphs.
    Proof. unfold clrs_of; auto. Qed.
    
    Hint Resolve chrom_num_same clrs_of_inc clrs_of_inc1: core.
+
+   Lemma coloring_of_HG (H G: UG)(f: A-> nat): Ind_subgraph H G-> coloring_of G f-> coloring_of H f.
+   Proof. Admitted.
+   Lemma chrom_num_HG (H G: UG)(m n: nat): chrom_num H m-> chrom_num G n-> m<=n.
+   Proof. Admitted.
+
+   Hint Immediate coloring_of_HG chrom_num_HG: core.
    
    (*----- Think about the proof of existence of a best coloring----------------------------*)
 
@@ -277,7 +298,13 @@ Section MoreOnDecidableGraphs.
       
    Lemma perfect_is_nice (G: UG): Perfect G -> Nice G.
    Proof.  unfold Perfect. intros H; apply H. auto.  Qed.
+
+   Hint Resolve perfect_is_nice: core.
+
+   Lemma perfect_sub_perfect (G H: UG): Perfect G-> Ind_subgraph H G-> Perfect H.
+   Proof. unfold Perfect. intros. cut (Ind_subgraph G1 G). auto. eauto. Qed.
    
+    
    (*---------  More colors needed than the largest cliq size --------------------------*)
    Lemma more_clrs_than_cliq_size (G: UG)(K: list A)(f: A->nat):
      Cliq_in G K-> Coloring_of G f -> |K| <= |clrs_of f G|.
@@ -304,7 +331,7 @@ Section MoreOnDecidableGraphs.
           assert (H2: Cliq_in G K); auto. subst n.
           apply more_clrs_than_cliq_size;auto. } Qed.
 
-   (*---------Some elimination and introduction  property of nice--------------------------*)
+   (*---------Some other properties of graph --------------------------*)
 
    Lemma nice_intro (G: UG)(n:nat):
      cliq_num G n -> (exists f, Coloring_of G f /\ |clrs_of f G|= n)-> Nice G.
@@ -317,7 +344,8 @@ Section MoreOnDecidableGraphs.
             rewrite HR. intro f1. apply more_clrs_than_cliq_num;auto. }
           { auto. } } Qed.
             
-  Hint Resolve perfect_is_nice: core.
+   Hint Immediate perfect_sub_perfect more_clrs_than_cliq_size more_clrs_than_cliq_num: core.
+   Hint Immediate nice_intro: core.
    
 End MoreOnDecidableGraphs.
 
@@ -328,12 +356,19 @@ End MoreOnDecidableGraphs.
  Hint Resolve stableP nil_is_stable: core.
  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
  Hint Resolve i_num_same:core.
+ Hint Immediate Stable_in_HG i_num_HG:core.
 
  Hint Resolve Cliq_in_elim Cliq_in_elim1 Cliq_in_elim2: core.
  Hint Resolve  Cliq_elim cliqP nil_is_cliq: core.
  Hint Resolve max_K_inP exists_Max_K_in Max_K_in_elim1 Max_K_in_elim2: core.
  Hint Resolve cliq_num_same:core.
+ Hint Immediate Cliq_in_HG cliq_num_HG:core.
  
  Hint Resolve chrom_num_same clrs_of_inc clrs_of_inc1: core.
+ Hint Immediate coloring_of_HG chrom_num_HG: core.
+ 
  Hint Resolve perfect_is_nice: core.
+ Hint Immediate perfect_sub_perfect more_clrs_than_cliq_size more_clrs_than_cliq_num: core.
+ Hint Immediate nice_intro: core.
+  
  
