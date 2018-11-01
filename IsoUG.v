@@ -375,16 +375,6 @@ Section GraphIsomorphism.
          unfold Nice. intros H1 n H2.
          cut (chrom_num G n). eauto. cut (cliq_num G n); eauto. } Qed.
 
-   Definition Ind_at (K: list A)(Pk: IsOrd K)(G: @UG A): @UG A.
-     refine {|nodes:= K; nodes_IsOrd := Pk;
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined.  
-
-   Lemma induced_fact1: forall (K:list A) (G: @UG A)(Pk: IsOrd K),
-        K[<=]G -> Ind_subgraph (Ind_at Pk G) G.
-   Proof. { intros K G Pk H. split. assumption. simpl;intros;symmetry;auto. }  Qed. 
-  
-  
-
   Lemma iso_subgraphs (G G' H: @UG A)(f: A->A):
     iso_using f G G' -> Ind_subgraph H G -> (exists H', Ind_subgraph H' G' /\ iso_using f H H').
   Proof.  { intros F1 F2. assert (F0: iso_using f G' G). auto. 
@@ -467,7 +457,9 @@ Hint Immediate max_I_in_G' i_num_G': core.
 Hint Resolve iso_coloring iso_same_clrs best_coloring_of_G': core.
 Hint Immediate chrom_num_G': core.
 
-Hint Immediate nice_G' induced_fact1 iso_subgraphs perfect_G': core.
+Hint Immediate nice_G' iso_subgraphs perfect_G': core.
+
+
 
 
 
