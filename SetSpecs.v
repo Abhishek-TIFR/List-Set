@@ -21,7 +21,7 @@
 
 
 From Coq Require Export ssreflect  ssrbool.
-Require Export Lists.List.
+Require Export Lists.List Omega.
 
 Set Implicit Arguments.
 
@@ -156,7 +156,35 @@ end.
   Lemma subset_cardinal_lt (l s: list A)(a: A):
     NoDup l -> l [<=] s->  In a s -> ~ In a l -> |l| < |s|.
   Proof. Admitted.
-    
+
+
+  (*--------Strong Induction, Well founded induction and set cardinality ----------*)
+
+  
+Theorem strong_induction: forall P : nat -> Prop,
+                    (forall n : nat, (forall k : nat, (k < n -> P k)) -> P n) ->
+                    forall n : nat, P n.
+Proof. { intros P Strong_IH n.
+         pose (Q:= fun (n: nat)=> forall k:nat, k<= n -> P k). 
+         assert (H: Q n);unfold Q. 
+         { induction n. 
+           { intros k H;apply Strong_IH.
+             intros k0 H1.  cut (k0 < 0). intro H2; inversion H2. omega.  } 
+           { intros k H0.
+             assert (H1: k < (S n) \/ k = (S n) ).  apply le_lt_or_eq; auto.
+             elim H1. intro. apply IHn. omega. 
+             intro H. subst k. apply Strong_IH. intros. apply IHn. omega. } }
+         unfold Q in H. apply H. omega. }   Qed. 
+
+Definition lt_set (l1 l2: list A):= |l1| < |l2|.
+
+Lemma lt_set_is_well_founded: well_founded lt_set.
+Proof. { unfold well_founded. intro a.
+       remember (|a|) as n. revert Heqn. revert a.
+       induction n using strong_induction.
+       { intros a H1. apply Acc_intro.
+         intros a0 H2. apply H with (k:= |a0|).
+         subst n; apply H2. auto. } } Qed. 
   
  
 End BasicSetFacts.
@@ -183,5 +211,7 @@ Hint Resolve Subset_intro Subset_intro1: core.
 
 Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
 Hint Resolve subset_cardinal_le subset_cardinal_lt: core.
+
+Hint Resolve lt_set_is_well_founded: core.
 
 
