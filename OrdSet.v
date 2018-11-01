@@ -7,7 +7,7 @@
    increasing list according to the order relation on elemets of ordType (i.e, <b)
    
    Following list operations are defined on sets:
-   remove a l    ==> removes the first occurence of a from l 
+   rmv a l    ==> removes the first occurence of a from l 
    add a l       ==> adds a to the ordered list l (works only for ordered lists)
    inter l s     ==> returns intersection of sets represented by lists l and s
    union l s     ==> returns union of sets represented by lists l and s
@@ -16,8 +16,8 @@
    Some useful results:
 
 
-   Lemma remove_IsOrd (a:A)(l: list A): IsOrd l -> IsOrd (remove a l).
-   Lemma remove_nodup (a:A)(l: list A): NoDup l -> NoDup (remove a l).
+   Lemma set_rmv_IsOrd (a:A)(l: list A): IsOrd l -> IsOrd (remove a l).
+   Lemma set_rmv_nodup (a:A)(l: list A): NoDup l -> NoDup (remove a l).
    
    Lemma set_add_IsOrd (a:A)(l: list A): IsOrd(l) -> IsOrd(add a l).
    Lemma set_add_nodup (a:A)(l: list A): IsOrd l -> NoDup (add a l).
@@ -78,6 +78,8 @@ Section OrderedSet.
            { right;auto. }
            { intro H1. destruct H1. left;auto. right;auto. }
            { intro H1. destruct H1. left;auto. right;auto. } } } Qed.
+  Lemma set_rmv_elim (b:A)(l: list A): (rmv b l) [<=] l.
+    Proof. unfold Subset. intros a;eapply set_rmv_elim1. Qed.
   Lemma set_rmv_elim2 (a b:A)(l: list A): NoDup l -> In a (rmv b l)-> (a<>b).
   Proof. { induction l. simpl. auto.
          { simpl. destruct (on_comp b a0).
@@ -87,6 +89,8 @@ Section OrderedSet.
              absurd (b <b b); eauto. apply IHl. eapply nodup_elim1;  eauto. auto. }
            { intros H1 H2. destruct H2. intro. subst a0; subst a.
              absurd (b <b b); eauto.  apply IHl. eapply nodup_elim1;  eauto. auto.  } } } Qed.
+  Lemma set_rmv_elim3 (a:A)(l: list A): NoDup l -> ~ In a (rmv a l).
+    Proof. Admitted.
   
   Lemma set_rmv_intro (a b: A)(l:list A): In a l -> a<>b -> In a (rmv b l).
   Proof. { induction l. simpl.  auto.
@@ -96,7 +100,8 @@ Section OrderedSet.
            { intros H1 H2. simpl. destruct H1. left;auto. right;auto. }
            { intros H1 H2. simpl. destruct H1. left;auto. right;auto. } } } Qed.
            
-  Hint Resolve set_rmv_elim1 set_rmv_elim2 set_rmv_intro: core.
+  Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
+  Hint Resolve     set_rmv_intro: core.
   Lemma set_rmv_iff (a b:A)(l: list A): NoDup l -> (In a (rmv b l) <-> (In a l /\ a<>b)).
   Proof. intro H. split. eauto.
          intro H0. destruct H0 as [H0 H1]. eauto.  Qed. 
@@ -146,11 +151,13 @@ Section OrderedSet.
   Proof. { intro. subst a. induction l.
          simpl. left;auto. simpl. destruct (on_comp b a).
          subst b; auto. all: auto. } Qed.
+  
   Lemma set_add_intro (a b: A)(l: list A): (a= b \/ In a l) -> In a (add b l).
   Proof. intro H. destruct H.  eapply set_add_intro2;auto.  eapply set_add_intro1;auto. Qed.
   Lemma set_add_intro3 (a:A)(l: list A): In a (add a l).
   Proof. { eapply set_add_intro2;auto.  } Qed.
-  Hint Resolve set_add_intro set_add_intro1 set_add_intro2 set_add_intro3: core.
+  
+  Hint Resolve set_add_intro1  set_add_intro3: core.
   
   Lemma set_add_not_empty (a: A)(l:list A): add a l <> (empty).
   Proof. intro H. absurd (In a empty). simpl; auto. rewrite <- H.
@@ -173,9 +180,9 @@ Section OrderedSet.
          assert (H1: a= b \/ In a l). apply set_add_elim;auto.
          destruct H1. absurd (a= b); auto. auto. } Qed.
   
-  Hint Resolve set_add_elim set_add_elim1 set_add_elim2: core.
+  Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
   Lemma set_add_iff (a b:A)(l:list A): In a (add b l) <-> (a= b \/ In a l).
-  Proof. split; auto. Qed.
+  Proof. split; auto using set_add_intro. Qed.
   
   Lemma set_add_IsOrd (a:A)(l: list A): IsOrd(l) -> IsOrd(add a l).
   Proof. { induction l. simpl. constructor.
@@ -195,7 +202,7 @@ Section OrderedSet.
   Fixpoint inter (l s: list A): list A:=
     match l with
     |nil => nil
-    |a::l' => match mem a s with
+    |a::l' => match memb a s with
              |true => add a (inter l' s)
              |false => (inter l' s)
              end
@@ -207,13 +214,13 @@ Section OrderedSet.
          { intros H H1.
            assert (H2: a=a0 \/ In a x); auto.
            destruct H2.
-           { subst a0. simpl. destruct (mem a y) eqn: H2. auto.
-             absurd (mem a y). switch;auto.  apply /memP;auto. }
-           { simpl. destruct (mem a0 y) eqn: H2; auto. } } } Qed.
+           { subst a0. simpl. destruct (memb a y) eqn: H2. auto.
+             absurd (memb a y). switch;auto.  apply /membP;auto. }
+           { simpl. destruct (memb a0 y) eqn: H2; auto. } } } Qed.
   Lemma set_inter_elim1 (a:A)(x y: list A): In a (inter x y)-> In a x.
   Proof. { induction x.
          { simpl. tauto. }
-         { simpl. destruct (mem a0 y).
+         { simpl. destruct (memb a0 y).
            { intro H0. assert(H: a= a0 \/ In a (inter x y)); auto.
              destruct H. left;symmetry;auto. right;auto. }
            { intro;right;auto. } } } Qed.
@@ -221,9 +228,9 @@ Section OrderedSet.
   Lemma set_inter_elim2 (a:A)(x y: list A): In a (inter x y)-> In a y.
   Proof. { induction x.
          { simpl. tauto. }
-         { simpl. destruct (mem a0 y) eqn: Hy.
+         { simpl. destruct (memb a0 y) eqn: Hy.
            { intro H0. assert(H: a=a0 \/ In a (inter x y));auto.
-             destruct H. subst a; apply /memP;auto. auto. }
+             destruct H. subst a; apply /membP;auto. auto. }
            { auto. } } } Qed.
   
   Lemma set_inter_elim (a:A)(x y: list A): In a (inter x y)-> (In a x /\ In a y).
@@ -232,13 +239,13 @@ Section OrderedSet.
   Lemma set_inter_IsOrd (x y: list A): IsOrd (inter x y).
   Proof. { induction x.
          { simpl. constructor. }
-         { simpl. destruct (mem a y); auto. } } Qed.
+         { simpl. destruct (memb a y); auto. } } Qed.
   
   Lemma set_inter_nodup (x y:list A): NoDup (inter x y).
   Proof. { induction x.
          { simpl. constructor. }
          { simpl.  assert (H1: IsOrd (inter x y)). apply set_inter_IsOrd.
-           destruct (mem a y); auto. } } Qed.
+           destruct (memb a y); auto. } } Qed.
 
   Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
   Hint Resolve set_inter_IsOrd set_inter_nodup: core.
@@ -281,7 +288,7 @@ Section OrderedSet.
          { left. left. symmetry;auto. }
          { assert (H1: In a l \/ In a s);auto. destruct H1. left;right;auto.
            right;auto. } } Qed.
-  Hint Resolve set_union_intro1 set_union_intro2 set_union_elim: core.
+  Hint Immediate set_union_intro1 set_union_intro2 set_union_elim: core.
   
   Lemma set_union_IsOrd (x y: list A): IsOrd y -> IsOrd (union x y).
   Proof. { induction x.
@@ -316,7 +323,7 @@ Section OrderedSet.
   Fixpoint diff (l s: list A): list A:=
     match l with
     |nil=> nil
-    |a::l' => match (mem a s) with
+    |a::l' => match (memb a s) with
              |true => diff l' s
              |false => add a (diff l' s)
              end
@@ -328,33 +335,33 @@ Section OrderedSet.
          { intros H H1. simpl.
            assert (H0: a=a0 \/ In a l); auto.
            destruct H0.
-           destruct (mem a0 s) eqn:H2.
-           { absurd ( In a0 s). subst a0;auto. apply /memP;auto. }
+           destruct (memb a0 s) eqn:H2.
+           { absurd ( In a0 s). subst a0;auto. apply /membP;auto. }
            { subst a0; auto. }
-           destruct (mem a0 s) eqn:H2. auto.
+           destruct (memb a0 s) eqn:H2. auto.
            cut (In a (diff l s)); auto. } } Qed.
            
   Lemma set_diff_elim1 (a:A)(l s: list A): In a (diff l s) -> In a l.
   Proof. { induction l. simpl; auto.
-         { simpl. destruct (mem a0 s) eqn: H0.
+         { simpl. destruct (memb a0 s) eqn: H0.
            intro; right; auto. intro H1.
            assert (H2: a= a0 \/ In a (diff l s)); auto.
            destruct H2. left; symmetry;auto. right;auto. } } Qed.
   Lemma set_diff_elim2 (a:A)(l s: list A): In a (diff l s) -> ~In a s.
   Proof. { induction l. simpl;auto.
-         { simpl. destruct (mem a0 s) eqn: H0.
+         { simpl. destruct (memb a0 s) eqn: H0.
            auto. intro H1. assert (H2: a= a0 \/ In a (diff l s)); auto.
-           destruct H2. subst a. move /memP. switch_in H0. auto. auto. } } Qed.
+           destruct H2. subst a. move /membP. switch_in H0. auto. auto. } } Qed.
   Lemma set_diff_empty (a:A)(l: list A): ~ In a (diff l l).
   Proof. intro H. absurd (In a l). eapply set_diff_elim2;eauto.
          eapply set_diff_elim1;eauto. Qed.
 
-  Hint Resolve set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
+  Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
 
   Lemma set_diff_IsOrd (l s: list A): IsOrd (diff l s).
   Proof. { induction l.
            { simpl. constructor. }
-           { simpl. destruct (mem a s); auto. } } Qed.
+           { simpl. destruct (memb a s); auto. } } Qed.
   
   Lemma set_diff_nodup (l s: list A): NoDup (diff l s).
   Proof. cut (IsOrd (diff l s)). auto. apply set_diff_IsOrd. Qed.
@@ -369,21 +376,22 @@ End OrderedSet.
 
 
 
-Hint Resolve set_rmv_elim1 set_rmv_elim2 set_rmv_intro: core.
+Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
+Hint Resolve     set_rmv_intro: core.
 Hint Resolve set_rmv_IsOrd set_rmv_nodup: core.
 
-Hint Resolve set_add_intro set_add_intro1 set_add_intro2 set_add_intro3: core.
-Hint Resolve set_add_elim set_add_elim1 set_add_elim2: core.
+Hint Resolve set_add_intro1  set_add_intro3: core.
+Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup: core.
 
 Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
 Hint Resolve set_inter_comm: core.
 Hint Resolve set_inter_IsOrd set_inter_nodup : core.
 
-Hint Resolve set_union_intro1 set_union_intro2 set_union_elim set_union_comm: core.
+Hint Immediate set_union_intro1 set_union_intro2 set_union_elim set_union_comm: core.
 Hint Resolve set_union_IsOrd set_union_nodup  : core.
 
 Hint Resolve inter_equal union_equal: core.
 
-Hint Resolve set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
+Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
 Hint Resolve set_diff_IsOrd set_diff_nodup: core.
