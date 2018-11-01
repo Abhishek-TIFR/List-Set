@@ -87,6 +87,21 @@ Section DecidableGraphs.
 
     Hint Resolve no_edg2 no_edg1 no_self_edg no_self_edg1 : core.
     Hint Immediate edg_sym sym_edg: core.
+
+
+ (*----------Well founded induction on the size of a graph---------------------------------*)
+
+Definition lt_graph (g1 g2: UG):= |g1| < |g2|.
+
+Lemma lt_graph_is_well_founded: well_founded lt_graph.
+Proof. { unfold well_founded. intro a.
+       remember (|a|) as n. revert Heqn. revert a.
+       induction n using strong_induction.
+       { intros a H1. apply Acc_intro.
+         intros a0 H2. apply H with (k:= |a0|).
+         subst n; apply H2. auto. } } Qed.
+
+Hint Resolve lt_graph_is_well_founded: core.
   
   (*---------- function  mk_refl to make a relation reflexive ------------------------------*)
 
@@ -146,7 +161,7 @@ Section DecidableGraphs.
   
 
   (*------------------ E at_ K := relation E restricted on the set of nodes K ------------*)
-  Definition E_res_to (K: list A)(E: A-> A-> bool)(x y:A):bool:= match (mem2 x y K) with
+  Definition E_res_to (K: list A)(E: A-> A-> bool)(x y:A):bool:= match (memb2 x y K) with
                                                             |true => E x y
                                                             |false => false
                                                             end.
@@ -154,12 +169,12 @@ Section DecidableGraphs.
 
    Lemma edg_equal_at_K (K: list A)(E: A-> A-> bool)(x y: A):
      In x K -> In y K -> E x y = (E at_ K) x y.
-   Proof. { intros H1 H2. assert (H3: mem2 x y K).
-            apply /mem2P. split; auto. unfold E_res_to. rewrite H3. reflexivity. } Qed.  
+   Proof. { intros H1 H2. assert (H3: memb2 x y K).
+            apply /memb2P. split; auto. unfold E_res_to. rewrite H3. reflexivity. } Qed.  
    
    Lemma no_edg_E_at_K (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> (In x K /\ In y K).
-   Proof. { intros x y. unfold E_res_to. destruct (mem2 x y K)  eqn: H.
-          intro H1. assert(H2: IN x y K). apply /mem2P. eauto. auto.
+   Proof. { intros x y. unfold E_res_to. destruct (memb2 x y K)  eqn: H.
+          intro H1. assert(H2: IN x y K). apply /memb2P. eauto. auto.
           intro H1. inversion H1. } Qed.
    Lemma no_edg_E_at_K1 (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> In x K.
    Proof. intros x y H; apply no_edg_E_at_K in H; tauto.  Qed.
@@ -189,14 +204,14 @@ Section DecidableGraphs.
 
    (*------  E at_ K preserves the irreflexive and symmetric property of relation----------- *)
    Lemma irefl_inv_for_E_at_K (E: A-> A-> bool)(K: list A): irefl E -> irefl (E at_ K).
-   Proof. unfold irefl. intros H x. unfold "at_". destruct (mem2 x x K) eqn:H1.
+   Proof. unfold irefl. intros H x. unfold "at_". destruct (memb2 x x K) eqn:H1.
           auto. auto.  Qed.
    Lemma sym_inv_for_E_at_K(E: A-> A-> bool)(K: list A): sym E -> sym (E at_ K).
    Proof. { unfold sym. intros H x y. unfold "at_".
-          destruct (mem2 x y K) eqn:H1. destruct (mem2 y x K) eqn: H2.
-          auto. assert (H3: mem2 y x K = mem2 x y K).
+          destruct (memb2 x y K) eqn:H1. destruct (memb2 y x K) eqn: H2.
+          auto. assert (H3: memb2 y x K = memb2 x y K).
           eauto.  rewrite H1 in H3; rewrite H2 in H3; discriminate H3.
-          replace (mem2 y x K) with (mem2 x y K).
+          replace (memb2 y x K) with (memb2 x y K).
           rewrite H1;simpl; auto. eauto.  } Qed.
 
    (*--------- mk_irefl and mk_sym preserves the " E only_at K" property of relation-----------*)
@@ -316,8 +331,8 @@ Section DecidableGraphs.
 
   Lemma only_at_inv_for_compl1 (E:A-> A-> bool)(K:list A): ((compl E) at_ K) only_at K.
   Proof. { unfold "only_at". intros x y. unfold compl. unfold "at_".
-         case (mem2 x y K) eqn: H.
-         intro H1. cut (IN x y K). unfold IN;tauto. apply /mem2P; eauto.
+         case (memb2 x y K) eqn: H.
+         intro H1. cut (IN x y K). unfold IN;tauto. apply /memb2P; eauto.
          intro H1; discriminate H1. } Qed.
   Lemma only_at_inv_for_compl (G:UG): ((compl (edg G)) at_ G) only_at G.
   Proof. eapply only_at_inv_for_compl1. Qed.
@@ -329,6 +344,34 @@ Section DecidableGraphs.
     refine ({|nodes:= G.(nodes);
              nodes_IsOrd := G.(nodes_IsOrd);
              edg:= ((compl G.(edg)) at_ G); |}). all: auto. Defined.
+
+   Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
+     refine {|nodes:= K; nodes_IsOrd := Pk;
+              edg:= (G.(edg) at_ K); |}. all: auto. Defined.  
+
+   Lemma induced_fact1: forall (K:list A) (G: UG)(Pk: IsOrd K),
+        K[<=]G -> Ind_subgraph (Ind_at Pk G) G.
+   Proof. { intros K G Pk H. split. assumption. simpl;intros;symmetry;auto. }  Qed.
+
+   Lemma induced_fact2 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
+     K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (Ind_at Pk G) x y.
+   Proof. Admitted.
+
+  (* Lemma induced_fact3 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
+     K[<=]G -> In x K -> ~ In y K -> ~ In y G -> edg G x y = edg (Ind_at Pk G) x y.
+   Proof. Admitted.
+
+   Lemma induced_fact4 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
+     K[<=]G -> In y K -> ~ In x K -> ~ In x G -> edg G x y = edg (Ind_at Pk G) x y.
+   Proof. Admitted.
+
+   Lemma induced_fact5 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
+     K[<=]G ->  ~ In x G ->  ~ In y G -> edg G x y = edg (Ind_at Pk G) x y.
+   Proof. Admitted. *)
+
+
+   Hint Immediate induced_fact1 induced_fact2: core.
+     (* induced_fact3 induced_fact4 induced_fact5 *)
   
 End DecidableGraphs.
 
@@ -337,6 +380,8 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
 
  Hint Resolve no_edg2 no_edg1 no_self_edg no_self_edg1 : core.
  Hint Immediate edg_sym sym_edg: core.
+
+ Hint Resolve lt_graph_is_well_founded: core.
  
  Hint Resolve IsOrd_S: core.
 
@@ -362,6 +407,11 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
  Hint Resolve self_is_induced induced_is_subgraph: core.
 
  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
+
+  Hint Immediate induced_fact1 induced_fact2: core.
+     (* induced_fact3 induced_fact4 induced_fact5 *)
+
+ (* Hint Immediate induced_fact1 induced_fact2 induced_fact3 induced_fact4 induced_fact5: core.*)
 
 Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
 Notation "E 'at_' K":= (E_res_to K E)(at level 70).
