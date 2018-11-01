@@ -144,7 +144,7 @@ Section Set_maps.
   Fixpoint one_one_onb (l: list A) (f: A->B): bool:=
     match l with
     |nil => true
-    | a1::l1 => (negb ( mem (f a1) (s_map f l1))) && (one_one_onb l1 f)
+    | a1::l1 => (negb ( memb (f a1) (s_map f l1))) && (one_one_onb l1 f)
     end.
 
 
@@ -154,7 +154,7 @@ Section Set_maps.
          { induction l.
            { unfold one_one_onb. reflexivity. }
            { intro H. simpl one_one_onb. apply /andP. split. cut (~ In (f a)(s_map f l)).
-             intro H1. assert (H2:  mem (f a) (s_map f l) = false ). apply /memP.
+             intro H1. assert (H2:  memb (f a) (s_map f l) = false ). apply /membP.
              auto. rewrite H2. simpl. reflexivity. eapply one_one_on_elim2.
              apply Hl. auto. apply IHl.
              eauto. eauto. } }   
@@ -163,8 +163,8 @@ Section Set_maps.
            { simpl. move /andP. intro H; destruct H as [H H1].
              apply one_one_on_intro1.  
              intro H2. unfold negb in H.
-             replace (mem (f a) (s_map f l)) with true in H. inversion H.
-             symmetry; apply /memP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
+             replace (memb (f a) (s_map f l)) with true in H. inversion H.
+             symmetry; apply /membP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
 
   (*--------- Some more properties of s_maps-----------------------------------*)
 
