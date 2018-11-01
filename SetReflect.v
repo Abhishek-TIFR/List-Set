@@ -48,11 +48,13 @@ Context { A:eqType }. (* to declare A as implicit for all functions in this sect
 Lemma decA: forall x y:A, {x=y}+{x<>y}.
 Proof. eauto. Qed.
 
+
+
   (*--------- set_mem (boolean function)  and its specification ---------*)
-  Fixpoint mem (a:A)(l: list A){struct l}: bool:=
+  Fixpoint memb (a:A)(l: list A){struct l}: bool:=
     match l with
     | nil =>false
-    | a1::l1 => (a== a1) ||  mem a l1
+    | a1::l1 => (a== a1) ||  memb a l1
     end.
   
   (* fix In (a : A) (l : list A) {struct l} : Prop :=
@@ -61,43 +63,51 @@ Proof. eauto. Qed.
   | b :: m => b = a \/ In a m
   end *)
 
-  Lemma set_mem_correct1: forall (a:A)(l:list A), mem a l -> In a l.
+  Lemma set_memb_correct1: forall (a:A)(l:list A), memb a l -> In a l.
   Proof. { intros a l. induction l.
          { simpl;auto. }
          { simpl.  move /orP. intro H; destruct H.
            move /eqP in H;symmetry in H; left;auto.
            right; auto.  } } Qed.
-  Lemma set_mem_correct2: forall (a:A)(l:list A), In a l ->  mem a l.
+  Lemma set_memb_correct2: forall (a:A)(l:list A), In a l ->  memb a l.
   Proof. { intros a l. induction l.
          { simpl;auto. }
          { simpl.  intro H. apply /orP. destruct H.
            left; apply /eqP; symmetry; auto. 
            right; auto.  } } Qed. 
   
-  Lemma memP a l: reflect (In a l) (mem  a l).
+  Lemma membP a l: reflect (In a l) (memb  a l).
   Proof. apply reflect_intro. split.
-         apply set_mem_correct2. apply set_mem_correct1. Qed.
+         apply set_memb_correct2. apply set_memb_correct1. Qed.
   
-  Hint Resolve memP : core.
-  Hint Immediate set_mem_correct1 set_mem_correct2: core.
+  Hint Resolve membP : core.
+  Hint Immediate set_memb_correct1 set_memb_correct2: core.
+
+  Lemma memb_prop1 (a:A)(l s: list A): l [<=] s -> In a l -> memb a l = memb a s.
+  Proof. Admitted.
+  Lemma memb_prop2 (a:A)(l s: list A): l [<=] s -> ~ In a s -> memb a l = memb a s.
+  Proof. Admitted.
+
+  Hint Resolve memb_prop1 memb_prop2: core.
+  
 
 Lemma In_EM: forall (a:A) (x: list A), In a x \/ ~ In a x.
 Proof. eauto.  Qed.
 
 Definition IN := fun (x:A)(y:A)(l:list A) => In x l /\ In y l.
-Definition mem2 x y l := mem  x l && mem y l.
+Definition memb2 x y l := memb  x l && memb y l.
 
-Lemma mem2P a b x : reflect (IN a b x) (mem2 a b x).
+Lemma memb2P a b x : reflect (IN a b x) (memb2 a b x).
 Proof. { apply reflect_intro. split.
-       { unfold IN; unfold mem2. intro H; destruct H.
-         apply /andP. split; apply /memP; auto. }
-       { unfold IN; unfold mem2. move /andP.
-         intro H; split; apply /memP; tauto. } } Qed.
+       { unfold IN; unfold memb2. intro H; destruct H.
+         apply /andP. split; apply /membP; auto. }
+       { unfold IN; unfold memb2. move /andP.
+         intro H; split; apply /membP; tauto. } } Qed.
 
-Lemma mem2_comute (x y: A)(l: list A): mem2 x y l = mem2 y x l.
-Proof. unfold mem2. case (mem  x l);case (mem y l); simpl;auto. Qed.
+Lemma memb2_comute (x y: A)(l: list A): memb2 x y l = memb2 y x l.
+Proof. unfold memb2. case (memb  x l);case (memb y l); simpl;auto. Qed.
 
-Hint Resolve mem2P: core.
+Hint Resolve memb2P: core.
 Lemma IN_EM: forall (a b:A)(x:list A), IN a b x \/ ~ IN a b x.
 Proof.  eauto. Qed.
 
@@ -105,16 +115,16 @@ Proof.  eauto. Qed.
 Fixpoint noDup (x: list A): bool:=
   match x with
     |nil => true
-    |h :: x1 => if mem h x1 then false else noDup x1
+    |h :: x1 => if memb h x1 then false else noDup x1
   end.
 Lemma NoDup_iff_noDup l: NoDup l <-> noDup l. 
 Proof. { split. 
        { induction l.  auto.
        intro H; inversion H;  simpl.
-       replace (mem a l) with false; auto. } 
+       replace (memb a l) with false; auto. } 
        { induction l. constructor.
-       simpl. case (mem a l) eqn: H1. discriminate.  intro H2.
-       constructor. move /memP.  rewrite H1.  auto. tauto. }  } Qed.
+       simpl. case (memb a l) eqn: H1. discriminate.  intro H2.
+       constructor. move /membP.  rewrite H1.  auto. tauto. }  } Qed.
 Lemma noDup_intro l: NoDup l -> noDup l.
 Proof. apply NoDup_iff_noDup. Qed.
 Lemma noDup_elim l: noDup l -> NoDup l.
@@ -163,7 +173,7 @@ Hint Immediate empty_elim empty_intro: core.
 Fixpoint subset (s s': list A): bool:=
   match s with
   |nil => true
-  | a1 :: s1=> mem a1 s' && subset s1 s'
+  | a1 :: s1=> memb a1 s' && subset s1 s'
   end.
 
 Lemma subsetP s s': reflect (Subset s s') (subset s s').
@@ -171,10 +181,10 @@ Proof. { induction s. simpl. constructor. intro. intros  H. absurd (In a nil); a
        apply reflect_intro. split.
        { intro H.  cut (In a s' /\ Subset s s'). Focus 2. split; eauto. simpl.
          intro H1; destruct H1 as [H1 H2].
-         apply /andP. split. apply /memP;auto. apply /IHs;auto.  }
+         apply /andP. split. apply /membP;auto. apply /IHs;auto.  }
        { simpl.  move /andP. intro H; destruct H as [H1 H2]. unfold Subset.
          intros a0 H3. cut (a0= a \/ In a0 s). intro H4; destruct H4 as [H4 | H5].
-         rewrite H4. apply /memP;auto. cut (Subset s s'). intro H6. auto. apply /IHs;auto.
+         rewrite H4. apply /membP;auto. cut (Subset s s'). intro H6. auto. apply /IHs;auto.
          eauto.   }  } Qed.
 
 Hint Resolve subsetP: core.
@@ -218,7 +228,7 @@ Fixpoint idx (x:A)(l: list A):= match l with
                                 |nil => 0
                                 |a::l' => match (x==a) with
                                         | true => 1
-                                        |false => match (mem x l') with
+                                        |false => match (memb x l') with
                                                  |true => S (idx x l')
                                                  |false => 0
                                                  end
@@ -376,12 +386,15 @@ Hint Resolve diff_index same_index: core.
      
 End SetReflections.
 
-Hint Resolve memP mem2P nodupP emptyP subsetP equalP
-     existsP existsbP ExistsP ForallP forallP forallbP mem2_comute: core.
+ 
+
+Hint Resolve membP memb2P nodupP emptyP subsetP equalP
+     existsP existsbP ExistsP ForallP forallP forallbP memb2_comute: core.
 Hint Resolve forall_exists_EM exists_forall_EM: core.
 Hint Resolve forall_em_exists exists_em_forall: core.
 
-Hint Immediate set_mem_correct1 set_mem_correct2: core.
+Hint Immediate set_memb_correct1 set_memb_correct2: core.
+Hint Resolve memb_prop1 memb_prop2: core.
 Hint Immediate noDup_elim noDup_intro: core.
 Hint Immediate empty_elim empty_intro: core.
 Hint Immediate subset_intro subset_elim: core.
