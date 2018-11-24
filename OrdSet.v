@@ -39,6 +39,7 @@ Require Export GenReflect SetSpecs OrdType.
 Require Export SetReflect OrdList.
 Require Export Omega.
 
+Require Export DecList. (* needed for cardinality results *)
 
 Set Implicit Arguments.
 
@@ -90,7 +91,7 @@ Section OrderedSet.
            { intros H1 H2. destruct H2. intro. subst a0; subst a.
              absurd (b <b b); eauto.  apply IHl. eapply nodup_elim1;  eauto. auto.  } } } Qed.
   Lemma set_rmv_elim3 (a:A)(l: list A): NoDup l -> ~ In a (rmv a l).
-    Proof. Admitted.
+    Proof. intros H H1. absurd (a=a). eapply set_rmv_elim2. all: eauto. Qed.
   
   Lemma set_rmv_intro (a b: A)(l:list A): In a l -> a<>b -> In a (rmv b l).
   Proof. { induction l. simpl.  auto.
