@@ -17,6 +17,9 @@ coqc DecType.v
  
 printf ‘SetReflect
 coqc SetReflect.v
+
+printf ‘DecList
+coqc DecList.v
  
 printf ‘OrdType 
 coqc OrdType.v
