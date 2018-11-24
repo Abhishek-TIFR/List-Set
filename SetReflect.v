@@ -11,8 +11,8 @@
   Following are the boolean functions and their corresponding predicated  
  
   Propositions                        Boolean functions      Connecting Lemma 
-  In a l                       <->    mem a l                memP
-  IN a b l                     <->    mem2 a b l             mem2p
+  In a l                       <->    memb a l                membP
+  IN a b l                     <->    memb2 a b l             memb2p
   NoDup l                      <->    noDup l                nodupP
   Empty l                      <->    is_empty l             emptyP
   Subset s s'                  <->    subset s s'            subsetP
@@ -84,9 +84,9 @@ Proof. eauto. Qed.
   Hint Immediate set_memb_correct1 set_memb_correct2: core.
 
   Lemma memb_prop1 (a:A)(l s: list A): l [<=] s -> In a l -> memb a l = memb a s.
-  Proof. Admitted.
+  Proof. intros H H1. assert (H2: In a s); auto. Qed.
   Lemma memb_prop2 (a:A)(l s: list A): l [<=] s -> ~ In a s -> memb a l = memb a s.
-  Proof. Admitted.
+  Proof. intros H H1. assert (H2: ~ In a l); auto. Qed.
 
   Hint Resolve memb_prop1 memb_prop2: core.
   
@@ -223,32 +223,6 @@ Proof. move /equalP. auto. Qed.
 
 Hint Immediate equal_elim equal_intro: core.
 
-(*---------- Index (idx) function to locate the first position of element in list----- *)
-Fixpoint idx (x:A)(l: list A):= match l with
-                                |nil => 0
-                                |a::l' => match (x==a) with
-                                        | true => 1
-                                        |false => match (memb x l') with
-                                                 |true => S (idx x l')
-                                                 |false => 0
-                                                 end
-                                         end
-                                end.
-Lemma absnt_idx_zero (x:A)(l:list A): ~ In x l -> (idx x l)=0.
-Proof. Admitted.
-Lemma idx_zero_absnt (x:A)(l:list A): (idx x l)=0 -> ~ In x l.
-Proof. Admitted.
-
-Lemma diff_index (x y:A)(l: list A): In x l -> In y l -> x<>y -> (idx x l <> idx y l).
-Proof. Admitted.
-Lemma same_index (x y:A)(l: list A): In x l -> In y l -> (idx x l = idx y l) -> x=y.
-Proof. Admitted.
-
-Lemma nodup_idx (x a: A)(l: list A): In x (a::l)-> NoDup (a::l)-> idx x (a::l)= S (idx x l).
-Proof. Admitted.
-
-Hint Immediate absnt_idx_zero idx_zero_absnt: core.
-Hint Resolve diff_index same_index: core.
 
 (*----------- existsb (boolean function) and its specifications-------------------*)
   
@@ -400,8 +374,6 @@ Hint Immediate empty_elim empty_intro: core.
 Hint Immediate subset_intro subset_elim: core.
 Hint Immediate equal_elim equal_intro: core.
 
-Hint Immediate absnt_idx_zero idx_zero_absnt: core.
-Hint Resolve diff_index same_index: core.
 
 
 
