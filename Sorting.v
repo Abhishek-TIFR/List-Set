@@ -120,6 +120,11 @@ Section Sorting.
               destruct H2a. subst a. inversion H. eauto.  inversion Ha; contradiction. }
             apply IHl. inversion H. constructor; eauto.  } } Qed.
 
+  Lemma putin_card (a:A)(l: list A): | putin a l | = S (|l|).
+  Proof. { induction l.
+         { simpl;auto. }
+         { simpl. case (a <=r a0) eqn:H.
+           simpl; auto. simpl; rewrite IHl; auto. } } Qed.
   
   
   Hint Resolve putin_intro putin_intro1 putin_elim putin_correct nodup_putin: core.
@@ -153,7 +158,10 @@ Section Sorting.
   Proof. split;intro; eauto. Qed.
 
   Lemma sort_same_size (l: list A): |sort l| = |l|.
-  Proof. Admitted.
+  Proof. { induction l.
+         { simpl;auto. }
+         { simpl. replace (|putin a (sort l)|) with (S(|sort l|)).
+           rewrite IHl. auto. symmetry. apply putin_card. } } Qed.
 
   Lemma Sorted_equal (l l': list A): Equal l l' -> Equal l (sort l').
   Proof. intro. cut (Equal l' (sort l')). eauto.  apply sort_equal. Qed.
