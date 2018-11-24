@@ -23,8 +23,8 @@ Following are some useful property of f:
  Lemma s_map_of_s_map (l: list A)(f: A->A)(Hl: IsOrd l):
     (forall x, f (f x) = x)-> s_map f (s_map f l) = l.
 
- Lemma iso_commutative1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
- Lemma iso_commutative (G G': @UG A): iso G G' -> iso G' G.
+ Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
+ Lemma iso_sym (G G': @UG A): iso G G' -> iso G' G.
 
  Lemma iso_one_one1 (G G': @UG A)(f: A-> A): iso_using f G G' -> one_one_on G f.
  Lemma iso_using_G' (G G': @UG A)(f: A-> A): iso_using f G G' -> nodes G' = (s_map f G).
@@ -120,7 +120,7 @@ Section GraphIsomorphism.
    Hint Resolve fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.   
 
    (* ---------------------- Isomorphism is commutative and transitive------------------*)
-  Lemma iso_commutative1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
+  Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
     Proof. { intro H. destruct H as [Ha H]; destruct H as [Hb H].
            split.
            { auto. }
@@ -137,19 +137,13 @@ Section GraphIsomorphism.
 
   Lemma iso_elim2 (G G': @UG A)(f: A->A)(x:A): iso_using f G G'-> In x G'-> In (f x) G.
   Proof. intros H Hx. replace (nodes G) with (s_map f G'). auto. symmetry.
-         apply iso_commutative1 in H as Ha. apply Ha. Qed.
+         apply iso_sym1 in H as Ha. apply Ha. Qed.
    
-  Lemma iso_commutative (G G': @UG A): iso G G' -> iso G' G.
-  Proof. { intro H. destruct H as [f H].  exists f. apply iso_commutative1. auto. } Qed.
+  Lemma iso_sym (G G': @UG A): iso G G' -> iso G' G.
+  Proof. { intro H. destruct H as [f H].  exists f. apply iso_sym1. auto. } Qed.
   
-  Hint Immediate iso_commutative1 iso_commutative iso_elim1 iso_elim2: core.
+  Hint Immediate iso_sym1 iso_sym iso_elim1 iso_elim2: core.
 
-  Lemma iso_trans1 (G G1 G2: @UG A)(f1 f2: A-> A): iso_using f1 G G1 -> iso_using f2 G1 G2 ->
-                                                  iso_using (fun x=> f2 (f1 x)) G G2.
-  Proof. Admitted.
-
-  Lemma iso_trans (G G1 G2: @UG A): iso G G1 -> iso G1 G2 -> iso G G2.
-  Proof. Admitted. 
   
 
   Lemma iso_one_one1 (G G': @UG A)(f: A-> A): iso_using f G G' -> one_one_on G f.
@@ -441,7 +435,7 @@ End GraphIsomorphism.
 
 Hint Resolve fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.
 
-Hint Immediate iso_commutative1 iso_commutative iso_elim1 iso_elim2: core.
+Hint Immediate iso_sym1 iso_sym iso_elim1 iso_elim2: core.
 Hint Immediate iso_one_one1 iso_one_one2: core.
 Hint Immediate iso_one_one iso_using_G iso_using_G': core.
 
