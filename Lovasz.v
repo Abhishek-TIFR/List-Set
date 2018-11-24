@@ -168,7 +168,7 @@ Section Repeat_node.
          switch_in Exy. absurd (edg G' x y). auto using In_E'xy_Exy. auto. }  Qed.
   
    Lemma In_Exy_eq_E'xy (x y:A)(P: In a G)(P': ~In a' G): In x G-> In y G-> edg G x y=edg G' x y.
-    Proof.  { intros Gx Gy.
+    Proof. { intros Gx Gy.
            destruct (edg G x y) eqn: Exy; destruct (edg G' x y) eqn: E'xy.
            auto.
            absurd ( edg G' x y). switch;auto. apply Exy_E'xy;auto.
