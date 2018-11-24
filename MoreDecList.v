@@ -8,7 +8,107 @@ Require Export Sorting.
 Require Export DecType SetReflect.
 Require Export DecList.
 
+
+
 Set Implicit Arguments.
+
+
+
+Section MoreDecList.
+
+Context { A: eqType}.
+(*------------------ Uniform list -----------------------------------------------------*)
+
+Inductive uniform : list A -> Prop:=
+| Nil_uni: uniform nil
+|Sing_uni(a:A): uniform (a::nil)
+|Ind_uni(a b:A)(l:list A): a=b -> uniform (b::l)-> uniform (a::b::l).
+
+Lemma uniform_elim (a:A)(l: list A): uniform (a::l)-> (forall x, In x l -> x=a).
+Proof. Admitted.
+Lemma uniform_elim1 (a:A)(l: list A): uniform (a::l)-> (forall x, In x (a::l)-> x=a).
+Proof. Admitted.
+Lemma uniform_elim2 (a:A) (l: list A): uniform (a::l)-> uniform l.
+Proof. Admitted.
+Lemma uniform_intro (a:A)(l: list A): (forall x, In x l -> x=a) -> uniform (a::l).
+Proof. Admitted.
+
+(* ----------------- delete_all operation ---------------------------------------------  *)
+
+Fixpoint del_all (a:A)(l: list A): list A:=
+    match l with
+    |nil => nil
+    | a1::l1 => match  (a == a1) with
+               |true => del_all a l1
+               |false => a1 :: del_all a l1
+               end
+    end.
+
+(* This function deletes all occurences of a in the list l *)
+
+  Lemma del_all_elim1 (a b:A)(l: list A): In a (del_all b l)-> In a l.
+  Proof. Admitted.
+  Lemma del_all_elim2 (a b:A)(l: list A): In a (del_all b l)-> (a<>b).
+  Proof. Admitted.
+
+  Lemma del_all_intro (a b: A)(l:list A): In a l -> a<>b -> In a (del_all b l).
+  Proof. Admitted.
+  Lemma del_all_iff (a b:A)(l: list A): (In a (del_all b l) <-> (In a l /\ a<>b)).
+  Proof. Admitted.
+
+  Hint Resolve del_all_elim1 del_all_elim2 del_all_intro: core.
+  
+  Lemma del_all_nodup (a:A)(l: list A): NoDup l -> NoDup (del_all a l).
+  Proof. Admitted.
+
+  Hint Resolve del_all_nodup: core.
+
+ (* ------- count of an element a in the list l ----------------------------------------*)
+
+ Fixpoint count (a:A) (l:list A) : nat:= match l with
+                          | nil => 0
+                          |a1::l1 => match a == a1 with
+                                    |true => S (count a l1)
+                                    |false => count a l1
+                                    end
+                                        end.
+  Lemma countP1 (a:A) (l:list A): In a l -> (count a l >= 1).
+  Proof. Admitted.
+  Lemma countP2 (a:A)(l: list A): ~ In a l -> (count a l = 0).
+  Proof. Admitted.
+  Lemma countP3 (a:A)(l: list A): (count a l = 0) -> ~ In a l.
+  Proof. Admitted.
+  Lemma countP4 (a:A)(l: list A): count a (a::l) = S (count a l).
+  Proof. Admitted.
+  Lemma countP5 (a b:A)(l: list A): (count a l) <= count a (b::l).
+  Proof. Admitted.
+  Lemma countP6 (a: A)(l: list A): count a l <= |l|.
+  Proof. Admitted.
+  Lemma countP7 (a:A) (l:list A): In a l -> count a l = S(count a (delete a l)).
+  Proof. Admitted.
+  Lemma countP8 (a:A) (l:list A): forall x, x<>a-> count x (a::l) = count x l.
+  Proof. Admitted.
+  Lemma countP9 (a:A) (l:list A): forall x, x<>a -> count x l = count x (delete a l).
+  Proof. Admitted.
+  Lemma countP10 (a:A)(l s:list A): count a l <= count a s -> count a (a::l) <= count a (a::s).
+  Proof. Admitted.
+  Lemma countP11 (a:A)(l s: list A): count a l = count a s -> count a (a::l) = count a (a::s).
+  Proof. Admitted.
+  Lemma countP12 (a:A)(l s: list A): count a l < count a s -> count a (a::l) < count a (a::s).
+  Proof. Admitted.
+  
+  Hint Immediate countP1 countP2 countP3: core.
+  Hint Resolve countP4 countP5 countP6 countP7 countP8 countP9: core.
+ 
+End MoreDecList.
+
+ Hint Resolve del_all_elim1 del_all_elim2 del_all_intro: core.
+ Hint Resolve del_all_nodup: core.
+
+ Hint Immediate countP1 countP2 countP3: core.
+ Hint Resolve countP4 countP5 countP6 countP7 countP8 countP9:  core.
+ Hint Resolve countP10 countP11 countP12: core.
+
 
 Section Permutation.
 
@@ -148,7 +248,7 @@ Section Permutation.
 
   Fixpoint included (l s: list A): bool := match l with
                                         |nil => true
-                                        | a::l1 => match (mem a s) with
+                                        | a::l1 => match (memb a s) with
                                                   |true => included l1 (delete a s)
                                                   |false => false
                                                   end
@@ -163,7 +263,7 @@ Section Permutation.
   Proof. Admitted. 
   Lemma included_intro (l s: list A): (forall a, count a l <= count a s)-> included l s.
   Proof. { revert s. induction l. intros;apply included_intro1;auto.
-           { intros s H. simpl.  case (mem a s) eqn:Has;move /memP in Has.
+           { intros s H. simpl.  case (memb a s) eqn:Has;move /membP in Has.
              apply IHl. intro x. destruct (EM x a).
              Focus 2.  replace (count x l) with (count x (a::l)).
              replace (count x (delete a s)) with (count x s).
