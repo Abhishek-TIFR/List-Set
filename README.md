@@ -1,5 +1,4 @@
-# List-Set
-Lists, Set, Undirected Graphs
+# List-Set 
 Formalisation of Perfect Graph theorems in Coq Proof Assistant 
 
 This work aims to formally verify perfect graph theorems (WPGT and SPGT) in the coq proof assistant. 
