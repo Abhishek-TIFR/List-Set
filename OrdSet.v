@@ -137,6 +137,36 @@ Section OrderedSet.
 
   Hint Resolve set_rmv_IsOrd set_rmv_nodup memb_prop_rmv: core.
 
+  Lemma rmv_card1 (a:A)(l: list A): In a l -> |rmv a l| = |l| - 1.
+  Proof. { induction l.
+         { simpl; auto. }
+         { intro H. simpl. match_up a a0.
+           {  omega. }
+           { simpl. destruct H. by_conflict.
+             apply IHl in H as H1. rewrite H1. cut (|l| > 0). omega. eauto. }
+           { simpl. destruct H. by_conflict.
+             apply IHl in H as H1. rewrite H1. cut (|l| > 0). omega. eauto. } } } Qed.
+  Lemma rmv_card2  (a:A)(l: list A): ~ In a l -> |rmv a l| = |l|.
+  Proof. { induction l.
+         { simpl; auto. }
+         { intro H. simpl. assert (H0: ~ In a l). auto.
+           match_up a a0.
+           {  subst a. absurd (In a0 (a0::l)); auto. }
+           { simpl.  apply IHl in H0 as H2. rewrite H2.  omega. }
+           { simpl.  apply IHl in H0 as H2. rewrite H2.  omega. } } } Qed.
+
+  Lemma rmv_card  (a:A)(l: list A):  |rmv a l| <= |l|.
+  Proof. { cut (In a l \/ ~ In a l). intro H.  destruct H.
+         apply rmv_card1 in H as H1; rewrite H1; omega.
+         apply rmv_card2 in H as H1; rewrite H1; omega.
+         eapply reflect_EM; eauto. } Qed.
+
+  Lemma rmv_card_min (a:A)(l: list A): |l| - 1 <=  |rmv a l|.
+  Proof. induction l. simpl;omega. simpl;match_up a a0; simpl;omega. Qed.
+
+  Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
+         
+
  
    (* ------------ set_add operation for ordered list -------------- ---------------  *)
   Fixpoint add (a:A)(l: list A): list A :=
@@ -209,7 +239,39 @@ Section OrderedSet.
           { symmetry. apply /membP. move /membP in H1. auto. }
           { symmetry. apply /membP.  move /membP in H1. intro H2; apply H1; eauto. } } Qed.
 
-  Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add : core.
+   Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add : core.
+
+   Lemma add_same (a:A)(l: list A): IsOrd l -> In a l-> (add a l) = l.
+   Proof. { revert a. induction l.
+          { simpl; tauto. }
+          { intros x H H1.
+            simpl.
+            match_up x a.
+            { auto. }
+            { absurd (In x (a::l)); auto. }
+            { assert (H2: In x l).
+              { destruct H1. by_conflict. auto. }
+              assert (H3: add x l = l). eauto.
+              rewrite H3. auto. } } } Qed.
+
+  
+  Lemma add_card1  (a:A)(l: list A): ~ In a l -> |add a l| = S(|l|).
+  Proof.  { induction l.
+         { simpl; auto. }
+         { intro H. simpl. assert (H0: ~ In a l). auto.
+           match_up a a0.
+           {  subst a. absurd (In a0 (a0::l)); auto. }
+           { simpl.   omega. }
+           { simpl.  apply IHl in H0 as H2. rewrite H2.  omega. } } } Qed.
+
+  Lemma add_card  (a:A)(l: list A): |l| <= |add a l|.
+  Proof.  induction l. simpl;auto. simpl;match_up a a0;simpl;omega. Qed.
+
+  Lemma add_card_max  (a:A)(l: list A): |add a l| <= S(|l|).
+  Proof. induction l. simpl;omega. simpl; match_up a a0;simpl;omega. Qed.
+        
+
+  Hint Resolve add_card add_card1 add_card_max add_same: core.
 
    
  
@@ -395,10 +457,12 @@ End OrderedSet.
 Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
 Hint Resolve     set_rmv_intro: core.
 Hint Resolve set_rmv_IsOrd set_rmv_nodup memb_prop_rmv: core.
+ Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
 
 Hint Resolve set_add_intro1  set_add_intro3: core.
 Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
+ Hint Resolve add_card add_card1 add_card_max add_same: core.
 
 Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
 Hint Resolve set_inter_comm: core.
