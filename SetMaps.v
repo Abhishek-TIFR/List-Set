@@ -169,16 +169,30 @@ Section Set_maps.
   (*--------- Some more properties of s_maps-----------------------------------*)
 
   Lemma one_one_s_map_elim (l: list A)(f: A->B)(x: A):
-    one_one_on l f -> In (f x) (s_map f l) -> In x l.
-  Proof. Admitted.
+    one_one f -> In (f x) (s_map f l) -> In x l.
+  Proof. { intros H H1. assert (H2: exists a, In a l /\ f x = f a). auto.
+         destruct H2 as [a H2]. destruct H2 as [H2 H3].
+         cut (x = a). intros; subst x; auto. eauto. } Qed.
   
   Lemma s_map_subset (l s: list A)(f: A->B): l [<=] s -> (s_map f l) [<=] (s_map f s).
-  Proof. Admitted.
+  Proof. { intros H fx H1. assert (H2: exists x, In x l /\ fx = f x). auto.
+         destruct H2 as [x H2]. destruct H2 as [H2 H3]. subst fx; auto. } Qed.
 
   Lemma s_map_size_less (l: list A)(f: A->B): |s_map f l| <= |l|.
-  Proof. Admitted.
+  Proof.  { induction l.
+          { simpl;auto. }
+          { simpl. assert (H: (| add (f a) (s_map f l) |) <= S (| s_map f l |)).
+            auto. omega. } } Qed.
+          
   Lemma s_map_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| s_map f l|.
-  Proof. Admitted.
+  Proof.  { induction l.
+          { simpl. auto. }
+          { intros H H1.
+            assert (Hl: NoDup l). eauto.
+            assert (H1a: one_one_on l f). eauto.
+            assert (H2: (| l |) = (| s_map f l |)). auto.
+            simpl. assert (H3: ~ In (f a) (s_map f l)). auto.
+            rewrite H2; symmetry;auto. }  } Qed.
   
 
   Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
@@ -186,16 +200,37 @@ Section Set_maps.
   
   Lemma s_map_strict_less (l: list A)(f: A->B):
     NoDup l -> (|s_map f l| < |l|) -> ~ one_one_on l f.
-  Proof. Admitted.
+  Proof. intros H H1 H2. assert(H3: |l|=| s_map f l|). auto. omega. Qed. 
 
-  Hint Immediate one_one_s_map_elim s_map_strict_less : core.
+  Hint Immediate one_one_s_map_elim  s_map_strict_less : core.
+
   
   Lemma one_one_on_intro2 (l: list A)(f: A->B):
     NoDup l -> (|s_map f l| = |l|)->  one_one_on l f.
-  Proof. Admitted.
+  Proof.  induction l.
+          { simpl; auto. }
+          { intros H H0.
+            assert (Ha: NoDup l). eauto.
+            assert (Hb: ~ In a l ). auto.
+            assert (H1: |s_map f l| = |l|).
+            { match_up  (| s_map f l |)  (| l |).
+              { auto. }
+              { assert ((| s_map f (a :: l) |) <b (| a :: l |)).
+                { move /ltP in H1. apply /ltP. simpl.
+                  cut ((| add (f a) (s_map f l) |) <= S (|s_map f l|)). omega.
+                  auto. } by_conflict. }
+              { assert (H2: |s_map f l| <= |l|). auto.
+                move /lebP in H2. auto. } } 
+            assert (H2: one_one_on l f). auto.
+            assert (H3: ~ In (f a) (s_map f l)).
+            { intro H3.
+              assert (H4: s_map f (a :: l) = (s_map f l)).
+              { simpl. eapply add_same. auto. auto. }
+              rewrite H4 in H0. rewrite H1 in H0. simpl in H0. omega. } auto. } Qed.
+            
 
   Lemma one_one_on_intro3 (l s: list A)(f: A-> B): s [<=] l -> one_one_on l f -> one_one_on s f.
-  Proof. Admitted.
+  Proof. intros H0 H1; unfold one_one_on; auto. Qed.
 
   Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
  
