@@ -17,12 +17,12 @@
 
       This is a lazy description which doesnot ensure the symmetric and ireflexive property of
       edge relation. Later on we give a more accurate description of edge relation which uses 
-      mk_iref and mk_sym function to modify the nw_edg relation. Hence the following edge 
-      relation  is irreflexive, symmetric and restricted to nodes of G'.
+      mk_iref and mk_sym function to modify the nw_edg relation. The following edge 
+      relation (i.e. ex_edg)  is irreflexive, symmetric and restricted to nodes of G'.
 
       Definition ex_edg (G: UG)(a a': A):= mk_sym (mk_irefl ((nw_edg G a a') at_ (add a' G))).
 
-      Then, we use the following definition to express G'.
+      Then, we can use the following definition to represent G'.
 
       Definition Repeat_in (G: @UG A)(a: A)(a':A): @UG A.
        refine({| nodes:= add a' G; edg:= (ex_edg G a a');
@@ -278,8 +278,6 @@ Section Repeat_node.
           { simpl. auto. }
           { intros x y H1 H2. simpl. symmetry;auto. } Qed.
 
-   Lemma memb_G'_G'_a (P: In a G)(P': ~ In a' G)(x:A): x<>a -> memb x G' = memb x (rmv a G').
-   Proof. Admitted.
    
    Let f:= ( fun x:A => match (x == a), (x == a') with
                             | true, true => x
@@ -290,13 +288,20 @@ Section Repeat_node.
 
    (* some properties of isomorphism f *)
    Lemma fa_is_a' (P: In a G)(P': ~ In a' G):  (f a) = a'.
-   Proof. Admitted.
+   Proof. { unfold f. replace (a==a) with true. replace (a==a') with false.
+            auto. all: symmetry; apply /eqP; auto. } Qed.
+   
    Lemma fa'_is_a (P: In a G)(P': ~ In a' G):  (f a') = a.
-   Proof. Admitted.
+   Proof. { unfold f. replace (a'==a') with true. replace (a'==a) with false.
+            auto. all: symmetry; apply /eqP; auto. intro. subst a'. contradiction. } Qed.
+   
    Lemma fx_is_x (P: In a G)(P': ~ In a' G)(x:A): In x G-> x<>a-> (f x) = x.
-   Proof. Admitted.
+   Proof.  { intros H H1. unfold f. replace (x==a) with false. replace (x==a') with false.
+             auto. all: symmetry; apply /eqP; auto. intro. subst x. contradiction. } Qed.
+   
    Lemma fx_is_x2 (P: In a G)(P': ~ In a' G)(x:A): x<>a'-> x<>a-> (f x) = x.
-   Proof. Admitted.
+   Proof.  { intros H H1. unfold f. replace (x==a) with false. replace (x==a') with false.
+             auto. all: symmetry; apply /eqP; auto.  } Qed.
    
    (* -----   fact: f (f x) = x     ------------ *)
    Lemma f_is_invertible (P: In a G)(P': ~ In a' G): forall x : A, f (f x) = x.
@@ -342,8 +347,7 @@ Section Repeat_node.
    Proof. {  assert (H0: a <> a'). auto.
           assert (H0a: a == a' = false). switch. move /eqP. auto.
           assert (H0b: (rmv a G') [<=] G'). auto.
-          assert (H0c: forall x, x <> a -> memb x G'= memb x (rmv a G')).
-          auto using memb_G'_G'_a.
+          assert (H0c: forall x, x <> a -> memb x G'= memb x (rmv a G')). auto.
           assert (H0d: In a' G'). simpl;  auto.
           destruct (x==y) eqn: Hxy.
           { (* when x =y : easy case*)
@@ -372,8 +376,7 @@ Section Repeat_node.
                 Focus 2. symmetry. apply Eay_eq_E'a'y;auto.
                 assert (H3: In a' (rmv a G')). simpl. auto.
                 assert (H3a: memb a' G' = memb a' (rmv a G')). symmetry; auto.
-                assert (H4: memb y G' = memb y (rmv a G')). auto using  memb_G'_G'_a .
-                auto. } }
+                assert (H4: memb y G' = memb y (rmv a G')); auto. } }
             { (*when x<>a*)
               assert (x<> a). move /eqP. switch; auto.
               destruct (x==a') eqn: Hxa'.
@@ -444,8 +447,6 @@ Section LovaszRepLemma.
   Hypothesis P': ~In a' G.
 
   Let G':= Repeat_in G a a'.
-
-  
 
   Lemma ReplicationLemma: Perfect G -> Perfect G'.
     Proof. Admitted.
