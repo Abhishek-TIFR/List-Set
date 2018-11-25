@@ -92,6 +92,10 @@ Section GraphIsomorphism.
 
    (*--------------------- properties of bijective function for isomorphism----------------*)
 
+   Lemma f_is_one_one (f: A->A): (forall x, f (f x) = x) -> one_one f.
+   Proof.  { intros H. unfold one_one. intros x y  Hxy HC. absurd (x=y).
+               auto. replace y with (f (f y)). rewrite <- HC. symmetry;auto. auto. } Qed.
+     
   Lemma fx_is_one_one (l: list A)(f: A->A): (forall x, f (f x) = x) -> one_one_on l f.
   Proof. { intros H. unfold one_one_on. intros x y Hx Hy Hxy HC. absurd (x=y).
            auto. replace y with (f (f y)). rewrite <- HC. symmetry;auto. auto. } Qed.
@@ -117,7 +121,7 @@ Section GraphIsomorphism.
      (forall x, f (f x) = x)-> l= s_map f (s_map f l).
    Proof. intros. symmetry. auto using s_map_of_s_map. Qed.
    
-   Hint Resolve fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.   
+   Hint Resolve f_is_one_one fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.   
 
    (* ---------------------- Isomorphism is commutative and transitive------------------*)
   Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
@@ -160,10 +164,13 @@ Section GraphIsomorphism.
 
   Lemma iso_one_one (G G': @UG A)(f: A-> A)(l: list A):
     iso_using f G G'-> one_one_on l f.
-    Proof. intro H; apply fx_is_one_one; apply H. Qed.
+  Proof. intro H; apply fx_is_one_one; apply H. Qed.
+
+  Lemma iso_f_one_one (G G': @UG A)(f: A-> A): iso_using f G G'-> one_one f.
+    Proof. intro H; apply f_is_one_one; apply H. Qed.
   
   
-    Hint Immediate iso_one_one1 iso_one_one2 iso_one_one
+    Hint Immediate iso_one_one1 iso_one_one2 iso_one_one iso_f_one_one
          iso_using_G iso_using_G': core.
 
   Lemma iso_cardinal (G G': @UG A)(f: A-> A): iso_using f G G' -> |G|=|G'|.
@@ -399,20 +406,17 @@ Section GraphIsomorphism.
                 auto. auto. symmetry. auto. }
               { (* Case2: In x H /\ ~ In y H *)
                 assert (H2: ~ In (f y) (s_map f H)).
-                { intro H2. apply H1. cut (one_one_on H f). eauto.
-                  cut (H [<=] G). eauto. auto. } 
+                { intro H2. apply H1. cut (one_one f); eauto. } 
                   replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
               { (* Case3: ~ In x H /\ In y H *)
                 assert (H2: ~ In (f x) (s_map f H)).
-                { intro H2. apply H0. cut (one_one_on H f). eauto.
-                  cut (H [<=] G). eauto. auto. } 
+                { intro H2. apply H0. cut (one_one f); eauto. } 
                   replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
               { (* Case4: ~ In x H /\ ~ In y H *)
                 assert (H2: ~ In (f y) (s_map f H)).
-                { intro H2. apply H1. cut (one_one_on H f). eauto.
-                  cut (H [<=] G). eauto. auto. } 
+                { intro H2. apply H1. cut (one_one f); eauto. } 
                   replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. } } }  } Qed. 
             
@@ -433,11 +437,11 @@ Section GraphIsomorphism.
 End GraphIsomorphism.
 
 
-Hint Resolve fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.
+Hint Resolve f_is_one_one fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.
 
 Hint Immediate iso_sym1 iso_sym iso_elim1 iso_elim2: core.
 Hint Immediate iso_one_one1 iso_one_one2: core.
-Hint Immediate iso_one_one iso_using_G iso_using_G': core.
+Hint Immediate iso_one_one iso_f_one_one iso_using_G iso_using_G': core.
 
 Hint Immediate iso_cardinal iso_sub_cardinal iso_edg1 iso_edg2: core.
 Hint Immediate iso_edg3 iso_edg4: core.
