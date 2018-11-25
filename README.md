@@ -18,7 +18,7 @@ The project is split into the following files:
 
 7. DecList.v: Lists on decidable types
 
-8. MoreDecList.v: Lists on decidable types
+8. MoreDecList.v: More results on Lists on decidable types (not needed for sets)
 
 9.  OrdType.v: A type with decidable equality and ordering among elements.
 
