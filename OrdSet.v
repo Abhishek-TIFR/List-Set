@@ -3,7 +3,8 @@
 
 
 
-(* This file implements sets as Ordered Lists. Ordered lists here means strictly 
+(* --------------------------- Description ----------------------------------------
+   This file implements sets as Ordered Lists. Ordered lists here means strictly 
    increasing list according to the order relation on elemets of ordType (i.e, <b)
    
    Following list operations are defined on sets:
@@ -32,7 +33,8 @@
    Lemma union_equal (x y:list A): IsOrd x -> IsOrd y -> union x y = union y x.
 
    Lemma set_diff_IsOrd (l s: list A): IsOrd (diff l s).
-   Lemma set_diff_nodup (l s: list A): NoDup (diff l s).  ------------------------*)
+   Lemma set_diff_nodup (l s: list A): NoDup (diff l s). 
+   --------------------------------------------------------------------------------*)
 
 Require Export Lists.List.
 Require Export GenReflect SetSpecs OrdType.
@@ -126,8 +128,14 @@ Section OrderedSet.
               eauto. eauto. }
             { constructor. intro H1. absurd (In a0 l). eauto.
               eauto. eauto. } } } Qed.
+  
+  Lemma memb_prop_rmv (x a:A)(l: list A): x <> a -> memb x l = memb x (rmv a l).
+  Proof.  { intro H. destruct (memb x l) eqn:H1.
+          { symmetry. apply /membP. move /membP in H1. auto. }
+          { symmetry. apply /membP.  move /membP in H1. intro H2; apply H1; eauto. } } Qed. 
+  
 
-  Hint Resolve set_rmv_IsOrd set_rmv_nodup: core.
+  Hint Resolve set_rmv_IsOrd set_rmv_nodup memb_prop_rmv: core.
 
  
    (* ------------ set_add operation for ordered list -------------- ---------------  *)
@@ -196,7 +204,14 @@ Section OrderedSet.
   Lemma set_add_nodup (a:A)(l: list A): IsOrd l -> NoDup (add a l).
   Proof. intro H. cut (IsOrd (add a l)). auto. apply set_add_IsOrd;auto. Qed.
 
-  Hint Resolve set_add_IsOrd set_add_nodup : core. 
+  Lemma memb_prop_add (x a:A)(l: list A): x <> a -> memb x l = memb x (add a l).
+   Proof. { intro H. destruct (memb x l) eqn:H1.
+          { symmetry. apply /membP. move /membP in H1. auto. }
+          { symmetry. apply /membP.  move /membP in H1. intro H2; apply H1; eauto. } } Qed.
+
+  Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add : core.
+
+   
  
   (* ------------ set_inter operation ----------------------------------------------  *)
   
@@ -379,11 +394,11 @@ End OrderedSet.
 
 Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
 Hint Resolve     set_rmv_intro: core.
-Hint Resolve set_rmv_IsOrd set_rmv_nodup: core.
+Hint Resolve set_rmv_IsOrd set_rmv_nodup memb_prop_rmv: core.
 
 Hint Resolve set_add_intro1  set_add_intro3: core.
 Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
-Hint Resolve set_add_IsOrd set_add_nodup: core.
+Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
 
 Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
 Hint Resolve set_inter_comm: core.
