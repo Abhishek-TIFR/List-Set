@@ -357,21 +357,8 @@ Hint Resolve lt_graph_is_well_founded: core.
      K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (Ind_at Pk G) x y.
    Proof. Admitted.
 
-  (* Lemma induced_fact3 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
-     K[<=]G -> In x K -> ~ In y K -> ~ In y G -> edg G x y = edg (Ind_at Pk G) x y.
-   Proof. Admitted.
-
-   Lemma induced_fact4 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
-     K[<=]G -> In y K -> ~ In x K -> ~ In x G -> edg G x y = edg (Ind_at Pk G) x y.
-   Proof. Admitted.
-
-   Lemma induced_fact5 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
-     K[<=]G ->  ~ In x G ->  ~ In y G -> edg G x y = edg (Ind_at Pk G) x y.
-   Proof. Admitted. *)
-
 
    Hint Immediate induced_fact1 induced_fact2: core.
-     (* induced_fact3 induced_fact4 induced_fact5 *)
   
 End DecidableGraphs.
 
@@ -408,11 +395,8 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
 
  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
-  Hint Immediate induced_fact1 induced_fact2: core.
-     (* induced_fact3 induced_fact4 induced_fact5 *)
-
- (* Hint Immediate induced_fact1 induced_fact2 induced_fact3 induced_fact4 induced_fact5: core.*)
-
+ Hint Immediate induced_fact1 induced_fact2: core.
+    
 Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
 Notation "E 'at_' K":= (E_res_to K E)(at level 70).
 
