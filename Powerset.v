@@ -215,9 +215,20 @@ Section PowerSet.
              destruct H0a as [x' H0a]. destruct H0a as [H0a H0b]. subst x; auto. }
            { cut(x [<=] l); auto. } }  } Qed.
   Lemma pw_elim1 (x l: list A): IsOrd l ->  In x (pw l) -> IsOrd x.
-  Proof. Admitted.
-  
-  
+  Proof.  { revert x. induction l.
+          { intro x. simpl. intros H H1. destruct H1. subst x. auto. tauto. }
+          { intros x H H1. simpl in H1.
+            assert (H2: In x ( a[::] pw l) \/ In x (pw l)). auto.
+            destruct H2.
+            { (* when In x (a [::] pw l) *)
+              assert (H2: exists x', In x' (pw l) /\ x = (a::x')). auto.
+              destruct H2 as [x' H2]. destruct H2 as [H2 H3].
+              assert (H4: IsOrd x'). eauto.
+              assert (H5: x' [<=] l). auto using pw_elim.
+              subst x. destruct x'. auto.
+              assert (H6: a <b e). eauto. apply  IsOrd_cons;auto. }
+            { (* when In x (pw l) *) eauto. } } } Qed.
+              
   Lemma nil_in_pw (l: list A):  In nil (pw l).
   Proof. induction l. simpl; left;auto. simpl; cut(In nil (pw l)); auto. Qed.
 
@@ -261,21 +272,24 @@ Section PowerReflect.
 
   Lemma Max_sub_in_elim1 (G I: list A)(B: list A -> bool):
     Max_sub_in G I B -> I [<=] G.
-  Proof. Admitted.
+  Proof.  unfold Max_sub_in; tauto. Qed.
   
   Lemma Max_sub_in_elim2 (G I: list A)(B: list A -> bool):
     Max_sub_in G I B -> IsOrd I.
-  Proof. Admitted.
+  Proof. unfold Max_sub_in; tauto. Qed.
   Lemma Max_sub_in_elim3 (G I: list A)(B: list A -> bool):
     Max_sub_in G I B -> B I.
-   Proof. Admitted.
+   Proof. unfold Max_sub_in; tauto. Qed.
 
   Lemma max_has_biggest_size (G: list A)(B: list A-> bool)(X: list A)(M: list A):
-    Max_sub_in G M B -> X[<=]G -> IsOrd X -> B X -> |X| <= |M|.
-  Proof. Admitted.
+    IsOrd G -> Max_sub_in G M B -> X[<=]G -> IsOrd X -> B X -> |X| <= |M|.
+  Proof. unfold Max_sub_in. intros H H1 H2 H3 H4. apply H1;eauto.  Qed.
   Lemma max_sub_same_size (G: list A)(B: list A-> bool)(X: list A)(Y: list A):
-    Max_sub_in G X B -> Max_sub_in G Y B -> |X|=|Y|.
-  Proof. Admitted.
+    IsOrd G -> Max_sub_in G X B -> Max_sub_in G Y B -> |X|=|Y|.
+  Proof.  { intros H H1 H2. cut (|X| <= |Y|). cut (|Y| <= |X|). omega.
+          all: eapply max_has_biggest_size with (G:=G)(B:=B);
+          unfold Max_sub_in in H1; unfold Max_sub_in in H2; (auto || apply H2 || apply H1). } Qed.
+          
   
   Lemma max_sub_inbP (G I: list A)(B: list A-> bool):
     reflect (Max_sub_in G I B)(max_sub_in G I B).
@@ -294,6 +308,7 @@ Section PowerReflect.
             move /forallbP in H2.
             intros I' H3 H4. apply /leP. specialize (H2 I').
             apply H2 in H3 as H5. move /impP in H5. auto. } } Qed.
+  
   Lemma max_sub_inP (G I: list A)(P: list A-> Prop)(B: list A-> bool):
     (forall x, reflect (P x)(B x))-> reflect (Max_sub_in G I P)(max_sub_in G I B).
   Proof. { intro HP. eapply iffP with (P:= Max_sub_in G I B). 
@@ -316,22 +331,24 @@ Section PowerReflect.
 
   Lemma Min_sub_in_elim1 (G I: list A)(B: list A -> bool):
     Min_sub_in G I B -> I [<=] G.
-  Proof. Admitted.
+  Proof. unfold Min_sub_in;tauto. Qed.
   
   Lemma Min_sub_in_elim2 (G I: list A)(B: list A -> bool):
     Min_sub_in G I B -> IsOrd I.
-  Proof. Admitted.
+  Proof.  unfold Min_sub_in;tauto. Qed.
   Lemma Min_sub_in_elim3 (G I: list A)(B: list A -> bool):
     Min_sub_in G I B -> B I.
-  Proof. Admitted.
+  Proof.  unfold Min_sub_in;tauto. Qed.
 
    Lemma min_has_smallest_size (G: list A)(B: list A-> bool)(X: list A)(M: list A):
-    Min_sub_in G M B -> X[<=]G -> IsOrd X -> B X -> |M| <= |X|.
-  Proof. Admitted.
+    IsOrd G -> Min_sub_in G M B -> X[<=]G -> IsOrd X -> B X -> |M| <= |X|.
+  Proof. unfold Min_sub_in. intros H H1 H2 H3 H4. apply H1;eauto.  Qed.
     
   Lemma min_sub_same_size (G: list A)(B: list A-> bool)(X: list A)(Y: list A):
-    Min_sub_in G X B -> Min_sub_in G Y B -> |X|=|Y|.
-  Proof. Admitted.
+    IsOrd G -> Min_sub_in G X B -> Min_sub_in G Y B -> |X|=|Y|.
+  Proof.  { intros H H1 H2. cut (|X| <= |Y|). cut (|Y| <= |X|). omega.
+          all: eapply min_has_smallest_size with (G:=G)(B:=B);
+          unfold Min_sub_in in H1; unfold Min_sub_in in H2; (auto || apply H2 || apply H1). } Qed.
 
   Lemma min_sub_inbP (G I: list A)(B: list A-> bool):
     reflect (Min_sub_in G I B)(min_sub_in G I B).
