@@ -256,7 +256,7 @@ Section GraphIsomorphism.
          { intros Y H2.
            replace (|Y|) with (|s_map f Y|).
            replace (|s_map f K|) with (|K|).
-           assert (H3: Cliq_in G (s_map f Y)); eauto.
+            assert (H3: Cliq_in G (s_map f Y)). eauto.
            eauto using Max_K_in_elim. eapply iso_sub_cardinal;eauto.
            symmetry. eapply iso_sub_cardinal; eauto. } } Qed.
 
@@ -318,7 +318,7 @@ Section GraphIsomorphism.
          { intros Y H2.
            replace (|Y|) with (|s_map f Y|).
            replace (|s_map f I|) with (|I|).
-           assert (H3: Stable_in G (s_map f Y)); eauto.
+           assert (H3: Stable_in G (s_map f Y)). eauto.
            eauto using Max_I_in_elim. eapply iso_sub_cardinal;eauto.
            symmetry. eapply iso_sub_cardinal; eauto. } } Qed.
 
