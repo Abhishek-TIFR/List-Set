@@ -185,11 +185,12 @@ Hint Resolve lt_graph_is_well_founded: core.
    
    Lemma Exy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A):
      In x K -> In y K -> E x y -> (E at_ K) x y.
-   Proof. Admitted.
+   Proof. intros H1 H2 H3; unfold E_res_to; replace (memb2 x y K) with true.
+          auto. symmetry;apply /memb2P; split;auto. Qed.
    Lemma Exy_inv_for_at_K1 (K: list A)(E: A-> A-> bool)(x y: A): (E at_ K) x y -> E x y.
-   Proof. Admitted.
+   Proof. unfold E_res_to. destruct (memb2 x y K); auto. Qed.
    Lemma negExy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A): ~ E x y -> ~ (E at_ K) x y.
-   Proof. Admitted.
+   Proof. intros H H0. apply H. eauto using Exy_inv_for_at_K1. Qed.
 
    
    Hint Resolve Exy_inv_for_at_K edg_equal_at_K: core.
@@ -353,9 +354,19 @@ Hint Resolve lt_graph_is_well_founded: core.
         K[<=]G -> Ind_subgraph (Ind_at Pk G) G.
    Proof. { intros K G Pk H. split. assumption. simpl;intros;symmetry;auto. }  Qed.
 
+   (*------------ description of the following lemma while explainig Ind_at ----------- *)
+
    Lemma induced_fact2 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
      K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (Ind_at Pk G) x y.
-   Proof. Admitted.
+   Proof. { intros H H1 H2. simpl. unfold "at_".
+          destruct (memb2 x y K) eqn: H3.
+          { auto. }
+          { assert (H4: (memb2 x y G) = false).
+            unfold memb2. rewrite H1. rewrite H2. apply H3.
+            switch. intro H5.
+            assert (H6: In x G). eapply no_edg1;eauto.
+            assert (H7: In y G). eapply no_edg2;eauto.
+            move /memb2P in H4. absurd (IN x y G). auto. split; auto. } } Qed.
 
 
    Hint Immediate induced_fact1 induced_fact2: core.
