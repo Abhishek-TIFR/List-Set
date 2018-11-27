@@ -115,11 +115,14 @@ Section MoreOnDecidableGraphs.
 
   Lemma Max_I_in_elim (G: UG)(I X: list A):
     Max_I_in G I ->  Stable_in G X -> |X| <= |I|.
-  Proof. Admitted.
+  Proof. intros H H1. eapply Max_I_in_elim3 with (G:=G). all:auto. eauto. Qed.
   
   Lemma Max_I_in_intro (G: UG)( I: list A):
     Stable_in G I -> (forall I', Stable_in G I' -> |I'| <= |I|) -> Max_I_in G I.
-  Proof. Admitted.
+  Proof. { intros H H1. unfold Max_I_in. unfold Max_sub_in.
+         split. auto. split. apply H. split. apply /stableP. apply H.
+         intros I' H2 H3. apply H1. split. auto. split. eauto.
+         apply /stableP;auto. } Qed.
 
    Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
   
@@ -134,9 +137,18 @@ Section MoreOnDecidableGraphs.
   Hint Resolve i_num_same : core.
 
   Lemma Stable_in_HG (H G:UG)(I: list A): Ind_subgraph H G-> Stable_in H I-> Stable_in G I.
-  Proof. Admitted.
+  Proof. { unfold Stable_in. intros h0 h1. unfold Ind_subgraph in h0.
+         destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
+         repeat try (split;auto). unfold Stable. intros x y h4 h5.
+         replace (edg G x y) with (edg H x y). apply h1;auto. auto. } Qed.
+  
   Lemma i_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> i_num H m -> i_num G n-> m<=n.
-  Proof. Admitted.
+  Proof. { intro h. unfold i_num. intros h1 h2.
+         destruct h1 as [I h1]. destruct h1 as [h1 hm].
+         destruct h2 as [Ig h2]. destruct h2 as [h2 hn].
+         assert (h3: Stable_in G I).
+         { cut (Stable_in H I). eauto using Stable_in_HG. auto. }
+         subst n. subst m.  eapply Max_I_in_elim; eauto. } Qed.
    
   Hint Immediate Stable_in_HG i_num_HG:core.
     
@@ -211,11 +223,14 @@ Section MoreOnDecidableGraphs.
   
   Lemma Max_K_in_elim (G: UG)(K X: list A):
     Max_K_in G K ->  Cliq_in G X -> |X| <= |K|.
-  Proof. Admitted.
+  Proof. intros H H1. eapply Max_K_in_elim3 with (G:=G). all:auto. eauto. Qed.
   
   Lemma Max_K_in_intro (G: UG)( K: list A):
     Cliq_in G K -> (forall K', Cliq_in G K' -> |K'| <= |K|) -> Max_K_in G K.
-  Proof. Admitted.
+  Proof. { intros H H1. unfold Max_K_in. unfold Max_sub_in.
+         split. auto. split. apply H. split. apply /cliqP. apply H.
+         intros K' H2 H3. apply H1. split. auto. split. eauto.
+         apply /cliqP;auto. } Qed.
   
   
 
@@ -232,9 +247,17 @@ Section MoreOnDecidableGraphs.
   Hint Resolve cliq_num_same:core.
 
   Lemma Cliq_in_HG (H G:UG)(K: list A): Ind_subgraph H G-> Cliq_in H K-> Cliq_in G K.
-  Proof. Admitted.
+  Proof. { unfold Cliq_in. intros h0 h1. unfold Ind_subgraph in h0.
+         destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
+         repeat try (split;auto). unfold Cliq. intros x y h4 h5.
+         replace (edg G x y) with (edg H x y). apply h1;auto. auto. } Qed.
   Lemma cliq_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> cliq_num H m -> cliq_num G n-> m<=n.
-  Proof. Admitted.
+  Proof. { intro h. unfold cliq_num. intros h1 h2.
+         destruct h1 as [I h1]. destruct h1 as [h1 hm].
+         destruct h2 as [Ig h2]. destruct h2 as [h2 hn].
+         assert (h3: Cliq_in G I).
+         { cut (Cliq_in H I). eauto using Cliq_in_HG. auto. }
+         subst n. subst m.  eapply Max_K_in_elim; eauto. } Qed.
    
   Hint Immediate Cliq_in_HG cliq_num_HG:core.
  
@@ -269,9 +292,13 @@ Section MoreOnDecidableGraphs.
 
    Lemma best_clrs_same_size (G: UG)(f1 f2: A->nat):
      Best_coloring_of G f1 -> Best_coloring_of G f2 -> |clrs_of f1 G|=|clrs_of f2 G|.
-   Proof.  Admitted.
+   Proof.  { intros h1 h2. destruct h1 as [h1a h1];destruct h2 as [h2a h2].
+           cut((| clrs_of f1 G |) <= (| clrs_of f2 G |)).
+           cut ((| clrs_of f2 G |) <= (| clrs_of f1 G |)). omega. all: eauto. } Qed.
    Lemma chrom_num_same (G:UG)(n m:nat): chrom_num G n-> chrom_num G m -> n=m.
-   Proof. Admitted.
+   Proof. { intros h1 h2. destruct h1 as [f1 h1]. destruct h1 as [h1a h1].
+          destruct h2 as [f2 h2]. destruct h2 as [h2a h2]. subst m;subst n.
+          apply best_clrs_same_size;auto. } Qed. 
 
    Lemma clrs_of_inc (K1: list A)(K2: list A)(f:A-> nat):
      K1 [<=] K2 -> (clrs_of f K1) [<=] (clrs_of f K2).
@@ -282,10 +309,20 @@ Section MoreOnDecidableGraphs.
    
    Hint Resolve chrom_num_same clrs_of_inc clrs_of_inc1: core.
 
-   Lemma coloring_of_HG (H G: UG)(f: A-> nat): Ind_subgraph H G-> coloring_of G f-> coloring_of H f.
-   Proof. Admitted.
-   Lemma chrom_num_HG (H G: UG)(m n: nat): chrom_num H m-> chrom_num G n-> m<=n.
-   Proof. Admitted.
+   Lemma coloring_of_HG (H G: UG)(f: A-> nat): Ind_subgraph H G-> Coloring_of G f-> Coloring_of H f.
+   Proof. { unfold Coloring_of. intros h0 h1. unfold Ind_subgraph in h0.
+            destruct h0 as [h0 h]. intros x y h2 h3 h4.
+            apply h1. all: try auto. replace (edg G x y) with (edg H x y); auto. } Qed.
+   Lemma chrom_num_HG (H G: UG)(m n: nat): Ind_subgraph H G-> chrom_num H m-> chrom_num G n-> m<=n.
+   Proof. { intro h. unfold chrom_num. intros h1 h2.
+           destruct h1 as [fh h1]. destruct h1 as [h1 hm].
+           destruct h2 as [fg h2]. destruct h2 as [h2 hn].
+           assert (h3: Coloring_of H fg).
+           { cut (Coloring_of G fg). eauto using coloring_of_HG. apply h2.  }
+           subst n. subst m.
+           cut ( (| clrs_of fh H |) <= (| clrs_of fg H |)).
+           cut ( (| clrs_of fg H |) <= (| clrs_of fg G |)). omega.
+           cut (H [<=] G). auto. apply h.  apply h1; auto. } Qed.
 
    Hint Immediate coloring_of_HG chrom_num_HG: core.
    
