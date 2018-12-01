@@ -145,8 +145,17 @@ Section GraphIsomorphism.
    
   Lemma iso_sym (G G': @UG A): iso G G' -> iso G' G.
   Proof. { intro H. destruct H as [f H].  exists f. apply iso_sym1. auto. } Qed.
+
+  Lemma iso_using_iso (G G':@UG A)(f: A->A): iso_using f G G' -> iso G G'.
+  Proof. intros h. exists f. auto. Qed.
+
+  Lemma iso_using_iso1 (G G':@UG A)(f: A->A): iso_using f G G' -> iso G' G.
+  Proof. intro h. apply iso_sym. eapply iso_using_iso. eauto. Qed.
+  
   
   Hint Immediate iso_sym1 iso_sym iso_elim1 iso_elim2: core.
+
+  Hint Resolve iso_using_iso iso_using_iso1: core.
 
   
 
@@ -440,6 +449,7 @@ End GraphIsomorphism.
 Hint Resolve f_is_one_one fx_is_one_one s_map_of_s_map s_map_of_s_map1: core.
 
 Hint Immediate iso_sym1 iso_sym iso_elim1 iso_elim2: core.
+ Hint Resolve iso_using_iso iso_using_iso1: core.
 Hint Immediate iso_one_one1 iso_one_one2: core.
 Hint Immediate iso_one_one iso_f_one_one iso_using_G iso_using_G': core.
 
