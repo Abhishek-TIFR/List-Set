@@ -446,9 +446,54 @@ Section LovaszRepLemma.
   Hypothesis P: In a G.
   Hypothesis P': ~In a' G.
 
-  Let G':= Repeat_in G a a'.
+  (* Let G':= Repeat_in G a a'. *)
 
-  Lemma ReplicationLemma: Perfect G -> Perfect G'.
-    Proof. Admitted.
+  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
+  Proof. {
+
+   (* We will prove the result by well founded induction on the set of all UG. 
+      To use the well founded induction we first need to prove that the relation 
+      lt_graph is well founded on UG. This is proved as Lemma lt_graph_is_well_founded
+      in the file DecUG.v. *) 
+    revert a a' P P'. pattern G. revert G.
+    apply well_founded_ind with (R:= @lt_graph A).  apply lt_graph_is_well_founded.
+    intros G IH a a' P P' h. remember (Repeat_in G a a') as G'.
+    unfold lt_graph in IH.
+    
+    unfold Perfect. intros H' h1.
+    assert (h0: H' [<=] G'). apply h1.
+
+    (* We break the proof in two cases (C1 and C2).
+       C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
+       C2 is the case when H' is same as G' (i.e. H' = G').  *)
+    assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
+    destruct HC as [C2 | C1].
+
+    (* Case C2: Proof -------------------------------------------------------------- *)
+    { (* C2: In this case H' [=] G'. We further split this case into two subcases C2a and C2b.
+       C2_a is the case when a is present in some largest clique K in G.
+       C2_b is the case when a is not present in any largest clique of G. *)
+    
+      admit.
+    } (*---------- End of Case C2 -------------------------------------------------- *)
+
+    
+    (* Case C1: Proof -------------------------------------------------------------- *)
+    { (* C1: In this case ~ H' [=] G'. This means that H' is strictly included in G'.
+         We further split this case into two subcases C1a and C1b. 
+         C1_a is the case when a is not present in H' (i.e. ~ In a H').
+         C1_b is the case when a is present in H' (i.e. In a H').  *)
+      assert (h2: exists x, In x G' /\ ~ In x H'). admit.
+      assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
+      destruct HC as [C1_b | C1_a].
+      (* Case C1_b: Proof ----------------------------- *)
+      { admit. }
+
+      (* Case C1_a: Proof ----------------------------- *)
+      { admit. }
+    } (*----------- End of Case C1 -------------------------------------------------- *) 
+
+    }  Admitted.  
+      
   
   End LovaszRepLemma.
