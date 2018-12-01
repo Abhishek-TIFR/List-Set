@@ -36,9 +36,7 @@ The project is split into the following files:
 
 16. IsoUG.v: Graph Isomorphism  
 
-17. Lovasz.v: Vertex Replication and the new edge relation
-
-18. LovaszRep.v: Lovasz replication Lemma.
+17. Lovasz.v: Vertex Replication and the Lovasz Replication LEmma
 
 
 The file sets.sh can be used to compile the files on sets and power sets (i.e. up to Powerset.v)
