@@ -421,7 +421,11 @@ Section Repeat_node.
             apply G'_a_is_s_mapG;auto. }
           { (*---------------  Proof that isomorphism preserves the edg relation-------*)
             intros x y. apply f_preserves_edg;auto.  } } Qed.
-            
+
+   Lemma G_isomorphic_G'_a  (P: In a G)(P': ~ In a' G): iso G (Ind_at G'_a G').
+     Proof. exists f.  apply G_iso_G'_a;auto. Qed.
+
+     
     
 End Repeat_node.
 
@@ -433,6 +437,7 @@ End Repeat_node.
  Hint Immediate E'xa_Exa E'xa'_Exa Exa_eq_E'xa' Eay_eq_E'a'y: core.
  Hint Immediate E'xa_E'xa' E'xa'_E'xa: core.
  Hint Immediate E'xa_eq_E'xa' E'ay_eq_E'a'y: core.
+ Hint Resolve G_isomorphic_G'_a: core.
 
 
 
@@ -462,6 +467,8 @@ Section LovaszRepLemma.
     
     unfold Perfect. intros H' h1.
     assert (h0: H' [<=] G'). apply h1.
+    assert (N'_a: IsOrd (rmv a G')). subst G'. simpl. auto.
+    assert (N: IsOrd G). auto.
 
     (* We break the proof in two cases (C1 and C2).
        C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
@@ -478,19 +485,36 @@ Section LovaszRepLemma.
     } (*---------- End of Case C2 -------------------------------------------------- *)
 
     
-    (* Case C1: Proof -------------------------------------------------------------- *)
+
+    
+    (* Case C1 (H' <> G'): Proof --------------------------------------------------- *)
     { (* C1: In this case ~ H' [=] G'. This means that H' is strictly included in G'.
          We further split this case into two subcases C1a and C1b. 
          C1_a is the case when a is not present in H' (i.e. ~ In a H').
          C1_b is the case when a is present in H' (i.e. In a H').  *)
       assert (h2: exists x, In x G' /\ ~ In x H'). admit.
+      destruct h2 as [x0 h2]. 
       assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
       destruct HC as [C1_b | C1_a].
-      (* Case C1_b: Proof ----------------------------- *)
+      (* Case C1_b ( In a H'): Proof ----------------------------- *)
       { admit. }
 
-      (* Case C1_a: Proof ----------------------------- *)
-      { admit. }
+      (* Case C1_a (~ In a H'): Proof ---------------------------- *)
+      { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
+        destruct h3 as [h3a | h3b].
+        (* subcase In a' H': In this case Ind_subgraph H' G'_a  *) 
+        assert (h3: Ind_subgraph H' (Ind_at N'_a G')). admit.
+        assert (h4: iso G (Ind_at N'_a G')).
+        {  subst G'. eapply G_isomorphic_G'_a with (G0:=G)(a0:=a)(a'0:=a');auto. }
+        destruct h4 as [f h4].
+        assert (h5: exists H, Ind_subgraph H G /\ iso_using f H' H).
+        { eapply iso_subgraphs. Focus 2. apply h3. auto. }
+        destruct h5 as [H h5]. destruct h5 as [h5 h6].
+        cut(iso H H'). cut (Nice H). eauto. auto. eauto.
+        (* subcase ~In a' H': In this case Ind_subgraph H' G *)
+        assert (h3: Ind_subgraph H' G). admit.
+        auto. }
+      
     } (*----------- End of Case C1 -------------------------------------------------- *) 
 
     }  Admitted.  
