@@ -15,7 +15,7 @@
                   |false, true => (edg G) x a
                   end.
 
-      This is a lazy description which doesnot ensure the symmetric and ireflexive property of
+      This is a lazy description which does not ensure the symmetric and ireflexive property of
       edge relation. Later on we give a more accurate description of edge relation which uses 
       mk_iref and mk_sym function to modify the nw_edg relation. The following edge 
       relation (i.e. ex_edg)  is irreflexive, symmetric and restricted to nodes of G'.
@@ -29,7 +29,7 @@
            |}); unfold ex_edg. all: auto. Defined. 
 
 
-   ---------------------------------------------------------------------------------------------*)
+   ------------------------------------------------------------------------------------------*)
 
 Require Export MoreDecUG IsoUG.
 
@@ -263,7 +263,7 @@ Section Repeat_node.
 
    Hint Resolve Ind_sub_GG': core.
 
-   (*---------------------------------------------------------------------*)
+   (* The term G'_a is used to define the induced subgraph of G' at G' \ {a} *)
    (*-------------------- G'_a is isomorphic to G  -----------------------*)
 
    Lemma G'_a: IsOrd (rmv a G').
@@ -440,7 +440,7 @@ End Repeat_node.
  Hint Resolve G_isomorphic_G'_a: core.
 
 
-
+(* 
  
 Section LovaszRepLemma.
 
@@ -476,7 +476,7 @@ Section LovaszRepLemma.
     assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
     destruct HC as [C2 | C1].
 
-    (* Case C2: Proof -------------------------------------------------------------- *)
+    (* Case C2 (H' = G'): Proof -------------------------------------------------------------- *)
     { (* C2: In this case H' [=] G'. We further split this case into two subcases C2a and C2b.
        C2_a is the case when a is present in some largest clique K in G.
        C2_b is the case when a is not present in any largest clique of G. *)
@@ -521,3 +521,5 @@ Section LovaszRepLemma.
       
   
   End LovaszRepLemma.
+
+*)
