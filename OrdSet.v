@@ -314,6 +314,13 @@ Section OrderedSet.
   Lemma set_inter_elim (a:A)(x y: list A): In a (inter x y)-> (In a x /\ In a y).
   Proof. intro. split. eapply set_inter_elim1;eauto. eapply set_inter_elim2;eauto. Qed.
 
+  Lemma set_inter_elim3 (x y: list A): inter x y [<=] x.
+  Proof. intros a h1. eauto using set_inter_elim1. Qed.
+
+  Lemma set_inter_elim4 (x y: list A): inter x y [<=] y.
+  Proof. intros a h1. eauto using set_inter_elim2. Qed.
+  
+
   Lemma set_inter_IsOrd (x y: list A): IsOrd (inter x y).
   Proof. { induction x.
          { simpl. constructor. }
@@ -327,6 +334,8 @@ Section OrderedSet.
 
   Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
   Hint Resolve set_inter_IsOrd set_inter_nodup: core.
+
+  Hint Immediate set_inter_elim3 set_inter_elim4: core.
   
   Lemma set_inter_comm (x y:list A): Equal (inter x y) (inter y x).
   Proof.  { split; intros a H.
@@ -367,6 +376,15 @@ Section OrderedSet.
          { assert (H1: In a l \/ In a s);auto. destruct H1. left;right;auto.
            right;auto. } } Qed.
   Hint Immediate set_union_intro1 set_union_intro2 set_union_elim: core.
+
+  Lemma set_union_intro3 (l s: list A): l [<=] (union l s).
+  Proof. intros a h1. eauto using set_union_intro1. Qed. 
+
+  Lemma set_union_intro4 (l s: list A): s [<=] (union l s).
+  Proof. intros a h1. eauto using set_union_intro2. Qed.
+
+  Hint Immediate set_union_intro3 set_union_intro4: core.
+  
   
   Lemma set_union_IsOrd (x y: list A): IsOrd y -> IsOrd (union x y).
   Proof. { induction x.
@@ -464,11 +482,13 @@ Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
  Hint Resolve add_card add_card1 add_card_max add_same: core.
 
-Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
+ Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
+ Hint Immediate set_inter_elim3 set_inter_elim4: core.
 Hint Resolve set_inter_comm: core.
 Hint Resolve set_inter_IsOrd set_inter_nodup : core.
 
 Hint Immediate set_union_intro1 set_union_intro2 set_union_elim set_union_comm: core.
+Hint Immediate set_union_intro3 set_union_intro4: core.
 Hint Resolve set_union_IsOrd set_union_nodup  : core.
 
 Hint Resolve inter_equal union_equal: core.
