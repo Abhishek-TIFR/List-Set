@@ -166,6 +166,8 @@ Section Set_maps.
              replace (memb (f a) (s_map f l)) with true in H. inversion H.
              symmetry; apply /membP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
 
+ 
+
   (*--------- Some more properties of s_maps-----------------------------------*)
 
   Lemma one_one_s_map_elim (l: list A)(f: A->B)(x: A):
@@ -250,9 +252,12 @@ Hint Immediate one_one_s_map_elim s_map_strict_less : core.
 
 Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
 
+
 Section Map_composition.
 
   Context {A B C: ordType}.
+
+ 
 
   (*-------------------------  A  --f-->  B  --g-->  C    --------------------------------*)
 
@@ -278,8 +283,46 @@ Section Map_composition.
   Hint Resolve range_of_range: core.
 End Map_composition.
 
- Hint Resolve range_of_range: core.
+Hint Resolve range_of_range: core.
 
+
+Section Maps_on_A.
+  Context {A: ordType}.
+
+    (*----------Identity map and its properties ---------------------------------*)
+
+  Definition id:= fun (x:A)=> x.
+
+  Lemma id_is_identity1 (l:list A) : l [=] s_map id l.
+  Proof.  { induction l.
+          { simpl. auto. }
+          { simpl.  split.
+           { intros x h. destruct h as [h | h].
+             subst a. unfold id. auto.
+             cut (In x (s_map id l)). auto.  apply IHl. auto. }
+           { unfold id. fold id. intros x h.
+             cut (x=a \/ In x (s_map id l)).
+             intro h1. destruct h1 as [h1a | h1b].
+             subst x. all: auto. cut (In x l). auto. apply IHl. auto. } } }  Qed. 
+  
+
+  Lemma id_is_identity (l:list A)(hl: IsOrd l): l = s_map id l.
+  Proof. { induction l.
+         { simpl. auto. }
+         { apply set_equal. auto. auto. 
+           simpl. replace (s_map id l) with l.
+           split.
+           { intros x h. destruct h as [h | h].
+             subst a. unfold id. auto. unfold id. auto. }
+           { unfold id. intros x h. cut (x=a \/ In x l).
+             intro h1. destruct h1 as [h1a | h1b].
+             subst x. all: auto. } eauto. } }  Qed.
+
+  Hint Immediate id_is_identity id_is_identity1: core.
+
+  End Maps_on_A.
+
+  Hint Immediate id_is_identity id_is_identity1: core.
 
 
 
