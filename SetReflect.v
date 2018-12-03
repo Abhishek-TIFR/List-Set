@@ -87,8 +87,13 @@ Proof. eauto. Qed.
   Proof. intros H H1. assert (H2: In a s); auto. Qed.
   Lemma memb_prop2 (a:A)(l s: list A): l [<=] s -> ~ In a s -> memb a l = memb a s.
   Proof. intros H H1. assert (H2: ~ In a l); auto. Qed.
+  Lemma memb_prop3 (a:A)(l s: list A): l [=] s -> memb a l = memb a s.
+  Proof. { intro h. destruct h as [h1 h2]. cut (In a l \/ ~ In a l).
+         intro h3.  destruct h3 as [h3 | h3].
+         apply memb_prop1;auto. apply memb_prop2;auto.
+         eapply reflect_EM;auto. } Qed.
 
-  Hint Resolve memb_prop1 memb_prop2: core.
+  Hint Resolve memb_prop1 memb_prop2 memb_prop3: core.
   
 
 Lemma In_EM: forall (a:A) (x: list A), In a x \/ ~ In a x.
@@ -110,6 +115,13 @@ Proof. unfold memb2. case (memb  x l);case (memb y l); simpl;auto. Qed.
 Hint Resolve memb2P: core.
 Lemma IN_EM: forall (a b:A)(x:list A), IN a b x \/ ~ IN a b x.
 Proof.  eauto. Qed.
+
+Lemma memb_prop4 (x y: A)(l s: list A): l [=] s -> memb2 x y l = memb2 x y s.
+Proof. intro h. assert (h1: s [=] l). auto. unfold memb2.
+       replace (memb x s) with (memb x l). replace (memb y s) with (memb y l).
+       auto. all: auto. Qed.
+
+
 
 (*---------- noDup  (boolean function) and its specification ---------*)
 Fixpoint noDup (x: list A): bool:=
@@ -368,7 +380,7 @@ Hint Resolve forall_exists_EM exists_forall_EM: core.
 Hint Resolve forall_em_exists exists_em_forall: core.
 
 Hint Immediate set_memb_correct1 set_memb_correct2: core.
-Hint Resolve memb_prop1 memb_prop2: core.
+Hint Resolve memb_prop1 memb_prop2 memb_prop3 memb_prop4: core.
 Hint Immediate noDup_elim noDup_intro: core.
 Hint Immediate empty_elim empty_intro: core.
 Hint Immediate subset_intro subset_elim: core.
