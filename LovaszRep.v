@@ -21,14 +21,20 @@ Section LovaszRepLemma.
 
   (* Let G':= Repeat_in G a a'. *)
 
-  Let id:= fun (x:A)=> x.
-
-  Lemma id_is_identity (l:list A)(hl: IsOrd l): l = s_map id l.
-  Proof. Admitted.
-  
   Lemma H'_sub_G (H': @UG A):
     Ind_subgraph H' (Repeat_in G a a') -> ~ In a' H' -> Ind_subgraph H' G.
-  Proof. Admitted.
+  Proof. { intros h1 h2. unfold Ind_subgraph.
+         assert (h3: H' [<=] G).
+         { intros x h3.
+           assert (h4: In x (Repeat_in G a a')).
+           { apply h1. auto. }
+           simpl in h4. cut (x<>a').  intro h5. eauto. intro h5. subst x. contradiction. } 
+         split. auto.
+         { destruct h1 as [h1a h1].
+           intros x y h4 h5.
+           replace (edg H' x y) with (edg (Repeat_in G a a') x y).
+           symmetry. cut (In x G). cut (In y G). all: auto.
+           symmetry;auto. } } Qed.
 
   Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
   Proof. {
@@ -44,8 +50,8 @@ Section LovaszRepLemma.
     
     unfold Perfect. intros H' h1.
     assert (h0: H' [<=] G'). apply h1.
-    assert (N'_a: IsOrd (rmv a G')). subst G'. simpl. auto.
-    assert (N: IsOrd G). auto.
+    
+    remember (Ind_at (rmv a G') G') as G'_a.
 
     (* We break the proof in two cases (C1 and C2).
        C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
@@ -68,7 +74,12 @@ Section LovaszRepLemma.
          We further split this case into two subcases C1a and C1b. 
          C1_a is the case when a is not present in H' (i.e. ~ In a H').
          C1_b is the case when a is present in H' (i.e. In a H').  *)
-      assert (h2: exists x, In x G' /\ ~ In x H'). admit.
+      assert (h2: exists x, In x G' /\ ~ In x H').
+      { assert (h3: forall x, In x H' \/ ~ In x H'). intros x. eapply reflect_EM;auto.
+        eapply forall_exists_EM with (l:= G') in h3.
+        destruct h3 as [h3 | h3].
+        assert (H' [=] G'). cut (G' [<=] H'). auto. auto. contradiction. auto. }
+      
       destruct h2 as [x0 h2]. 
       assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
       destruct HC as [C1_b | C1_a].
@@ -76,10 +87,10 @@ Section LovaszRepLemma.
       (* Case C1_b ( In a H'): Proof ----------------------------- *)
       { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
         destruct h3 as [h3a | h3b].
-        (* subcase In a' H': In this case   *)
-        assert (NH: IsOrd (inter G H')). auto.
-        remember (Ind_at NH H') as H.
-        
+        (* subcase In a' H': In this case we use IH *)
+        remember (Ind_at  H' G) as H.
+        assert (h0a: H [<=] H').
+        { subst H. simpl. auto. }
         assert ( h4: |H| < |G|).
         { apply subset_cardinal_lt with (a0:= x0). auto.
           subst H. simpl. auto.
@@ -88,24 +99,18 @@ Section LovaszRepLemma.
           destruct h2 as [h2 h2a]. subst G'. simpl in h2. eauto.
           destruct h2 as [h2 h2a].
           subst H. simpl. intro h3. absurd (In x0 H'). auto. eauto. }
-        
         assert (h5: Ind_subgraph H G).
         { unfold Ind_subgraph. split.
           subst H; simpl; auto.
-          subst H; simpl. intros x y h5 h6.
-           assert (h5a: In x G). eauto. assert (h6a: In y G). eauto.
-          unfold Ind_subgraph in h1.  destruct h1 as [h1a h1].
-          replace ((edg H' at_ inter G H') x y) with  (edg H' x y).
-          replace (edg G x y) with (edg G' x y).
-          apply h1;eauto.
-          symmetry; subst G'; auto. auto. }
-        
+          subst H; simpl. intros x y h5 h6. symmetry. auto. }
         assert (h6: iso (Repeat_in H a a') H').
         { exists id.
           split.
+          (* first subgoal: forall x:A, id (id x) = x *)
           { intros; unfold id; auto. } split.
+          (* second subgoal:  H' = s_map id (Repeat_in H a a') *)
           { subst H. simpl.
-            replace (s_map id (add a' (inter G H'))) with (add a' (inter G H')).
+            replace (s_map id (add a' (inter H' G))) with (add a' (inter H' G)).
             apply set_equal. auto. auto. unfold Equal.
             split.
             { intros x h6.
@@ -113,14 +118,22 @@ Section LovaszRepLemma.
               destruct h7 as [h7a | h7b].
               subst x. auto.
               assert (h8: In x G).
-              { cut (In x G'). subst G'. simpl. intros. eauto. auto. }
-              auto. }
+              { cut (In x G'). subst G'. simpl. intros. eauto. auto. } auto. }
             { intros x h6.
-              assert (h7: x = a' \/ In x (inter G H')). auto.
+              assert (h7: x = a' \/ In x (inter H' G)). auto.
               destruct h7 as [h7 | h7].
-              subst x. auto. eauto. }
-            apply id_is_identity. auto. }
-          { simpl. unfold id. admit. } }
+              subst x. auto. eauto. } apply id_is_identity. auto. }
+          
+          (* third subgoal: edg (Repeat_in H a a') x y = edg H' (id x) (id y) *)
+          { simpl. unfold id. intros x y.
+            unfold Ind_subgraph in h1.  unfold Ind_subgraph in h5.
+            destruct (memb2 x y H') eqn: h7.
+            { (* when both x and y is in H' *)
+              assert (h8: In x H' /\ In y H'). move /memb2P in h7. auto.
+              destruct h8 as [h8a h8b].
+              admit. }
+            { (* when one of x or y is not present in H' *)
+               admit. } }  }
         
         cut (Nice (Repeat_in H a a')). eauto.
         cut (Perfect (Repeat_in H a a')). auto.
@@ -132,16 +145,19 @@ Section LovaszRepLemma.
       { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
         destruct h3 as [h3a | h3b].
         (* subcase In a' H': In this case Ind_subgraph H' G'_a  *) 
-        assert (h3: Ind_subgraph H' (Ind_at N'_a G')).
+        assert (h3: Ind_subgraph H' G'_a).
         { unfold Ind_subgraph. simpl. unfold Ind_subgraph in h1.
           assert (h4: H' [<=] rmv a G').
           { intros x h4. cut(In x G'). cut (x <> a). auto.
             intro. subst x. contradiction. auto. }
-          split. auto. intros x y h5 h6.
-          replace (edg H' x y) with (edg G' x y).
-          apply edg_equal_at_K; auto.  symmetry; apply h1;auto. }
-        assert (h4: iso G (Ind_at N'_a G')).
-        {  subst G'. eapply G_isomorphic_G'_a with (G0:=G)(a0:=a)(a'0:=a');auto. }
+          split. subst G'_a. subst G'. rewrite <- NG'_a. auto.  intros x y h5 h6.
+          replace (edg H' x y) with (edg G' x y). subst G'_a.
+          apply edg_equal_at_K;replace (inter (rmv a G') G') with (rmv a G');auto;
+            apply set_equal. all: auto.
+          cut (rmv a G' [<=] G'); auto. cut (rmv a G' [<=] G'); auto.
+          symmetry; apply h1;auto. }
+        assert (h4: iso G G'_a).
+        { subst G'_a. subst G'. eapply G_isomorphic_G'_a with (G0:=G)(a0:=a)(a'0:=a');auto. }
         destruct h4 as [f h4].
         assert (h5: exists H, Ind_subgraph H G /\ iso_using f H' H).
         { eapply iso_subgraphs. Focus 2. apply h3. auto. }
