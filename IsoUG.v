@@ -389,44 +389,55 @@ Section GraphIsomorphism.
     iso_using f G G' -> Ind_subgraph H G -> (exists H', Ind_subgraph H' G' /\ iso_using f H H').
   Proof.  { intros F1 F2. assert (F0: iso_using f G' G). auto. 
             assert (Nk: IsOrd (s_map f H)). auto.
-            pose H' := (Ind_at Nk G').
-          exists H'. split. 
-          { (* Ind_subgraph H' G' *)
-            unfold Ind_subgraph. split.
-            { replace (nodes G') with (s_map f G). 
+            pose H' := (Ind_at (s_map f H) G').
+            exists H'.
+            assert (h0: H' [<=] G').
+            { replace (nodes G') with (s_map f G). simpl.
+              cut (s_map f H [<=] s_map f G). auto. 
               eapply s_map_subset. apply F2. symmetry. auto. }
-            { unfold H'. simpl. intros. symmetry. auto. } }
-          { (* iso_using f H H' *)
-            unfold H'. unfold iso_using.
+            assert (h1: s_map f H [<=] G').
+            { replace (nodes G') with (s_map f G).
+                cut (H [<=] G). auto. apply F2.  symmetry.
+                assert(F3: iso_using f G G'). auto. apply F3. }
+            assert (h2: s_map f H = inter (s_map f H) G').
+            { apply set_equal; auto. }
             split.
-            { apply F1. }
-            split.
-            { simpl. auto. }
-            { (* forall x y : A, edg H x y = edg (Ind_at Nk G') (f x) (f y) *)
+            (* Ind_subgraph H' G' *)
+            {  unfold Ind_subgraph. split.
+               { auto. }
+               { unfold H'. simpl. intros. symmetry. auto. } }
+            (* iso_using f H H' *)
+            { (* unfold H'. *) unfold iso_using.
+              split.
+              { apply F1. }
+              split.
+              { simpl. symmetry. auto.  }
+              { (* forall x y : A, edg H x y = edg (Ind_at Nk G') (f x) (f y) *)
               simpl. intros x y.
               assert (Hx: In x H \/ ~In x H). eauto.
               assert (Hy: In y H \/ ~In y H). eauto.
               destruct Hx; destruct Hy.
               { (* Case1: In x H /\ In y H *)
-                replace (edg H x y) with (edg G x y).
+                replace (edg H x y) with (edg G x y). rewrite <- h2.
                 assert (H2: In (f x) (s_map f H)). auto.
                 assert (H3: In (f y) (s_map f H)). auto.
                 replace ((edg G' at_ s_map f H) (f x) (f y)) with (edg G' (f x)(f y)).
                 auto. auto. symmetry. auto. }
               { (* Case2: In x H /\ ~ In y H *)
                 assert (H2: ~ In (f y) (s_map f H)).
-                { intro H2. apply H1. cut (one_one f); eauto. } 
+                { intro H2. apply H1. cut (one_one f); eauto. }
+                  rewrite <- h2.
                   replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
               { (* Case3: ~ In x H /\ In y H *)
                 assert (H2: ~ In (f x) (s_map f H)).
                 { intro H2. apply H0. cut (one_one f); eauto. } 
-                  replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
+                  rewrite <- h2. replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
               { (* Case4: ~ In x H /\ ~ In y H *)
                 assert (H2: ~ In (f y) (s_map f H)).
                 { intro H2. apply H1. cut (one_one f); eauto. } 
-                  replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
+                  rewrite <- h2. replace ((edg G' at_ s_map f H) (f x) (f y)) with false.
                 switch. eauto. symmetry. switch. intro H3. apply H2. eauto. } } }  } Qed. 
             
 
