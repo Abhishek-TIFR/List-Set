@@ -266,14 +266,21 @@ Section Repeat_node.
    (* The term G'_a is used to define the induced subgraph of G' at G' \ {a} *)
    (*-------------------- G'_a is isomorphic to G  -----------------------*)
 
-   Lemma G'_a: IsOrd (rmv a G').
-   Proof. auto. Qed.
+   (* Lemma G'_a: IsOrd (rmv a G').
+   Proof. auto. Qed. *)
 
-   (* Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
-     refine {|nodes:= K; nodes_IsOrd := Pk;
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined. *)
+   Let N'_a:= (rmv a G').
+   Let G'_a:= (Ind_at (rmv a G') G').
 
-   Lemma G'_a_is_ind_subgraph(P: In a G)(P': ~ In a' G): Ind_subgraph (Ind_at G'_a G') G'.
+   (*  Definition Ind_at (K: list A)(G: UG): UG.
+     refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined. *)
+
+   Lemma NG'_a: N'_a = nodes (Ind_at N'_a G').
+   Proof.  apply set_equal;auto. unfold N'_a. auto. 
+          cut ((rmv a G') [<=] G'). simpl. auto. auto.  Qed.
+
+
+   Lemma G'_a_is_ind_subgraph(P: In a G)(P': ~ In a' G): Ind_subgraph (Ind_at N'_a G') G'.
    Proof. split.
           { simpl. auto. }
           { intros x y H1 H2. simpl. symmetry;auto. } Qed.
@@ -315,13 +322,13 @@ Section Repeat_node.
             { rewrite Hxa. rewrite Hxa'. auto. } } Qed.
 
    (* -----   fact:   G'_a = (s_map f G) -------- *)
-   Lemma G'_a_is_s_mapG (P: In a G)(P': ~ In a' G): nodes (Ind_at G'_a G') = (s_map f G).
+   Lemma G'_a_is_s_mapG (P: In a G)(P': ~ In a' G): nodes (Ind_at N'_a G') = (s_map f G).
    Proof. { assert (H0: a <> a'). auto.
-          assert (H1: Equal (Ind_at G'_a G') (s_map f G)).
+          assert (H1: Equal (Ind_at N'_a G') (s_map f G)).
           { split; unfold Subset.
             { (* -- x in G_a' implies x in s_map f G --*)
               intros x H1.
-              assert (H1a: x <> a). simpl in H1. 
+              assert (H1a: x <> a). rewrite <- NG'_a in H1. 
               { eapply set_rmv_elim2 with (l:= (add a' G));auto. }
               assert (case_xa': x=a' \/ x<>a'). eauto.
               destruct case_xa'.
@@ -336,14 +343,17 @@ Section Repeat_node.
               assert (Hxa: x=a \/ x<>a). eauto.
               destruct Hxa.
               { subst y. replace (f x) with a'. simpl.
-                cut (In a' (add a' G)); auto. subst x; symmetry. auto using fa_is_a'. }
-              { subst y. replace (f x) with x. simpl.
-                cut (In x (add a' G)); auto. symmetry; auto using fx_is_x. } } }
+                cut (In a' (add a' G)). cut (In a' N'_a).
+                auto. unfold N'_a. cut(a'<>a). cut (In a' G').  auto.
+                simpl. all: auto.  subst x; symmetry. auto using fa_is_a'. }
+              { subst y. replace (f x) with x. rewrite <- NG'_a.
+                unfold N'_a. cut (In x G').  auto. unfold G'. simpl. auto.
+                symmetry; auto using fx_is_x. } } }
               auto. } Qed. 
    
    (* -----   fact: f preserves edg relation ----- *)
    Lemma f_preserves_edg (P: In a G)(P': ~ In a' G)(x y:A):
-     edg G x y = edg (Ind_at G'_a G') (f x) (f y).
+     edg G x y = edg (Ind_at N'_a G') (f x) (f y).
    Proof. {  assert (H0: a <> a'). auto.
           assert (H0a: a == a' = false). switch. move /eqP. auto.
           assert (H0b: (rmv a G') [<=] G'). auto.
@@ -367,8 +377,8 @@ Section Repeat_node.
               { (*when y=a'*)
                 assert (y=a'). auto. subst y.
                 replace (edg G a a') with false.
-                symmetry;switch. cut (~ In a (Ind_at G'_a G')).
-                eauto. simpl. cut (NoDup (add a' G)); auto.
+                symmetry;switch. cut (~ In a (Ind_at N'_a G')).
+                eauto. rewrite <- NG'_a; unfold N'_a. cut (NoDup G'); auto.
                 symmetry. switch. cut (~ In a' G); eauto. }
               { (*when y <> a'*)
                 assert (y<>a'). move /eqP. switch. auto. 
@@ -385,8 +395,8 @@ Section Repeat_node.
                 replace (edg G a' y) with false.
                 Focus 2. symmetry; switch; eauto.
                 symmetry. replace (y==a') with false.
-                switch. cut (~ In a (Ind_at G'_a G')). eauto.
-                simpl. cut (NoDup (add a' G)); auto. rewrite <- Hxy. auto. }
+                switch. cut (~ In a (Ind_at N'_a G')). eauto.
+                rewrite <- NG'_a; unfold N'_a. cut (NoDup G');auto. rewrite <- Hxy. auto. }
               { (* when x <> a'*)
                 assert (x<> a'). switch_in Hxa'. intro H2; apply Hxa'; auto.
                 destruct (y==a) eqn: Hya; destruct (y== a') eqn: Hya'.
@@ -400,8 +410,8 @@ Section Repeat_node.
                 { move /eqP in Hya'. subst y.
                   replace (edg G x a') with false.
                   symmetry. switch.
-                  cut (~ In a (Ind_at G'_a G')). eauto.
-                  simpl. cut (NoDup (add a' G)); auto.
+                  cut (~ In a (Ind_at N'_a G')). eauto.
+                  rewrite <- NG'_a; unfold N'_a. cut (NoDup G'); auto.
                   symmetry;switch. eauto. }
                 { assert (y<>a). move /eqP; switch; auto.
                   assert (y<>a'). move /eqP; switch; auto.
@@ -411,7 +421,7 @@ Section Repeat_node.
                   assert (memb y G' = memb y (rmv a G')). auto.
                   auto. } } } }  } Qed.
                   
-   Lemma G_iso_G'_a (P: In a G)(P': ~ In a' G): iso_using f G (Ind_at G'_a G').
+   Lemma G_iso_G'_a (P: In a G)(P': ~ In a' G): iso_using f G (Ind_at N'_a G').
    Proof. { assert (H0: a <> a'). auto.
           split.
           { (* ------------------ Proof of the fact that f (f x) = x -----------------*)
@@ -422,7 +432,7 @@ Section Repeat_node.
           { (*---------------  Proof that isomorphism preserves the edg relation-------*)
             intros x y. apply f_preserves_edg;auto.  } } Qed.
 
-   Lemma G_isomorphic_G'_a  (P: In a G)(P': ~ In a' G): iso G (Ind_at G'_a G').
+   Lemma G_isomorphic_G'_a  (P: In a G)(P': ~ In a' G): iso G (Ind_at N'_a G').
      Proof. exists f.  apply G_iso_G'_a;auto. Qed.
 
      
@@ -438,88 +448,3 @@ End Repeat_node.
  Hint Immediate E'xa_E'xa' E'xa'_E'xa: core.
  Hint Immediate E'xa_eq_E'xa' E'ay_eq_E'a'y: core.
  Hint Resolve G_isomorphic_G'_a: core.
-
-
-(* 
- 
-Section LovaszRepLemma.
-
-  Context { A:ordType }.
-
-  Variable G: @UG A.
-  Variable a a': A.
-  Hypothesis P: In a G.
-  Hypothesis P': ~In a' G.
-
-  (* Let G':= Repeat_in G a a'. *)
-
-  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
-  Proof. {
-
-   (* We will prove the result by well founded induction on the set of all UG. 
-      To use the well founded induction we first need to prove that the relation 
-      lt_graph is well founded on UG. This is proved as Lemma lt_graph_is_well_founded
-      in the file DecUG.v. *) 
-    revert a a' P P'. pattern G. revert G.
-    apply well_founded_ind with (R:= @lt_graph A).  apply lt_graph_is_well_founded.
-    intros G IH a a' P P' h. remember (Repeat_in G a a') as G'.
-    unfold lt_graph in IH.
-    
-    unfold Perfect. intros H' h1.
-    assert (h0: H' [<=] G'). apply h1.
-    assert (N'_a: IsOrd (rmv a G')). subst G'. simpl. auto.
-    assert (N: IsOrd G). auto.
-
-    (* We break the proof in two cases (C1 and C2).
-       C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
-       C2 is the case when H' is same as G' (i.e. H' = G').  *)
-    assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
-    destruct HC as [C2 | C1].
-
-    (* Case C2 (H' = G'): Proof -------------------------------------------------------------- *)
-    { (* C2: In this case H' [=] G'. We further split this case into two subcases C2a and C2b.
-       C2_a is the case when a is present in some largest clique K in G.
-       C2_b is the case when a is not present in any largest clique of G. *)
-    
-      admit.
-    } (*---------- End of Case C2 -------------------------------------------------- *)
-
-    
-
-    
-    (* Case C1 (H' <> G'): Proof --------------------------------------------------- *)
-    { (* C1: In this case ~ H' [=] G'. This means that H' is strictly included in G'.
-         We further split this case into two subcases C1a and C1b. 
-         C1_a is the case when a is not present in H' (i.e. ~ In a H').
-         C1_b is the case when a is present in H' (i.e. In a H').  *)
-      assert (h2: exists x, In x G' /\ ~ In x H'). admit.
-      destruct h2 as [x0 h2]. 
-      assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
-      destruct HC as [C1_b | C1_a].
-      (* Case C1_b ( In a H'): Proof ----------------------------- *)
-      { admit. }
-
-      (* Case C1_a (~ In a H'): Proof ---------------------------- *)
-      { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
-        destruct h3 as [h3a | h3b].
-        (* subcase In a' H': In this case Ind_subgraph H' G'_a  *) 
-        assert (h3: Ind_subgraph H' (Ind_at N'_a G')). admit.
-        assert (h4: iso G (Ind_at N'_a G')).
-        {  subst G'. eapply G_isomorphic_G'_a with (G0:=G)(a0:=a)(a'0:=a');auto. }
-        destruct h4 as [f h4].
-        assert (h5: exists H, Ind_subgraph H G /\ iso_using f H' H).
-        { eapply iso_subgraphs. Focus 2. apply h3. auto. }
-        destruct h5 as [H h5]. destruct h5 as [h5 h6].
-        cut(iso H H'). cut (Nice H). eauto. auto. eauto.
-        (* subcase ~In a' H': In this case Ind_subgraph H' G *)
-        assert (h3: Ind_subgraph H' G). admit.
-        auto. }
-      
-    } (*----------- End of Case C1 -------------------------------------------------- *) 
-
-    }  Admitted.  
-      
-  
-  End LovaszRepLemma.
-
-*)
