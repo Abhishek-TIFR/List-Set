@@ -40,6 +40,8 @@ Set Implicit Arguments.
 Section DecidableGraphs.
 
   Context { A: ordType }.
+
+  
   
   (*------------ Reflexive, Ireflexive and Symmetric Relation --------------------------------*)
   Definition refl (E: A -> A-> bool):= forall x, E x x = true.
@@ -346,19 +348,25 @@ Hint Resolve lt_graph_is_well_founded: core.
              nodes_IsOrd := G.(nodes_IsOrd);
              edg:= ((compl G.(edg)) at_ G); |}). all: auto. Defined.
 
-   Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
+  (* Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
      refine {|nodes:= K; nodes_IsOrd := Pk;
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined.  
+              edg:= (G.(edg) at_ K); |}. all: auto. Defined. *)
 
-   Lemma induced_fact1: forall (K:list A) (G: UG)(Pk: IsOrd K),
-        K[<=]G -> Ind_subgraph (Ind_at Pk G) G.
-   Proof. { intros K G Pk H. split. assumption. simpl;intros;symmetry;auto. }  Qed.
+   Definition Ind_at (K: list A)(G: UG): UG.
+     refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined.  
+
+   Lemma induced_fact1: forall (K:list A) (G: UG),
+        K[<=]G -> Ind_subgraph (Ind_at K G) G.
+   Proof. { intros K G H. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed.
 
    (*------------ description of the following lemma while explainig Ind_at ----------- *)
 
-   Lemma induced_fact2 (K:list A) (G: UG)(Pk: IsOrd K)(x y:A):
-     K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (Ind_at Pk G) x y.
+   Lemma induced_fact2 (K:list A) (G: UG)(x y:A):
+     K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (Ind_at K G) x y.
    Proof. { intros H H1 H2. simpl. unfold "at_".
+            assert (h3: K [=] (inter K G)). auto.
+            replace ( memb2 x y (inter K G)) with ( memb2 x y K).
+            Focus 2. auto.
           destruct (memb2 x y K) eqn: H3.
           { auto. }
           { assert (H4: (memb2 x y G) = false).
