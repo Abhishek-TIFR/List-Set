@@ -87,10 +87,10 @@ Section LovaszRepLemma.
       (* Case C1_b ( In a H'): Proof ----------------------------- *)
       { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
         destruct h3 as [h3a | h3b].
-        (* subcase In a' H': In this case we use IH *)
+        (* subcase In a' H': In this case we use IH *) 
         remember (Ind_at  H' G) as H.
         assert (h0a: H [<=] H').
-        { subst H. simpl. auto. }
+        { subst H; simpl; auto. }
         assert ( h4: |H| < |G|).
         { apply subset_cardinal_lt with (a0:= x0). auto.
           subst H. simpl. auto.
@@ -123,7 +123,6 @@ Section LovaszRepLemma.
               assert (h7: x = a' \/ In x (inter H' G)). auto.
               destruct h7 as [h7 | h7].
               subst x. auto. eauto. } apply id_is_identity. auto. }
-          
           (* third subgoal: edg (Repeat_in H a a') x y = edg H' (id x) (id y) *)
           { simpl. unfold id. intros x y.
             unfold Ind_subgraph in h1.  unfold Ind_subgraph in h5.
@@ -131,9 +130,73 @@ Section LovaszRepLemma.
             { (* when both x and y is in H' *)
               assert (h8: In x H' /\ In y H'). move /memb2P in h7. auto.
               destruct h8 as [h8a h8b].
-              admit. }
-            { (* when one of x or y is not present in H' *)
-               admit. } }  }
+              replace (edg H' x y) with (edg G' x y).
+              Focus 2. symmetry; apply h1;auto.
+              assert (hx: x = a' \/ x <> a'). eauto.
+              assert (hy: y = a' \/ y <> a'). eauto.
+              destruct hx as [hx | hx]; destruct hy as [hy | hy].
+              { (* when x= a' and y= a' *)
+                subst x. subst y.  replace (edg G' a' a') with false.
+                switch. replace (ex_edg H a a') with (edg (Repeat_in H a a')).
+                eapply no_self_edg1. simpl. auto. symmetry. switch; auto. }
+              { (* when x= a' and y <> a'*)
+                assert (h8: In y H).
+                { subst H. simpl. cut (In y G). auto.
+                  cut (In y G'). subst G'. simpl. eauto. auto. } 
+                assert (h9: y=a \/ y<>a). eauto.
+                destruct h9 as [h9 |h9].
+                { subst x. subst y.  replace (edg G' a' a) with true.
+                replace (ex_edg H a a') with (edg (Repeat_in H a a')).
+                cut ( edg (Repeat_in H a a') a a' = true). all: auto.
+                symmetry. cut (edg G' a a' = true). auto. subst G'; auto. }
+                { subst x. replace (ex_edg H a a' a' y) with (edg H a y).
+                  replace (edg G' a' y) with (edg G a y).
+                  apply h5. subst H. simpl. auto. auto. subst G'. auto.  
+                  eapply Eay_eq_E'a'y; subst H; simpl;auto. intro h10.
+                  absurd (In a' G);eauto. } }
+              { (* when x <> a' and y = a' *)
+                assert (h8: In x H).
+                { subst H. simpl. cut (In x G). auto.
+                  cut (In x G'). subst G'. simpl. eauto. auto. } 
+                assert (h9: x=a \/ x<>a). eauto.
+                destruct h9 as [h9 |h9].
+                { subst x. subst y.  replace (edg G' a a') with true.
+                replace (ex_edg H a a') with (edg (Repeat_in H a a')); auto.
+                symmetry;subst G'; auto. }
+                { subst y. replace (ex_edg H a a' x a') with (edg H x a).
+                  replace (edg G' x a') with (edg G x a).
+                  apply h5; subst H; simpl; auto. subst G'; auto.  
+                  eapply Exa_eq_E'xa'; subst H; simpl;auto. intro h10.
+                  absurd (In a' G);eauto. } }
+              { (* when x <> a' and y <> a'*)
+                assert (hx1: In x H). admit.
+                assert (hy1: In y H). admit.
+                replace (ex_edg H a a' x y) with (edg H x y).
+                replace (edg H x y) with (edg G x y).
+                cut (In x G). cut (In y G). subst G';auto.
+                subst H; simpl in hy1;simpl in hx1;eauto.
+                subst H; simpl in hy1;simpl in hx1;eauto.
+                symmetry;apply h5;auto.  apply Exy_eq_E'xy; subst H; simpl.
+                auto. intro h10. absurd (In a' G). auto. eauto. all: auto. }  }
+
+            { (* when either x or y is not in H'*)
+              
+              assert (h8: ~ In x H' \/ ~ In y H'). auto.
+              destruct h8 as [h8 | h8].
+              { replace (edg H' x y) with false. 
+                replace (ex_edg H a a') with (edg (Repeat_in H a a')). switch.
+                cut (~ In x (Repeat_in H a a')).  eauto.
+                simpl. subst H. simpl. intro h9. assert (h10: x=a' \/ In x (inter H' G)).
+                auto.  destruct h10 as [h10 | h10].
+                subst x;contradiction. absurd (In x H'); eauto. simpl;auto.
+                symmetry. switch. intro h9;apply h8. eapply no_edg1;eauto. }
+               { replace (edg H' x y) with false. 
+                replace (ex_edg H a a') with (edg (Repeat_in H a a')). switch.
+                cut (~ In y (Repeat_in H a a')).  eauto.
+                simpl. subst H. simpl. intro h9. assert (h10: y=a' \/ In y (inter H' G)).
+                auto.  destruct h10 as [h10 | h10].
+                subst y;contradiction. absurd (In y H'); eauto. simpl;auto.
+                symmetry; switch. intro h9;apply h8. eapply no_edg1;eauto. } }   }  } 
         
         cut (Nice (Repeat_in H a a')). eauto.
         cut (Perfect (Repeat_in H a a')). auto.
@@ -164,9 +227,8 @@ Section LovaszRepLemma.
         destruct h5 as [H h5]. destruct h5 as [h5 h6].
         cut(iso H H'). cut (Nice H). eauto. auto. eauto.
         (* subcase ~In a' H': In this case Ind_subgraph H' G *)
-        assert (h3: Ind_subgraph H' G). subst G'. eauto using H'_sub_G. auto. }
-      
-    } (*----------- End of Case C1 -------------------------------------------------- *) 
+        assert (h3: Ind_subgraph H' G). subst G'. eauto using H'_sub_G. auto. }  }
+    (*----------- End of Case C1 -------------------------------------------------- *) 
 
     }  Admitted.  
       
