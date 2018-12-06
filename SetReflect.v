@@ -120,6 +120,11 @@ Lemma memb_prop4 (x y: A)(l s: list A): l [=] s -> memb2 x y l = memb2 x y s.
 Proof. intro h. assert (h1: s [=] l). auto. unfold memb2.
        replace (memb x s) with (memb x l). replace (memb y s) with (memb y l).
        auto. all: auto. Qed.
+Lemma memb2_elim (x y: A)(l: list A): memb2 x y l = false -> (~ In x l \/ ~ In y l).
+Proof. { intro h7. unfold memb2 in h7.
+       destruct (memb x l) eqn:h7x; destruct (memb y l) eqn:h7y; simpl in h7;
+           move /membP in h7x; move /membP in h7y.
+       inversion h7. right;auto. all: left;auto. } Qed.
 
 
 
@@ -379,7 +384,7 @@ Hint Resolve membP memb2P nodupP emptyP subsetP equalP
 Hint Resolve forall_exists_EM exists_forall_EM: core.
 Hint Resolve forall_em_exists exists_em_forall: core.
 
-Hint Immediate set_memb_correct1 set_memb_correct2: core.
+Hint Immediate set_memb_correct1 set_memb_correct2  memb2_elim: core.
 Hint Resolve memb_prop1 memb_prop2 memb_prop3 memb_prop4: core.
 Hint Immediate noDup_elim noDup_intro: core.
 Hint Immediate empty_elim empty_intro: core.
