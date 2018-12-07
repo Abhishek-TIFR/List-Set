@@ -36,75 +36,37 @@ Section LovaszRepLemma.
            symmetry. cut (In x G). cut (In y G). all: auto.
            symmetry;auto. } } Qed.
 
-  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
-  Proof. {
+  Lemma H'_iso_G' (H' G': @UG A): Ind_subgraph H' G' -> H' [=] G'-> iso G' H'.
+  Proof. { intros h1 C2.
+            exists id. split.
+             { unfold id; auto. } split.
+             { apply set_equal. auto. auto. auto. }
+             { unfold id. intros x y. symmetry.
+               destruct (memb2 x y H') eqn: h2.
+               { cut (In x H'). cut (In y H'). auto.
+                 move /memb2P in h2; apply h2. move /memb2P in h2; apply h2. }
+               { assert (h3: ~ In x H' \/ ~ In y H'). auto.
+                 destruct h3 as [h3a | h3b].
+                 { replace (edg H' x y) with false. symmetry. switch. intro h3.
+                   assert (h4: In x G').
+                   eapply no_edg1. apply h3. absurd (In x H'). auto. apply C2. auto.
+                   symmetry. switch. intro h3. apply h3a. eapply no_edg1;eauto. }
+                 { replace (edg H' x y) with false. symmetry. switch.
+                   intro h3. assert (h4: In y G').
+                   eapply no_edg2. apply h3. absurd (In y H'). auto. apply C2. auto.
+                   symmetry. switch. intro h3. apply h3b. eapply no_edg2;eauto. } } } } Qed.
 
-   (* We will prove the result by well founded induction on the set of all UG. 
-      To use the well founded induction we first need to prove that the relation 
-      lt_graph is well founded on UG. This is proved as Lemma lt_graph_is_well_founded
-      in the file DecUG.v. *) 
-    revert a a' P P'. pattern G. revert G.
-    apply well_founded_ind with (R:= @lt_graph A).  apply lt_graph_is_well_founded.
-    intros G IH a a' P P' h. remember (Repeat_in G a a') as G'.
-    unfold lt_graph in IH.
-    
-    unfold Perfect. intros H' h1.
-    assert (h0: H' [<=] G'). apply h1.
-    
-    remember (Ind_at (rmv a G') G') as G'_a.
-
-    (* We break the proof in two cases (C1 and C2).
-       C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
-       C2 is the case when H' is same as G' (i.e. H' = G').  *)
-    assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
-    destruct HC as [C2 | C1].
-
-    (* Case C2 (H' = G'): Proof ---------------------------------------------------- *)
-    { (* C2: In this case H' [=] G'.
-         We further split this case into two subcases C2a and C2b.
-         C2_a is the case when a is present in some largest clique K in G.
-         C2_b is the case when a is not present in any largest clique of G. *)
-    
-      admit.
-    } (*---------- End of Case C2 -------------------------------------------------- *)
-
-    
-    (* Case C1 (H' <> G'): Proof --------------------------------------------------- *)
-    { (* C1: In this case ~ H' [=] G'. This means that H' is strictly included in G'.
-         We further split this case into two subcases C1a and C1b. 
-         C1_a is the case when a is not present in H' (i.e. ~ In a H').
-         C1_b is the case when a is present in H' (i.e. In a H').  *)
-      assert (h2: exists x, In x G' /\ ~ In x H').
-      { assert (h3: forall x, In x H' \/ ~ In x H'). intros x. eapply reflect_EM;auto.
-        eapply forall_exists_EM with (l:= G') in h3.
-        destruct h3 as [h3 | h3].
-        assert (H' [=] G'). cut (G' [<=] H'). auto. auto. contradiction. auto. }
-      
-      destruct h2 as [x0 h2]. 
-      assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
-      destruct HC as [C1_b | C1_a].
-      
-      (* Case C1_b ( In a H'): Proof ----------------------------- *)
-      { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
-        destruct h3 as [h3a | h3b].
-        (* subcase In a' H': In this case we use IH *) 
-        remember (Ind_at  H' G) as H.
-        assert (h0a: H [<=] H').
-        { subst H; simpl; auto. }
-        assert ( h4: |H| < |G|).
-        { apply subset_cardinal_lt with (a0:= x0). auto.
-          subst H. simpl. auto.
-          assert (h5: x0 <> a').
-          { intro. subst x0. destruct h2. contradiction. }
-          destruct h2 as [h2 h2a]. subst G'. simpl in h2. eauto.
-          destruct h2 as [h2 h2a].
-          subst H. simpl. intro h3. absurd (In x0 H'). auto. eauto. }
-        assert (h5: Ind_subgraph H G).
-        { unfold Ind_subgraph. split.
+  Lemma RepeatH_iso_H' (H' G': @UG A): G'= Repeat_in G a a'-> Ind_subgraph H' G' -> In a H' ->
+                                       In a' H'-> iso (Repeat_in (Ind_at H' G) a a') H'.
+  Proof. { intros HeqG' h1 C1_b h3a. remember (Ind_at H' G) as H.
+         assert (h0: H' [<=] G'). apply h1.
+         assert (h0a: H [<=] H').
+         { subst H; simpl; auto. }
+         assert (h5: Ind_subgraph H G).
+         { unfold Ind_subgraph. split.
           subst H; simpl; auto.
           subst H; simpl. intros x y h5 h6. symmetry. auto. }
-        assert (h6: iso (Repeat_in H a a') H').
-        { exists id.
+          { exists id.
           split.
           (* first subgoal: forall x:A, id (id x) = x *)
           { intros; unfold id; auto. } split.
@@ -169,8 +131,12 @@ Section LovaszRepLemma.
                   eapply Exa_eq_E'xa'; subst H; simpl;auto. intro h10.
                   absurd (In a' G);eauto. } }
               { (* when x <> a' and y <> a'*)
-                assert (hx1: In x H). admit.
-                assert (hy1: In y H). admit.
+                assert (hx1: In x H).
+                { subst H. simpl. cut (In x G). auto.
+                  cut (In x G'). subst G'. simpl. eauto. auto. }
+                assert (hy1: In y H).
+                { subst H. simpl. cut (In y G). auto.
+                  cut (In y G'). subst G'. simpl. eauto. auto. }
                 replace (ex_edg H a a' x y) with (edg H x y).
                 replace (edg H x y) with (edg G x y).
                 cut (In x G). cut (In y G). subst G';auto.
@@ -196,14 +162,111 @@ Section LovaszRepLemma.
                 simpl. subst H. simpl. intro h9. assert (h10: y=a' \/ In y (inter H' G)).
                 auto.  destruct h10 as [h10 | h10].
                 subst y;contradiction. absurd (In y H'); eauto. simpl;auto.
-                symmetry; switch. intro h9;apply h8. eapply no_edg1;eauto. } }   }  } 
-        
+                symmetry; switch. intro h9;apply h8. eapply no_edg1;eauto. } } } } } Qed.   
+         
+                                                                                     
+
+  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
+  Proof. {
+
+   (* We will prove the result by well founded induction on the set of all UG. 
+      To use the well founded induction we first need to prove that the relation 
+      lt_graph is well founded on UG. This is proved as Lemma lt_graph_is_well_founded
+      in the file DecUG.v. *) 
+    revert a a' P P'. pattern G. revert G.
+    apply well_founded_ind with (R:= @lt_graph A).  apply lt_graph_is_well_founded.
+    intros G IH a a' P P' h.
+
+    remember (Repeat_in G a a') as G'.
+    unfold lt_graph in IH.
+    
+    unfold Perfect. intros H' h1.
+    assert (h0: H' [<=] G'). apply h1.
+    
+    (* remember (Ind_at (rmv a G') G') as G'_a. *)
+
+    (* We break the proof in two cases (C1 and C2).
+       C1 is the case when  H' is not equal to G' (i.e H' <> G'). 
+       C2 is the case when H' is same as G' (i.e. H' = G').  *)
+    assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
+    destruct HC as [C2 | C1].
+
+    (* Case C2 (H' = G'): Proof ---------------------------------------------------- *)
+    { (* C2: In this case H' [=] G'.
+         We further split this case into two subcases C2a and C2b.
+         C2_a is the case when a is present in some largest clique K in G.
+         C2_b is the case when a is not present in any largest clique of G. *)
+      
+      assert (h_iso: iso G' H'). apply H'_iso_G';auto.
+      cut(Nice G'). eauto.
+      
+      set (Pb:= fun K => max_K_in G K && memb a K). 
+      specialize (exists_em_forall Pb (pw G)) as HC.
+      unfold Pb in HC.
+      destruct HC as [C2_a | C2_b].
+      { (* C2_a : when a is present in some largest clique K of G.  *)
+        destruct C2_a as [K C2_a]. destruct C2_a as [C2a C2b].
+        move /andP in C2b. destruct C2b as [h2 h3]. move /max_K_inP in h2.
+        move /membP in h3. assert (h2a: Cliq_in G K). auto.
+        assert (h2b: K [<=] G). auto. assert (h2c: IsOrd K). eauto.
+        (* preprocessing ends and  main proof starts *)
+        admit. }
+
+      { (* C2_b : when a is not present in any largest clique of G. *)
+        assert (C2b: forall K, Cliq_in G K -> In a K -> ~ Max_K_in G K).
+        { intros K h2 h3 h4.
+          absurd (max_K_in G K && memb a K).
+          { apply C2_b. apply pw_intro.
+            assert (h4a: Cliq_in G K). auto. all: auto. eauto. }
+          { split_. apply /max_K_inP; auto. apply /membP;auto. } }
+        (* preprocessing ends and main proof starts *)
+        admit. } 
+    } (*---------- End of Case C2 -------------------------------------------------- *)
+
+    
+    (* Case C1 (H' <> G'): Proof --------------------------------------------------- *)
+    { (* C1: In this case ~ H' [=] G'. This means that H' is strictly included in G'.
+         We further split this case into two subcases C1a and C1b. 
+         C1_a is the case when a is not present in H' (i.e. ~ In a H').
+         C1_b is the case when a is present in H' (i.e. In a H').  *)
+      assert (h2: exists x, In x G' /\ ~ In x H').
+      { assert (h3: forall x, In x H' \/ ~ In x H'). intros x. eapply reflect_EM;auto.
+        eapply forall_exists_EM with (l:= G') in h3.
+        destruct h3 as [h3 | h3].
+        assert (H' [=] G'). cut (G' [<=] H'). auto. auto. contradiction. auto. }
+      
+      destruct h2 as [x0 h2]. 
+      assert (HC: In a H' \/ ~ In a H'). eapply reflect_EM; eauto.
+      destruct HC as [C1_b | C1_a].
+      
+      (* Case C1_b ( In a H'): Proof ----------------------------- *)
+      { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
+        destruct h3 as [h3a | h3b].
+        (* subcase In a' H': In this case we use IH *) 
+        remember (Ind_at  H' G) as H.
+        assert (h0a: H [<=] H').
+        { subst H; simpl; auto. }
+        assert ( h4: |H| < |G|).
+        { apply subset_cardinal_lt with (a0:= x0). auto.
+          subst H. simpl. auto.
+          assert (h5: x0 <> a').
+          { intro. subst x0. destruct h2. contradiction. }
+          destruct h2 as [h2 h2a]. subst G'. simpl in h2. eauto.
+          destruct h2 as [h2 h2a].
+          subst H. simpl. intro h3. absurd (In x0 H'). auto. eauto. }
+        assert (h5: Ind_subgraph H G).
+        { unfold Ind_subgraph. split.
+          subst H; simpl; auto.
+          subst H; simpl. intros x y h5 h6. symmetry. auto. }
+        assert (h6: iso (Repeat_in H a a') H').
+        { subst H. apply RepeatH_iso_H' with (G':=G');auto. }
         cut (Nice (Repeat_in H a a')). eauto.
         cut (Perfect (Repeat_in H a a')). auto.
         apply IH. auto. subst H; simpl; auto. subst H; simpl; auto. eauto. eauto.
         (* subcase ~In a' H': In this case Ind_subgraph H' G *)
         assert (h3: Ind_subgraph H' G). subst G'.  eauto using H'_sub_G. auto. }
-
+      
+      remember (Ind_at (rmv a G') G') as G'_a.
       (* Case C1_a (~ In a H'): Proof ---------------------------- *)
       { assert (h3: In a' H' \/ ~ In a' H'). eapply reflect_EM;eauto.
         destruct h3 as [h3a | h3b].
