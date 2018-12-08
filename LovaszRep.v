@@ -164,8 +164,31 @@ Section LovaszRepLemma.
                 subst y;contradiction. absurd (In y H'); eauto. simpl;auto.
                 symmetry; switch. intro h9;apply h8. eapply no_edg1;eauto. } } } } } Qed.   
          
-                                                                                     
 
+  Lemma cliq_in_G' (K: list A): In a K ->  Cliq_in G K ->  Cliq_in (Repeat_in G a a') (add a' K).
+  Proof.  { intros h1 h2. assert (h2b: K [<=] G). auto.
+          assert (h2c: IsOrd K). eauto. assert (h2d: Cliq G K). auto.
+          unfold Cliq in h2d.
+          unfold Cliq_in. split. simpl;auto. split. auto.
+          unfold Cliq. intros x y h4 h5.
+            assert (h4a: x= a' \/ In x K). auto.
+            assert (h5a: y= a' \/ In y K). auto.
+            destruct h4a as [h4a | h4a]; destruct h5a as [h5a | h5a].
+            { subst x; subst y; left; auto. }
+            { subst x;right. cut(a = y \/ edg G a y= true). 
+              intro h6. destruct h6 as [h6 | h6]. subst y; apply sym_edg; eauto. auto.
+              apply h2d;auto. }
+             { subst y;right. cut(x = a \/ edg G x a = true). 
+              intro h6. destruct h6 as [h6 | h6]. subst x;eauto. auto.
+              apply h2d;auto. }
+             { assert (h6: x = y \/ edg G x y). auto. destruct h6 as [h6 | h6].
+               left;auto. right. cut (In x G). cut (In y G). all: auto. } } Qed.
+             
+  
+  Lemma max_K_in_G' (K: list A)(n:nat): cliq_num G n -> Cliq_in (Repeat_in G a a') K -> |K| <= n+1.
+  Proof. Admitted.
+  
+                                            
   Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
   Proof. {
 
@@ -207,10 +230,24 @@ Section LovaszRepLemma.
       { (* C2_a : when a is present in some largest clique K of G.  *)
         destruct C2_a as [K C2_a]. destruct C2_a as [C2a C2b].
         move /andP in C2b. destruct C2b as [h2 h3]. move /max_K_inP in h2.
-        move /membP in h3. assert (h2a: Cliq_in G K). auto.
+        move /membP in h3.  assert (h2a: Cliq_in G K). auto.
         assert (h2b: K [<=] G). auto. assert (h2c: IsOrd K). eauto.
+        assert (h2d: Cliq G K). auto.
+        
         (* preprocessing ends and  main proof starts *)
-        admit. }
+        apply nice_intro with (n:=|K|+1). unfold cliq_num.
+        exists (add a' K).
+        split.
+        {(* Max_K_in G' (add a' K) *)
+          apply Max_K_in_intro.
+          subst G'; apply cliq_in_G';auto.
+          intros K' h4. replace (| add a' K|) with (|K|+1).
+          eapply max_K_in_G'. exists K.
+          split;auto. subst G'; auto. symmetry. replace (|K|+1) with (S(|K|)).
+          apply add_card1. auto. omega. }
+        { replace (|K|+1) with (S(|K|)). apply add_card1. auto. omega. }
+        { (* exists f : A -> nat, Coloring_of G' f /\ (| clrs_of f G' |) = (| K |) + 1  *)
+          admit. }  } 
 
       { (* C2_b : when a is not present in any largest clique of G. *)
         assert (C2b: forall K, Cliq_in G K -> In a K -> ~ Max_K_in G K).
