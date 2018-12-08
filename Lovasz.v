@@ -130,10 +130,14 @@ Section Repeat_node.
            assert (Hc: x <> a'). intro; subst x; contradiction.  
            auto. } Qed.
 
+  Lemma Eay_E'a'y (y: A)(P: In a G)(P': ~In a' G): (edg G) a y -> (edg G') a' y.
+  Proof. intro h. apply sym_edg. cut (edg G y a = true); auto using Exa_E'xa'. Qed.
+  
+
    Lemma a_not_eq_a' (P: In a G)(P': ~In a' G): a <> a'.
    Proof. intro. subst a. absurd (In a' G); auto. Qed.
 
-  Hint Resolve edge_aa' Exa_E'xa' a_not_eq_a': core.
+  Hint Resolve edge_aa' Exa_E'xa' Eay_E'a'y a_not_eq_a': core.
    
   Lemma Exy_E'xy (x y:A)(P: In a G)(P': ~In a' G): edg G x y -> edg G' x y.
   Proof. { intro H. simpl. unfold ex_edg.
@@ -439,7 +443,7 @@ Section Repeat_node.
     
 End Repeat_node.
 
- Hint Resolve edge_aa' Exa_E'xa' a_not_eq_a': core.
+ Hint Resolve edge_aa' Exa_E'xa' Eay_E'a'y a_not_eq_a': core.
  Hint Immediate Exy_E'xy: core.
  Hint Immediate In_E'xy_Exy In_E'xy_Exy1 In_Exy_eq_E'xy: core.
  Hint Immediate E'xy_Exy: core.
