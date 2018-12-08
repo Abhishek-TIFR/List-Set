@@ -165,6 +165,15 @@ Section OrderedSet.
   Proof. induction l. simpl;omega. simpl;match_up a a0; simpl;omega. Qed.
 
   Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
+
+  Lemma rmv_prop1 (a:A)(l s: list A): NoDup l-> l [<=] s -> (rmv a l) [<=] (rmv a s).
+  Proof. intros h1 h2 x h3. assert (h4: In x l /\ x<>a). apply set_rmv_iff;auto.
+         destruct h4 as [h4 h5]. auto. Qed.
+
+  Lemma rmv_prop2 (a:A)(l s: list A): NoDup l-> NoDup s-> l [=] s -> (rmv a l) [=] (rmv a s).
+  Proof. intros h1 h2 h3. split;apply rmv_prop1; auto; apply h3. Qed.
+
+  Hint Immediate rmv_prop1 rmv_prop2: core.
          
 
  
@@ -273,8 +282,16 @@ Section OrderedSet.
 
   Hint Resolve add_card add_card1 add_card_max add_same: core.
 
+  Lemma add_prop1 (a:A)(l s: list A): l [<=] s -> (add a l) [<=] (add a s).
+  Proof. intros h1 x h2. assert (h3: x=a \/ In x l). auto.
+         destruct h3 as [h3 | h3]. subst x; auto. cut (In x s);auto. Qed.
+  
+  Lemma add_prop2 (a:A)(l s: list A): l [=] s -> (add a l) [=] (add a s).
+  Proof. intros h1. destruct h1 as [h1 h2]. split; auto using add_prop1. Qed.
+
+  Hint Immediate add_prop1 add_prop2: core.
+
    
- 
   (* ------------ set_inter operation ----------------------------------------------  *)
   
   Fixpoint inter (l s: list A): list A:=
@@ -492,12 +509,15 @@ End OrderedSet.
 Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
 Hint Resolve     set_rmv_intro: core.
 Hint Resolve set_rmv_IsOrd set_rmv_nodup memb_prop_rmv: core.
- Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
+Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
+Hint Immediate rmv_prop1 rmv_prop2: core.
 
 Hint Resolve set_add_intro1  set_add_intro3: core.
 Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
- Hint Resolve add_card add_card1 add_card_max add_same: core.
+Hint Resolve add_card add_card1 add_card_max add_same: core.
+Hint Immediate add_prop1 add_prop2: core.
+
 
  Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
  Hint Immediate set_inter_elim3 set_inter_elim4 set_inter_elim5 set_inter_elim6: core.
