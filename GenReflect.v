@@ -27,6 +27,10 @@ Some useful Ltac defined terms:
 
 
 From Coq Require Export ssreflect  ssrbool.
+
+Require Export Omega.
+
+
 Set Implicit Arguments.
 
 Section GeneralReflections.
@@ -105,3 +109,47 @@ Ltac switch_in H:= (apply switch1 in H || apply switch2 in H).
 Ltac right_ := apply /orP; right.
 Ltac left_ := apply /orP; left.
 Ltac split_ := apply /andP; split.
+
+
+Section NaturalNumbers.
+
+Lemma ltP (x y:nat): reflect (x < y) (Nat.ltb x y).
+Proof. { apply reflect_intro. split.
+       { unfold "<".  unfold "<?". 
+         revert y. induction x. intro y; case y. simpl.
+         intro H. inversion H. simpl. auto.
+         intro y;case y.
+         intro H; inversion H. intros n H. 
+         replace (S (S x) <=?  S n) with (S x <=? n). apply IHx. omega.
+         simpl. auto. }
+       { unfold "<"; unfold "<?".
+         revert y. induction x. intro y; case y. simpl.
+         intro H. inversion H. intros; omega.
+         intro y;case y. simpl. intro H; inversion H.
+         intro n. replace (S (S x) <=? S n) with (S x <=? n).
+         intro H; apply IHx in H. omega. simpl;auto. } } Qed.
+
+Lemma leP (x y: nat): reflect (x <= y) (Nat.leb x y).
+Proof. { apply reflect_intro. split.
+       { revert y. induction x. intro y; case y; simpl; auto.
+         intro y;case y.
+         intro H; inversion H. intros n H. 
+         replace (S  x <=? S n) with ( x <=? n). apply IHx. omega.
+         simpl. auto. }
+       { revert y. induction x. intro y; case y; intros; omega. 
+         intro y;case y. simpl. intro H; inversion H.
+         intro n. replace (S x <=? S n) with ( x <=? n).
+         intro H; apply IHx in H. omega. simpl;auto. } } Qed.
+
+Lemma nat_reflexive: reflexive Nat.leb.
+  Proof. unfold reflexive; induction x; simpl; auto. Qed.
+
+Lemma nat_transitive: transitive Nat.leb.
+Proof. unfold transitive. intros x y z h1 h2. move /leP in h1. move /leP in h2.
+         apply /leP. omega. Qed.
+
+Hint Resolve leP ltP nat_reflexive nat_transitive: core.
+
+End NaturalNumbers.
+
+Hint Resolve leP ltP nat_reflexive nat_transitive: core.
