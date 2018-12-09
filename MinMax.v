@@ -67,6 +67,7 @@ Section Min_Max.
   Hypothesis lr_trans: transitive lr.
   Hypothesis lr_comparable: comparable lr.
   
+  
   Lemma maxof_spec1 (a b: A): a <=r maxof a b.
   Proof. unfold maxof. destruct (a <=r b) eqn:H; eauto using lr_refl. Qed. (* refl *)
   Lemma maxof_spec2 (a b: A): b <=r maxof a b. 
@@ -204,3 +205,14 @@ Hint Resolve minof_spec1 minof_spec2 minof_spec3 minof_spec4: core.
 Hint Resolve minin_spec minin_elim minin_elim1: core.
 
 Hint Immediate min_exists max_exists min_withP_exists max_withP_exists: core.
+
+
+
+Section Nat_numbers.
+
+ Lemma nat_comparable: comparable Nat.leb.
+  Proof. unfold comparable. intros x y h1. move /leP in h1. apply /leP. omega. Qed.
+  
+End Nat_numbers.
+
+Hint Resolve nat_comparable: core.
