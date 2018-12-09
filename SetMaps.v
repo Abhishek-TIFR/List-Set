@@ -235,7 +235,32 @@ Section Set_maps.
   Proof. intros H0 H1; unfold one_one_on; auto. Qed.
 
   Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
- 
+
+  (* ------------ set maps and set add interaction ------------------------ *)
+
+   
+   
+
+  Lemma s_map_add (a: A)(l: list A)(f: A-> B): s_map f (add a l) = add (f a) (s_map f l).
+  Proof. { apply set_equal;auto.
+         induction l.
+         { simpl. auto. }
+         {  simpl.
+           assert (H:  s_map f (add a l) = add (f a) (s_map f l)).
+           apply set_equal; auto.
+           destruct IHl as [IHl IHl1].  match_up a  a0.
+           { subst a. simpl. auto. }
+           { simpl. auto. }
+           { simpl. rewrite H. auto. } }  } Qed.
+            
+  Lemma s_map_same (l: list A) (f g: A->B): (forall x, In x l -> f x = g x)-> (s_map f l = s_map g l).
+  Proof. {  induction l.
+         { simpl; auto. }
+         { intro h1. simpl. replace (g a) with (f a). replace (s_map g l) with (s_map f l).
+           auto. apply IHl. intros x h2. apply h1; auto. apply h1; auto. } } Qed. 
+  
+  
+ Hint Resolve s_map_add s_map_same: core.
   
 End Set_maps.
 
@@ -251,6 +276,8 @@ Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
 Hint Immediate one_one_s_map_elim s_map_strict_less : core.
 
 Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
+
+Hint Resolve s_map_add s_map_same: core.
 
 
 Section Map_composition.
