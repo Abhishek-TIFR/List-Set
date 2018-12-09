@@ -247,7 +247,53 @@ Section LovaszRepLemma.
           apply add_card1. auto. omega. }
         { replace (|K|+1) with (S(|K|)). apply add_card1. auto. omega. }
         { (* exists f : A -> nat, Coloring_of G' f /\ (| clrs_of f G' |) = (| K |) + 1  *)
-          admit. }  } 
+          assert (h4: Nice G). auto. unfold Nice in h4.
+          specialize (h4 (|K|)). assert (h5: cliq_num G (|K|) ). exists K. split;auto.
+          specialize (h4 h5) as h6. destruct h6 as [f h6]. destruct h6 as [h6a h6b].
+          destruct h6a as [h6a h6c].
+          (* c0 as defined below is the new color for a' *)
+          set (c0 := maxin (Nat.leb) (s_map f G) 0 + 1).
+          assert (hc0: ~ In c0 (s_map f G)).
+          { intro h7. eapply maxin_spec with (lr:= Nat.leb )(d:=0) in h7.
+            revert h7. unfold c0. move /leP. intro h7.
+            remember (maxin Nat.leb (s_map f G) 0) as n0. omega. all: auto.  }
+          (* following function f0 is the new coloring for graph G' *)
+          set (f0:= fun x:A => match x == a' with
+                            |true => c0
+                            |false => f x
+                            end ).
+          exists f0.
+          assert (hf0: forall x, x<> a' ->  f x = f0 x).
+          { intros x h7. unfold f0. destruct (x== a') eqn: h8.
+            move /eqP in h8. contradiction. auto. }
+          assert (h1f0: forall x, In x G -> f x = f0 x).
+          { intros x h7. cut (x <> a'). auto. intro h8; subst x; contradiction. } 
+          assert (h2f0: f0 a' = c0).
+          { unfold f0. replace (a'==a') with true. auto. symmetry;auto. } 
+           split.  
+          {(* proof that f0 is a coloring of G' *)
+            unfold Coloring_of. intros x y h7 h8 h9. unfold f0.
+            destruct (x==a') eqn: hxa; destruct (y == a') eqn: hya.
+            { move /eqP in hxa;move /eqP in hya. subst x;subst y. absurd (edg G' a' a'); auto. }
+            { move /eqP in hya. assert (h10: In y G).
+              { subst G';simpl in h7;simpl in h8; eauto. }
+              intro h11. absurd (In c0 (s_map f G)). auto. rewrite h11. auto. }
+            { move /eqP in hxa. assert (h10: In x G).
+              { subst G';simpl in h7;simpl in h8; eauto. }
+               intro h11. absurd (In c0 (s_map f G)). auto. rewrite <- h11. auto. }
+            { move /eqP in hxa. move /eqP in hya. cut (In x G). cut (In y G).
+               intros. apply h6a. all: auto. replace (edg G x y) with (edg G' x y).
+               auto. symmetry. subst G'. auto.
+               all: subst G';simpl in h7;simpl in h8; eauto. } }
+          {(* proof that  (| clrs_of f0 G' |) = (| K |) + 1 *)
+            unfold Coloring_of in h6a.
+            subst G'. simpl. unfold clrs_of.
+            replace (s_map f0 (add a' G)) with (add (f0 a') (s_map f0 G)).
+            replace (s_map f0 G) with (s_map f G). replace (f0 a') with c0.
+            rewrite <- h6b. unfold clrs_of.
+            assert (h11: (| s_map f G |) + 1 = S (| s_map f G |)). omega.
+            rewrite h11. eapply add_card1. all: auto. } }
+        } 
 
       { (* C2_b : when a is not present in any largest clique of G. *)
         assert (C2b: forall K, Cliq_in G K -> In a K -> ~ Max_K_in G K).
