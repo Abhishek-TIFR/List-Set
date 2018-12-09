@@ -248,7 +248,7 @@ Section OrderedSet.
           { symmetry. apply /membP. move /membP in H1. auto. }
           { symmetry. apply /membP.  move /membP in H1. intro H2; apply H1; eauto. } } Qed.
 
-   Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add : core.
+   Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add : core. 
 
    Lemma add_same (a:A)(l: list A): IsOrd l -> In a l-> (add a l) = l.
    Proof. { revert a. induction l.
@@ -289,7 +289,36 @@ Section OrderedSet.
   Lemma add_prop2 (a:A)(l s: list A): l [=] s -> (add a l) [=] (add a s).
   Proof. intros h1. destruct h1 as [h1 h2]. split; auto using add_prop1. Qed.
 
-  Hint Immediate add_prop1 add_prop2: core.
+  Lemma add_add_is_add (a:A)(l:list A): add a l = add a (add a l).
+  Proof. { induction l.
+         { simpl. match_up a a. auto. all: by_conflict. }
+         { simpl. match_up a a0.
+           { subst a. simpl. match_up a0 a0. auto. all: by_conflict. }
+           { simpl. match_up a a. auto. all: by_conflict. }
+           { simpl. match_up a a0. subst a. by_conflict. by_conflict.
+             rewrite <- IHl. auto. } } } Qed.
+
+   Lemma add_add_is_add1 (a:A)(l: list A): add a l [=] add a (add a l).
+   Proof. rewrite <- (add_add_is_add a l). auto. Qed.
+
+   Lemma add_a_add_b (a b:A)(l: list A): add a (add b l) [=] add b (add a l).
+   Proof. { split.
+          { intros x h1. assert (h2: x= a \/ In x (add b l)). auto.
+            destruct h2 as [h2 | h2].
+            { subst x. cut (In a (add a l));auto. }
+            { assert (h3: x = b \/ In x l). auto. destruct h3 as [h3 | h3].
+              subst x. auto. cut (In x (add a l));auto. } }
+           { intros x h1. assert (h2: x= b \/ In x (add a l)). auto.
+            destruct h2 as [h2 | h2].
+            { subst x. cut (In b (add b l));auto. }
+            { assert (h3: x = a \/ In x l). auto. destruct h3 as [h3 | h3].
+              subst x. auto. cut (In x (add b l));auto. } } } Qed.
+
+   Lemma add_a_b (a b:A)(l: list A): IsOrd l -> add a (add b l) = add b (add a l).
+   Proof. intro h. apply set_equal. all:auto. apply add_a_add_b. Qed.
+   
+   Hint Immediate add_prop1 add_prop2 add_add_is_add add_add_is_add1: core.
+   Hint Resolve add_a_add_b add_a_b: core.
 
    
   (* ------------ set_inter operation ----------------------------------------------  *)
@@ -516,7 +545,8 @@ Hint Resolve set_add_intro1  set_add_intro3: core.
 Hint Immediate set_add_elim set_add_elim1 set_add_elim2: core.
 Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
 Hint Resolve add_card add_card1 add_card_max add_same: core.
-Hint Immediate add_prop1 add_prop2: core.
+Hint Immediate add_prop1 add_prop2 add_add_is_add add_add_is_add1: core.
+Hint Resolve add_a_add_b add_a_b: core.
 
 
  Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
