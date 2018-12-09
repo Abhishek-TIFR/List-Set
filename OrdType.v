@@ -252,34 +252,6 @@ Proof. { unfold "<?". revert y. induction x.
 Hint Resolve nat_ltb_antisym: core.
 
 
-Lemma ltP (x y:nat): reflect (x < y) (Nat.ltb x y).
-Proof. { apply reflect_intro. split.
-       { unfold "<"; unfold "<?".
-         revert y. induction x. intro y; case y. simpl.
-         intro H. inversion H. simpl. auto.
-         intro y;case y.
-         intro H; inversion H. intros n H. 
-         replace (S (S x) <=? S n) with (S x <=? n). apply IHx. omega.
-         simpl. auto. }
-       { unfold "<"; unfold "<?".
-         revert y. induction x. intro y; case y. simpl.
-         intro H. inversion H. intros; omega.
-         intro y;case y. simpl. intro H; inversion H.
-         intro n. replace (S (S x) <=? S n) with (S x <=? n).
-         intro H; apply IHx in H. omega. simpl;auto. } } Qed.
-
-Lemma leP (x y: nat): reflect (x <= y) (Nat.leb x y).
-Proof. { apply reflect_intro. split.
-       { revert y. induction x. intro y; case y; simpl; auto.
-         intro y;case y.
-         intro H; inversion H. intros n H. 
-         replace (S  x <=? S n) with ( x <=? n). apply IHx. omega.
-         simpl. auto. }
-       { revert y. induction x. intro y; case y; intros; omega. 
-         intro y;case y. simpl. intro H; inversion H.
-         intro n. replace (S x <=? S n) with ( x <=? n).
-         intro H; apply IHx in H. omega. simpl;auto. } } Qed.
-
 Hint Resolve leP ltP nat_eqP: core.
 
 Lemma nat_ltb_trans (x y z:nat):  Nat.ltb x y -> Nat.ltb y z -> Nat.ltb x z.
