@@ -451,4 +451,7 @@ End Repeat_node.
  Hint Immediate E'xa_Exa E'xa'_Exa Exa_eq_E'xa' Eay_eq_E'a'y: core.
  Hint Immediate E'xa_E'xa' E'xa'_E'xa: core.
  Hint Immediate E'xa_eq_E'xa' E'ay_eq_E'a'y: core.
+
+ Hint Resolve Ind_sub_GG': core.
+ 
  Hint Resolve G_isomorphic_G'_a: core.
