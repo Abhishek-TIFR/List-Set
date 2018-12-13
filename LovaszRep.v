@@ -342,28 +342,103 @@ Section LovaszRepLemma.
           destruct h3 as [K h3]. destruct h3 as [h3a h3].
           destruct h4 as [K' h4]. destruct h4 as [h4a h4].
           assert (h6: In a' K' \/ ~ In a' K'). eauto.
+          assert (h16: Cliq_in G K). auto. assert (h17: Cliq_in G' K'). auto.
+          destruct h16 as [h16a h16]. destruct h16 as [h16b h16].
+          destruct h17 as [h17a h17]. destruct h17 as [h17b h17].
           destruct h6 as [h6 | h6].
-          { assert (h7: Cliq_in G (rmv a' K')). admit.
-            assert (h8: In a (rmv a' K')). admit.
-            assert (h9: |(rmv a' K')| < wG). admit.
-            assert (h10: |(rmv a' K')| = |K'| - 1). admit.
-            omega. }
-          { assert (h7: Cliq_in G K'). admit.
-            assert (h8: |K'| <= wG). admit.
-            omega. } }
-        
+          { (* both a and a' are in K' *)
+            assert (h6a: In a K').
+            { assert (h7: In a K' \/ ~ In a K'). eauto.
+              destruct h7 as [h7 | h7]. auto.
+              assert (h8: Cliq_in G' (add a K')).
+              { assert (h8: add a K' [<=] G'). 
+                { intros x h8. cut (x=a \/ In x K'). intro h9. destruct h9 as [h9 |h9].
+                  subst x. subst G'. simpl. cut (In a G); auto. auto. auto. }
+                split. auto. split. auto. unfold Cliq. unfold Cliq in h17.
+                intros x y h9 h10.
+                assert (hx: In x K' \/ ~ In x K'). eauto.
+                assert (hy: In y K' \/ ~ In y K'). eauto.
+                destruct hx as [hx | hx]; destruct hy as [hy | hy].
+                { auto. }
+                { assert (h11: y=a). eauto. subst y.
+                  assert (h12: x = a' \/ x <> a'). eauto.
+                  destruct h12 as [h12 | h12].
+                  { subst x. right. subst G'. apply sym_edg. apply edg_aa';auto. }
+                  { assert (h13: x = a' \/ edg G' x a'). auto. destruct h13.
+                    contradiction. right. subst G'. eapply E'xa'_E'xa;auto.
+                    intro h13; subst x; contradiction. } }
+                { assert (h11: x=a). eauto. subst x.
+                  assert (h12: y = a' \/ y <> a'). eauto.
+                  destruct h12 as [h12 | h12].
+                  { subst y. right. subst G'. apply edg_aa';auto. }
+                  { assert (h13: a'= y  \/ edg G' a' y). auto. destruct h13.
+                    symmetry in H. contradiction. right.
+                    subst G'. apply sym_edg. eapply E'xa'_E'xa;auto.
+                    intro h13; subst y; contradiction. } }
+                { assert (h11: x = a). eauto. assert (h12: y = a). eauto. left;subst x;auto. } }
+              assert (h9: |(add a K')| <= |K'|). eapply Max_K_in_elim. eauto.
+              apply h8. assert (h10: | add a K'|= S (|K'|)). auto. omega. } 
+            
+            assert (h7: Cliq_in G (rmv a' K')).
+            { unfold Cliq_in.
+              assert (h18: rmv a' K' [<=] G).
+              { intros x h7. cut (In x (add a' G)). cut (x <> a').
+                eauto. cut (NoDup K'); eauto. cut (In x K'). subst G'. auto. eauto. }
+              split. auto.   split. auto.
+              unfold Cliq. unfold Cliq in h17. intros x y h7 h8.
+              replace (edg G x y) with (edg G' x y). apply h17;eauto.
+              symmetry. subst G'. cut (In x G). cut (In y G). all: auto. } 
+            assert (h8: In a (rmv a' K')).
+            { cut (a<>a'). auto. intro H. subst a;contradiction. }
+            
+            assert (h9: |(rmv a' K')| < wG).
+            { subst wG.
+              cut ((| rmv a' K' |) <= (| K |)). cut ((| rmv a' K' |) <> (| K |)). omega.
+              intro H1. absurd (Max_K_in G (rmv a' K')). apply C2b;auto.
+              apply Max_K_in_intro. auto. rewrite H1; eauto using Max_K_in_elim.
+              eauto using Max_K_in_elim. }
+            
+            assert (h10: |(rmv a' K')| = |K'| - 1). auto. omega. }
+          
+          { assert (h7: Cliq_in G K').
+            { assert (h7a: K' [<=] G).
+              { subst G'. intros x H1. cut (In x (add a' G)). cut (x<>a'). eauto.
+                intros H2. subst x. contradiction. auto. }
+              unfold Cliq_in. split. auto. split. auto.
+              unfold Cliq. intros x y H1 H2. replace (edg G x y) with (edg G' x y).
+              apply h17;auto. symmetry. cut (In x G). cut (In y G). subst G'. all: auto. }
+            
+            assert (h8: |K'| <= wG). subst wG. eapply Max_K_in_elim;eauto. omega. } } 
         
         assert(h6: Nice G); auto. unfold Nice in h6. apply h6 in h3 as h7;destruct h7 as [f h7].
         destruct h7 as [hX1 hX]. assert (hX2: Coloring_of G f). apply hX1. clear h6. clear hX1.
         (*let f be coloring of G which uses wG colors*)
-        set (Ns := filter (fun x=> ((f x == f a) || (x == a))) G).
-        (* assert (hNs: In a N_star). admit.
-        assert (hNs1: forall x, In x G -> f x = f a -> In x N_star). admit.
+        set (Ns := filter (fun x=> ( negb (f x == f a) || (x == a))) G).
+       
+        (* a' is not connected to any vertices outside Ns *)
         
-        assert (hNs3: forall x, In x N_star -> f x = f a \/ x = a ). admit. *)
-        (* a' is not connected to any vertices outside N_star *)
-        assert (hNs_G: forall x, In x Ns -> In x G). admit.
-        assert (h6: forall x, ~ In x Ns -> ~ edg G' x a'). admit.
+        assert (hNs_G: forall x, In x Ns -> (In x G /\ ( (~~(f x == f a)) || (x == a))= true)).
+        { intros x.  eapply filter_In. }
+        assert (h6a: forall x, In x Ns -> In x G).
+        { intros x H1; apply hNs_G; auto. }
+        assert (h6b: forall x, In x Ns -> (~~(f x == f a) || (x == a))= true ).
+        { intros x H1. apply hNs_G. auto. }
+        assert (h6c: forall x, In x Ns -> f x <> f a \/ x = a).
+        { intros x H1. apply h6b in H1 as H2. move /orP in H2.
+          destruct H2 as [H | H]. left. move /negP in H.
+          intro H2. apply H. apply /eqP. auto. move /eqP in H. subst x;right;auto. }
+        assert (h6d: forall x, ~ In x Ns -> ~ edg G x a).
+        { unfold Coloring_of in hX2.  intros x H1 H2. apply H1.
+          apply filter_In. split. eapply no_edg1. apply H2.
+          left_. apply /negP. cut (f x <> f a). auto.
+          apply hX2. eapply no_edg1; eauto. eapply no_edg1; eauto. auto. }
+        assert (h6e: In a Ns).
+        { apply filter_In. split. auto. right_. auto. } 
+        assert (h6: forall x, ~ In x Ns -> ~ edg G' x a').
+        { intros x H1.
+          assert(H2: x<> a). intros H2; subst x; contradiction.
+          cut (~ edg G x a). intros H3 H4;apply H3.
+          cut(x<>a'). subst G'. eauto. intros H5. subst x. revert H4. eauto. auto. } clear hNs_G. clear h6b.
 
         set (Gs:= Ind_at Ns G). destruct (cliq_num_of Gs) as [wGs h7].
         assert(h_Gs_nice: Nice Gs).
@@ -383,7 +458,11 @@ Section LovaszRepLemma.
                           |true => (fs x)
                           |false => c0
                           end ).
-          assert (hfa': f' a' = c0). admit. 
+          assert (hfa': f' a' = c0).
+          { unfold f'. replace (memb a' Gs) with false. auto.
+            symmetry. apply /membP. intro H1. simpl in H1.
+            absurd (In a' G). auto. eauto. }
+          
           assert (h_clrs: (clrs_of f' G') = add c0 (clrs_of fs Gs)). admit.
           eapply nice_intro with (n:= wG'). auto.
           exists f'.
