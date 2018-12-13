@@ -397,7 +397,7 @@ End MoreOnDecidableGraphs.
 
  Hint Resolve Cliq_in_elim Cliq_in_elim1 Cliq_in_elim2: core.
  Hint Resolve  Cliq_elim cliqP nil_is_cliq: core.
- Hint Resolve max_K_inP exists_Max_K_in Max_K_in_elim1 Max_K_in_elim2: core.
+ Hint Resolve max_K_inP exists_Max_K_in  Max_K_in_elim1 Max_K_in_elim2: core.
  Hint Resolve cliq_num_same:core.
  Hint Immediate Cliq_in_HG cliq_num_HG:core.
  
