@@ -144,9 +144,7 @@ Section LovaszRepLemma.
                 subst H; simpl in hy1;simpl in hx1;eauto.
                 symmetry;apply h5;auto.  apply Exy_eq_E'xy; subst H; simpl.
                 auto. intro h10. absurd (In a' G). auto. eauto. all: auto. }  }
-
             { (* when either x or y is not in H'*)
-              
               assert (h8: ~ In x H' \/ ~ In y H'). auto.
               destruct h8 as [h8 | h8].
               { replace (edg H' x y) with false. 
@@ -185,8 +183,36 @@ Section LovaszRepLemma.
                left;auto. right. cut (In x G). cut (In y G). all: auto. } } Qed.
              
   
-  Lemma max_K_in_G' (K: list A)(n:nat): cliq_num G n -> Cliq_in (Repeat_in G a a') K -> |K| <= n+1.
-  Proof. Admitted.
+  Lemma max_K_in_G' (K': list A)(n:nat): cliq_num G n -> Cliq_in (Repeat_in G a a') K' -> |K'| <= n+1.
+  Proof. { intros h1 h2. assert (h3: In a' K' \/ ~ In a' K'). eauto.
+         destruct h3 as [h3 | h3].
+         { (* In this case K' \ a' is a cliq in G *)
+           assert (h4: (rmv a' K') [<=] G).
+           { intros x h4. destruct h2 as [h2a h2]. destruct h2 as [h2b h2].
+             cut (In x (add a' G)). cut (x<>a'). eauto. cut (NoDup K'); eauto.
+             cut (In x K'). auto. eauto. }
+           assert (h5: Cliq_in G (rmv a' K')).
+           { destruct h2 as [h2a h2];destruct h2 as [h2b h2]. split. auto. split. 
+             auto. unfold Cliq in h2. unfold Cliq. intros x y h5 h6.
+             replace (edg G x y) with (edg (Repeat_in G a a') x y).
+             apply h2;eauto. symmetry. cut (In x G). cut (In y G). all: auto. }
+           assert (h6: | rmv a' K' | <= n). 
+           { destruct h1 as [K h1]. destruct h1 as [h1 h1a].
+             subst n. eapply Max_K_in_elim;eauto. }
+           assert (h7: (| rmv a' K' |) = |K'| - 1). auto. omega. }
+         { (* In this case K' is a cliq in G *)
+           assert (h4: K' [<=] G).
+           { intros x h4. destruct h2 as [h2a h2];destruct h2 as [h2b h2].
+             cut (In x (add a' G)). cut (x<>a'). eauto.
+             intros h5;subst x. contradiction. auto. }
+           assert (h5: Cliq_in G K').
+           { destruct h2 as [h2a h2];destruct h2 as [h2b h2]. split. auto. split. 
+             auto. unfold Cliq in h2. unfold Cliq. intros x y h5 h6.
+             replace (edg G x y) with (edg (Repeat_in G a a') x y).
+             apply h2;eauto. symmetry. cut (In x G). cut (In y G). all: auto. }
+           assert (h6: |K'| <= n).
+           { destruct h1 as [K h1]. destruct h1 as [h1 h1a].
+             subst n. eapply Max_K_in_elim;eauto. } omega. } } Qed. 
   
                                             
   Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
@@ -302,8 +328,72 @@ Section LovaszRepLemma.
           { apply C2_b. apply pw_intro.
             assert (h4a: Cliq_in G K). auto. all: auto. eauto. }
           { split_. apply /max_K_inP; auto. apply /membP;auto. } }
-        (* preprocessing ends and main proof starts *)
-        admit. } 
+        assert (h2: forall K, Max_K_in G K-> ~ In a K). 
+        { intros K h2 h3. absurd (Max_K_in G K); auto. }
+        destruct (cliq_num_of G) as [wG h3]. destruct (cliq_num_of G') as [wG' h4].
+        (* preprocessing ends and main proof starts *) 
+        
+        assert (h5a: wG <= wG').
+        { apply cliq_num_HG with (H:=G)(G0:=G'). subst G'. all: auto. }
+        
+        (* largest cliq of G and G' has same size *)
+        assert (h5: wG = wG').
+        { cut (wG' <= wG). omega.
+          destruct h3 as [K h3]. destruct h3 as [h3a h3].
+          destruct h4 as [K' h4]. destruct h4 as [h4a h4].
+          assert (h6: In a' K' \/ ~ In a' K'). eauto.
+          destruct h6 as [h6 | h6].
+          { assert (h7: Cliq_in G (rmv a' K')). admit.
+            assert (h8: In a (rmv a' K')). admit.
+            assert (h9: |(rmv a' K')| < wG). admit.
+            assert (h10: |(rmv a' K')| = |K'| - 1). admit.
+            omega. }
+          { assert (h7: Cliq_in G K'). admit.
+            assert (h8: |K'| <= wG). admit.
+            omega. } }
+        
+        
+        assert(h6: Nice G); auto. unfold Nice in h6. apply h6 in h3 as h7;destruct h7 as [f h7].
+        destruct h7 as [hX1 hX]. assert (hX2: Coloring_of G f). apply hX1. clear h6. clear hX1.
+        (*let f be coloring of G which uses wG colors*)
+        set (Ns := filter (fun x=> ((f x == f a) || (x == a))) G).
+        (* assert (hNs: In a N_star). admit.
+        assert (hNs1: forall x, In x G -> f x = f a -> In x N_star). admit.
+        
+        assert (hNs3: forall x, In x N_star -> f x = f a \/ x = a ). admit. *)
+        (* a' is not connected to any vertices outside N_star *)
+        assert (hNs_G: forall x, In x Ns -> In x G). admit.
+        assert (h6: forall x, ~ In x Ns -> ~ edg G' x a'). admit.
+
+        set (Gs:= Ind_at Ns G). destruct (cliq_num_of Gs) as [wGs h7].
+        assert(h_Gs_nice: Nice Gs).
+        { cut (Ind_subgraph Gs G). auto. unfold Gs. auto. }
+        unfold Nice in h_Gs_nice. apply h_Gs_nice in h7 as h8. destruct h8 as [fs h8].
+        clear h_Gs_nice.
+        (* largest cliq of G_star is smaller than that of G *)
+        assert (h9: wGs < wG). admit.
+        (* c0 is the color not used by fs for coloring any vertex of Gs *)
+        set (c0 := maxin (Nat.leb) (s_map fs Gs) 0 + 1).
+          assert (hc0: ~ In c0 (s_map fs Gs)).
+          { intro h17. eapply maxin_spec with (lr:= Nat.leb )(d:=0) in h17.
+            revert h17. unfold c0. move /leP. intro h17.
+            remember (maxin Nat.leb (s_map fs Gs) 0) as n0. omega. all: auto.  }
+        (* a new coloring scheme f' for G' *)
+        set (f':= fun x:A => match (memb x Gs) with
+                          |true => (fs x)
+                          |false => c0
+                          end ).
+          assert (hfa': f' a' = c0). admit. 
+          assert (h_clrs: (clrs_of f' G') = add c0 (clrs_of fs Gs)). admit.
+          eapply nice_intro with (n:= wG'). auto.
+          exists f'.
+          assert (h10: Coloring_of G' f'). admit.
+          split. auto.
+          assert (h_triv: (| clrs_of f' G' |) >= wG'). auto.
+          cut ((| clrs_of f' G' |) <= wG'). omega.
+          rewrite h_clrs. unfold clrs_of.
+          assert (H1: |add c0 (s_map fs Gs)| = S (|s_map fs Gs |)). auto.
+          rewrite H1. destruct h8 as [h8a h8]. rewrite h8. omega. } 
     } (*---------- End of Case C2 -------------------------------------------------- *)
 
     
