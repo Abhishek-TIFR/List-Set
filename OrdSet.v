@@ -506,6 +506,8 @@ Section OrderedSet.
            intro; right; auto. intro H1.
            assert (H2: a= a0 \/ In a (diff l s)); auto.
            destruct H2. left; symmetry;auto. right;auto. } } Qed.
+  Lemma set_diff_elim3 (l s: list A): (diff l s) [<=] l.
+    Proof. intros x. eauto using set_diff_elim1. Qed.
   Lemma set_diff_elim2 (a:A)(l s: list A): In a (diff l s) -> ~In a s.
   Proof. { induction l. simpl;auto.
          { simpl. destruct (memb a0 s) eqn: H0.
@@ -526,14 +528,12 @@ Section OrderedSet.
   Proof. cut (IsOrd (diff l s)). auto. apply set_diff_IsOrd. Qed.
 
   Hint Resolve set_diff_IsOrd set_diff_nodup: core.
+
+  Lemma filter_IsOrd (l: list A)(f: A-> bool): IsOrd l -> IsOrd (filter f l).
+  Proof. Admitted.
+  
           
 End OrderedSet.
-
-
-
-
-
-
 
 Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
 Hint Resolve     set_rmv_intro: core.
@@ -560,5 +560,55 @@ Hint Resolve set_union_IsOrd set_union_nodup  : core.
 
 Hint Resolve inter_equal union_equal: core.
 
-Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
+Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_elim3 set_diff_intro set_diff_empty: core.
 Hint Resolve set_diff_IsOrd set_diff_nodup: core.
+
+Hint Resolve filter_IsOrd: core.
+
+
+Notation "s [i] t" := (inter s t) (at level 67, left associativity).
+Notation "s [u] t" := (union s t) (at level 68, left associativity).
+Notation "s [\] t" := (diff s t)  (at level 68, left associativity).
+
+
+Section MoreOrdSet.
+
+  Context { A: ordType }. (* to declare A as implicit outside the section *)
+  Variable x y: list A.
+  Hypothesis hx: IsOrd x.
+  Hypothesis hy: IsOrd y.
+
+
+  Lemma set_inter_elim15 : x [<=] y -> x = (inter x y).
+  Proof. intros h; apply set_equal;  auto. Qed.
+
+  Lemma set_inter_elim16 : y [<=] x -> y = (inter x y).
+  Proof. intros h; apply set_equal;  auto. Qed. 
+
+   Lemma set_union_intro15: x [<=] y -> y = (union x y).
+  Proof. intros h; apply set_equal;  auto. Qed.
+
+  Lemma set_union_intro16: y [<=] x -> x = (union x y).
+  Proof. intros h; apply set_equal;  auto. Qed.
+
+  Lemma y_as_disj_sum: x [<=] y -> y = x [u] (y [\] x).
+  Proof. { intro h1. apply set_equal;auto. split. intros a h2. cut (In a x \/ ~ In a x).
+         intro h3. destruct h3. auto. cut (In a (y [\] x)). auto. auto. eauto.
+         intros a h2. assert (h3: In a x \/ In a (y [\] x)). auto. destruct h3;eauto. } Qed.
+  
+  Lemma y_as_disj_sum1 : y =  (y [i] x) [u] (y [\] x).
+  Proof. Admitted.
+  
+  Lemma inc_exc1: x [i] y = empty ->  | x [u] y | = |x| + |y|.
+  Proof. Admitted.
+
+  Lemma inclusion_exclusion: | x [u] y | = |x| + |y| - | x [i] y |.
+  Proof. Admitted.
+
+    
+End MoreOrdSet.
+
+
+Hint Resolve set_inter_elim15 set_inter_elim16: core.
+Hint Resolve set_union_intro15 set_union_intro16: core.
+Hint Resolve y_as_disj_sum: core.
