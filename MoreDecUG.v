@@ -25,7 +25,7 @@
  Definition i_num (G:UG)(n:nat):= exists I, Max_I_in G I /\ |I|=n.
  Definition cliq_num (G:UG)(n:nat):= exists K, Max_K_in G K /\ |K|=n.
 
- Definition clrs_of (f:A->nat) (l:list A): list nat:= (s_map f l).
+ Definition clrs_of (f:A->nat) (l:list A): list nat:= (img f l).
  Definition chrom_num (G: UG) (n: nat):= 
                               exists f, Best_coloring_of G f /\ | clrs_of f G | = n.
 
@@ -283,7 +283,7 @@ Section MoreOnDecidableGraphs.
          eapply no_self_edg;eauto. } Qed.
 
    
-  Definition clrs_of (f:A->nat) (l:list A): list nat:= (s_map f l).
+  Definition clrs_of (f:A->nat) (l:list A): list nat:= (img f l).
    
    Definition Best_coloring_of (G: UG) (f:A->nat): Prop :=
      Coloring_of G f /\ (forall f1, Coloring_of G f1 -> | clrs_of f G | <= | clrs_of f1 G|).
@@ -347,9 +347,9 @@ Section MoreOnDecidableGraphs.
      Cliq_in G K-> Coloring_of G f -> |K| <= |clrs_of f G|.
    Proof. { intros H H1.
           assert (H2: | K | = |clrs_of f K|).
-          { unfold clrs_of. match_up (|K|) (| s_map f K|).
+          { unfold clrs_of. match_up (|K|) (| img f K|).
             { auto. }
-            { cut (| s_map f K| <= |K|).
+            { cut (| img f K| <= |K|).
               move /ltP in H0. intro H2. omega. auto. }
             { move /ltP in H0.
               assert (H2: ~ one_one_on K f).
