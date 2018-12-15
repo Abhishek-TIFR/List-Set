@@ -36,58 +36,58 @@ Section Set_maps.
   Proof.  eauto.  Qed.
   Lemma EM_B: forall x y:B, x=y \/ x<>y.
   Proof. eauto.  Qed.
+
   
-  
-  Fixpoint s_map (f:A->B) (l:list A): list B:= match l with
+  Fixpoint img (f:A->B) (l:list A): list B:= match l with
                                         | nil => nil
-                                        | a1::l1 => add (f a1) (s_map f l1)
+                                        | a1::l1 => add (f a1) (img f l1)
                                               end.
 
-  Lemma IsOrd_s_map (f:A->B) (l:list A):  IsOrd (s_map f l).
+  Lemma IsOrd_img (f:A->B) (l:list A):  IsOrd (img f l).
   Proof. { induction l. simpl. constructor. simpl. eauto. } Qed.
   
-  Lemma NoDup_s_map (f:A->B) (l:list A):  NoDup (s_map f l).
-    Proof. cut (IsOrd (s_map f l)). eauto. apply IsOrd_s_map. Qed.
+  Lemma NoDup_img (f:A->B) (l:list A):  NoDup (img f l).
+    Proof. cut (IsOrd (img f l)). eauto. apply IsOrd_img. Qed.
   
-  Lemma s_map_intro1(f: A->B)(l: list A)(a:A)(y: B): In y (s_map f l)-> In y (s_map f (a::l)).
+  Lemma img_intro1(f: A->B)(l: list A)(a:A)(y: B): In y (img f l)-> In y (img f (a::l)).
     Proof. simpl. eapply set_add_intro1. Qed.
-  Lemma s_map_intro2 (f: A->B)(l: list A)(x:A): In x l -> In (f x) (s_map f l).
+  Lemma img_intro2 (f: A->B)(l: list A)(x:A): In x l -> In (f x) (img f l).
   Proof.  { induction l. simpl.  tauto.
           cut (x=a \/ x <> a). 
           intro H;destruct H as [Hl | Hr].
           { intro H. rewrite Hl. simpl. eapply set_add_intro2. auto. }
-          { intro H. cut (In x l). intro H1. eapply s_map_intro1;eauto.
+          { intro H. cut (In x l). intro H1. eapply img_intro1;eauto.
             eapply in_inv2;eauto.  } eauto. } Qed.
 
-  Lemma s_map_elim (f:A->B) (l: list A)(a0:A)(fa:B): In (fa) (s_map f (a0::l))->
-                                                    fa = f(a0) \/ In fa (s_map f l).
+  Lemma img_elim (f:A->B) (l: list A)(a0:A)(fa:B): In (fa) (img f (a0::l))->
+                                                    fa = f(a0) \/ In fa (img f l).
     Proof. simpl. eapply set_add_elim. Qed.
 
-  Lemma s_map_elim2 (f:A->B) (l: list A)(a0:A)(fa:B): In (fa) (s_map f (a0::l))->
-                                                   fa <> f(a0) -> In fa (s_map f l).
+  Lemma img_elim2 (f:A->B) (l: list A)(a0:A)(fa:B): In (fa) (img f (a0::l))->
+                                                   fa <> f(a0) -> In fa (img f l).
   Proof. simpl. eapply set_add_elim2.  Qed.
   
-  Lemma s_map_elim3 (f:A->B)(l:list A)(a:A): ~ In a l -> In (f a) (s_map f l) ->
+  Lemma img_elim3 (f:A->B)(l:list A)(a:A): ~ In a l -> In (f a) (img f l) ->
                                            (exists y, In y l /\ f a = f y).
   Proof. { intros H H1. induction l. inversion H1.
          assert (H2: ~ In a l). intro H2; apply H. simpl;tauto. 
          cut ( f a = f a0 \/ f a <> f a0 ). intro H3; destruct H3 as [H3a | H3b]. exists a0.
-         split; auto. assert (H4: In (f a) (s_map f l)). eapply s_map_elim2.
+         split; auto. assert (H4: In (f a) (img f l)). eapply img_elim2.
          eapply H1. exact H3b. assert (H5: exists y : A, In y l /\ f a = f y). eauto.
          destruct H5 as [y0 H5]. exists y0. split;  simpl. tauto. tauto.
          eapply EM_B. } Qed.
-  Lemma s_map_elim4 (f: A->B)(l: list A)(b:B): In b (s_map f l)-> (exists a, In a l /\ b = f a).
+  Lemma img_elim4 (f: A->B)(l: list A)(b:B): In b (img f l)-> (exists a, In a l /\ b = f a).
   Proof. { induction l.
          { simpl. tauto. }
-         { intro H. apply s_map_elim in H as H1. destruct H1.
+         { intro H. apply img_elim in H as H1. destruct H1.
            { exists a. split;auto. }
            { apply IHl in H0 as H1.
              destruct H1 as [a' H1]; destruct H1 as [H1 H2].
              exists a'. split;auto. } } } Qed.
         
-  Hint Resolve IsOrd_s_map NoDup_s_map : core.
-  Hint Resolve s_map_intro1 s_map_intro2 s_map_elim: core.
-  Hint Resolve s_map_elim2 s_map_elim3 s_map_elim4: core.
+  Hint Resolve IsOrd_img NoDup_img : core.
+  Hint Resolve img_intro1 img_intro2 img_elim: core.
+  Hint Resolve img_elim2 img_elim3 img_elim4: core.
   
   Lemma funP (f: A->B)(x y: A): f x <> f y -> x <> y.
   Proof. intros H H1. apply H;rewrite H1; auto. Qed.
@@ -115,23 +115,23 @@ Section Set_maps.
   Proof. unfold one_one_on. intros x y H H0 H1 H2. inversion H. Qed.
 
   Lemma one_one_on_intro1(l:list A) (f: A->B)(a:A):
-             (~ In (f a) (s_map f l)) -> (one_one_on l f) -> one_one_on (a::l) f.
+             (~ In (f a) (img f l)) -> (one_one_on l f) -> one_one_on (a::l) f.
   Proof. { unfold one_one_on. intros H H1. 
          intros x y H2 H3. destruct H2; destruct H3.
          rewrite <- H0; rewrite <- H2.  tauto.
-         rewrite <- H0. intros H3 H4. assert (H5: In (f a) (s_map f l)). rewrite H4.
-         apply s_map_intro2;auto. absurd (In (f a) (s_map f l)); assumption.
-         rewrite <- H2. intros H3 H4. absurd (In (f a) (s_map f l)). assumption.
-         rewrite <- H4. apply s_map_intro2;auto. apply H1; auto. } Qed.
+         rewrite <- H0. intros H3 H4. assert (H5: In (f a) (img f l)). rewrite H4.
+         apply img_intro2;auto. absurd (In (f a) (img f l)); assumption.
+         rewrite <- H2. intros H3 H4. absurd (In (f a) (img f l)). assumption.
+         rewrite <- H4. apply img_intro2;auto. apply H1; auto. } Qed.
  
   Lemma one_one_on_elim1 (l:list A) (f: A->B)(a: A): one_one_on (a::l) f -> one_one_on l f.
   Proof. { unfold one_one_on.  intro H. intros x y H1 H2. eapply H; auto. } Qed.
   
   Lemma one_one_on_elim2 (l:list A) (f: A->B)(a: A)(Hl: NoDup (a::l)):
-    one_one_on (a::l) f -> ~ In (f a)(s_map f l).
+    one_one_on (a::l) f -> ~ In (f a)(img f l).
   Proof. { unfold one_one_on.  intros H H1.
          assert (H2: (exists y, In y l /\ f a = f y)).
-         { eapply s_map_elim3. intro H2; inversion Hl;contradiction. auto. }
+         { eapply img_elim3. intro H2; inversion Hl;contradiction. auto. }
          destruct H2 as [b H2]; destruct H2 as [H2 H3].
          eapply H with (x:=a)(y:=b); auto. intro H4. rewrite <- H4 in H2.
          inversion Hl;contradiction. } Qed.
@@ -144,7 +144,7 @@ Section Set_maps.
   Fixpoint one_one_onb (l: list A) (f: A->B): bool:=
     match l with
     |nil => true
-    | a1::l1 => (negb ( memb (f a1) (s_map f l1))) && (one_one_onb l1 f)
+    | a1::l1 => (negb ( memb (f a1) (img f l1))) && (one_one_onb l1 f)
     end.
 
 
@@ -153,8 +153,8 @@ Section Set_maps.
   Proof. { apply reflect_intro. split.
          { induction l.
            { unfold one_one_onb. reflexivity. }
-           { intro H. simpl one_one_onb. apply /andP. split. cut (~ In (f a)(s_map f l)).
-             intro H1. assert (H2:  memb (f a) (s_map f l) = false ). apply /membP.
+           { intro H. simpl one_one_onb. apply /andP. split. cut (~ In (f a)(img f l)).
+             intro H1. assert (H2:  memb (f a) (img f l) = false ). apply /membP.
              auto. rewrite H2. simpl. reflexivity. eapply one_one_on_elim2.
              apply Hl. auto. apply IHl.
              eauto. eauto. } }   
@@ -163,72 +163,72 @@ Section Set_maps.
            { simpl. move /andP. intro H; destruct H as [H H1].
              apply one_one_on_intro1.  
              intro H2. unfold negb in H.
-             replace (memb (f a) (s_map f l)) with true in H. inversion H.
+             replace (memb (f a) (img f l)) with true in H. inversion H.
              symmetry; apply /membP; eauto. apply IHl. eauto. apply H1. } }  } Qed.
 
  
 
-  (*--------- Some more properties of s_maps-----------------------------------*)
+  (*--------- Some more properties of imgs-----------------------------------*)
 
-  Lemma one_one_s_map_elim (l: list A)(f: A->B)(x: A):
-    one_one f -> In (f x) (s_map f l) -> In x l.
+  Lemma one_one_img_elim (l: list A)(f: A->B)(x: A):
+    one_one f -> In (f x) (img f l) -> In x l.
   Proof. { intros H H1. assert (H2: exists a, In a l /\ f x = f a). auto.
          destruct H2 as [a H2]. destruct H2 as [H2 H3].
          cut (x = a). intros; subst x; auto. eauto. } Qed.
   
-  Lemma s_map_subset (l s: list A)(f: A->B): l [<=] s -> (s_map f l) [<=] (s_map f s).
+  Lemma img_subset (l s: list A)(f: A->B): l [<=] s -> (img f l) [<=] (img f s).
   Proof. { intros H fx H1. assert (H2: exists x, In x l /\ fx = f x). auto.
          destruct H2 as [x H2]. destruct H2 as [H2 H3]. subst fx; auto. } Qed.
 
-  Lemma s_map_size_less (l: list A)(f: A->B): |s_map f l| <= |l|.
+  Lemma img_size_less (l: list A)(f: A->B): |img f l| <= |l|.
   Proof.  { induction l.
           { simpl;auto. }
-          { simpl. assert (H: (| add (f a) (s_map f l) |) <= S (| s_map f l |)).
+          { simpl. assert (H: (| add (f a) (img f l) |) <= S (| img f l |)).
             auto. omega. } } Qed.
           
-  Lemma s_map_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| s_map f l|.
+  Lemma img_size_same (l: list A)(f: A->B): NoDup l -> one_one_on l f-> |l|=| img f l|.
   Proof.  { induction l.
           { simpl. auto. }
           { intros H H1.
             assert (Hl: NoDup l). eauto.
             assert (H1a: one_one_on l f). eauto.
-            assert (H2: (| l |) = (| s_map f l |)). auto.
-            simpl. assert (H3: ~ In (f a) (s_map f l)). auto.
+            assert (H2: (| l |) = (| img f l |)). auto.
+            simpl. assert (H3: ~ In (f a) (img f l)). auto.
             rewrite H2; symmetry;auto. }  } Qed.
   
 
-  Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
+  Hint Resolve img_subset img_size_less img_size_same: core.
 
   
-  Lemma s_map_strict_less (l: list A)(f: A->B):
-    NoDup l -> (|s_map f l| < |l|) -> ~ one_one_on l f.
-  Proof. intros H H1 H2. assert(H3: |l|=| s_map f l|). auto. omega. Qed. 
+  Lemma img_strict_less (l: list A)(f: A->B):
+    NoDup l -> (|img f l| < |l|) -> ~ one_one_on l f.
+  Proof. intros H H1 H2. assert(H3: |l|=| img f l|). auto. omega. Qed. 
 
-  Hint Immediate one_one_s_map_elim  s_map_strict_less : core.
+  Hint Immediate one_one_img_elim  img_strict_less : core.
 
   
   Lemma one_one_on_intro2 (l: list A)(f: A->B):
-    NoDup l -> (|s_map f l| = |l|)->  one_one_on l f.
-  Proof.  induction l.
+    NoDup l -> (|img f l| = |l|)->  one_one_on l f.
+  Proof.  { induction l.
           { simpl; auto. }
           { intros H H0.
             assert (Ha: NoDup l). eauto.
             assert (Hb: ~ In a l ). auto.
-            assert (H1: |s_map f l| = |l|).
-            { match_up  (| s_map f l |)  (| l |).
+            assert (H1: |img f l| = |l|).
+            { match_up  (| img f l |)  (| l |).
               { auto. }
-              { assert ((| s_map f (a :: l) |) <b (| a :: l |)).
+              { assert ((| img f (a :: l) |) <b (| a :: l |)).
                 { move /ltP in H1. apply /ltP. simpl.
-                  cut ((| add (f a) (s_map f l) |) <= S (|s_map f l|)). omega.
+                  cut ((| add (f a) (img f l) |) <= S (|img f l|)). omega.
                   auto. } by_conflict. }
-              { assert (H2: |s_map f l| <= |l|). auto.
+              { assert (H2: |img f l| <= |l|). auto.
                 move /lebP in H2. auto. } } 
             assert (H2: one_one_on l f). auto.
-            assert (H3: ~ In (f a) (s_map f l)).
+            assert (H3: ~ In (f a) (img f l)).
             { intro H3.
-              assert (H4: s_map f (a :: l) = (s_map f l)).
+              assert (H4: img f (a :: l) = (img f l)).
               { simpl. eapply add_same. auto. auto. }
-              rewrite H4 in H0. rewrite H1 in H0. simpl in H0. omega. } auto. } Qed.
+              rewrite H4 in H0. rewrite H1 in H0. simpl in H0. omega. } auto. } } Qed.
             
 
   Lemma one_one_on_intro3 (l s: list A)(f: A-> B): s [<=] l -> one_one_on l f -> one_one_on s f.
@@ -238,46 +238,60 @@ Section Set_maps.
 
   (* ------------ set maps and set add interaction ------------------------ *)
 
-   
-   
-
-  Lemma s_map_add (a: A)(l: list A)(f: A-> B): s_map f (add a l) = add (f a) (s_map f l).
+  Lemma img_add (a: A)(l: list A)(f: A-> B): img f (add a l) = add (f a) (img f l).
   Proof. { apply set_equal;auto.
          induction l.
          { simpl. auto. }
          {  simpl.
-           assert (H:  s_map f (add a l) = add (f a) (s_map f l)).
+           assert (H:  img f (add a l) = add (f a) (img f l)).
            apply set_equal; auto.
            destruct IHl as [IHl IHl1].  match_up a  a0.
            { subst a. simpl. auto. }
            { simpl. auto. }
            { simpl. rewrite H. auto. } }  } Qed.
             
-  Lemma s_map_same (l: list A) (f g: A->B): (forall x, In x l -> f x = g x)-> (s_map f l = s_map g l).
+  Lemma img_same (l: list A) (f g: A->B): (forall x, In x l -> f x = g x)-> (img f l = img g l).
   Proof. {  induction l.
          { simpl; auto. }
-         { intro h1. simpl. replace (g a) with (f a). replace (s_map g l) with (s_map f l).
+         { intro h1. simpl. replace (g a) with (f a). replace (img g l) with (img f l).
            auto. apply IHl. intros x h2. apply h1; auto. apply h1; auto. } } Qed. 
   
+  Hint Resolve img_add img_same: core.
+
+  Lemma img_inter1 (l s: list A)(f: A-> B): img f (l [i] s) [<=] (img f l) [i] (img f s).
+  Proof. Admitted.
+  Lemma img_inter2 (l s: list A)(f: A-> B): one_one_on l f -> one_one_on s f->
+                                             img f (l [i] s) = (img f l) [i] (img f s).
+  Proof. Admitted.
+
+  Lemma img_union (l s: list A)(f: A-> B): img f (l [u] s) = (img f l) [u] (img f s).
+  Proof. Admitted.
+
+  Lemma img_diff (l s: list A)(f: A-> B): one_one_on l f -> one_one_on s f->
+                                           img f (l [\] s) = (img f l) [\] (img f s).
+  Proof. Admitted.
   
- Hint Resolve s_map_add s_map_same: core.
+  Hint Resolve img_inter1 img_inter2 img_union img_diff: core.
   
+    
 End Set_maps.
 
-Hint Resolve IsOrd_s_map NoDup_s_map : core.
-Hint Resolve s_map_intro1 s_map_intro2 s_map_elim: core.
-Hint Resolve s_map_elim2 s_map_elim3 s_map_elim4 : core.
+Hint Resolve IsOrd_img NoDup_img : core.
+Hint Resolve img_intro1 img_intro2 img_elim: core.
+Hint Resolve img_elim2 img_elim3 img_elim4 : core.
 Hint Immediate one_oneP1: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
 Hint Immediate one_one_on_intro one_one_on_intro1: core.
 Hint Resolve one_one_onP: core.
 
-Hint Resolve s_map_subset s_map_size_less s_map_size_same: core.
-Hint Immediate one_one_s_map_elim s_map_strict_less : core.
+Hint Resolve img_subset img_size_less img_size_same: core.
+Hint Immediate one_one_img_elim img_strict_less : core.
 
 Hint Immediate one_one_on_intro2 one_one_on_intro3 : core.
 
-Hint Resolve s_map_add s_map_same: core.
+Hint Resolve img_add img_same: core.
+
+Hint Resolve img_inter1 img_inter2 img_union img_diff: core.
 
 
 Section Map_composition.
@@ -289,19 +303,19 @@ Section Map_composition.
   (*-------------------------  A  --f-->  B  --g-->  C    --------------------------------*)
 
   Lemma range_of_range (l:list A)(f: A->B)(g: B->C):
-    s_map g (s_map f l) = s_map ( fun x => g (f x)) l.
-  Proof. { assert (H: Equal  (s_map g (s_map f l)) (s_map ( fun x => g (f x)) l) ).
+    img g (img f l) = img ( fun x => g (f x)) l.
+  Proof. { assert (H: Equal  (img g (img f l)) (img ( fun x => g (f x)) l) ).
          { unfold Equal.
            split.
            { unfold Subset. intros c Hc.
-             assert (Hb: exists b, In b (s_map f l) /\ c = g b). auto.
+             assert (Hb: exists b, In b (img f l) /\ c = g b). auto.
              destruct Hb as [b Hb]. destruct Hb as [Hb Hb1].
              assert (Ha: exists a, In a l /\ b = f a). auto.
              destruct Ha as [a Ha]. destruct Ha as [Ha Ha1].
              rewrite Hb1. set (gf := (fun x : A => g (f x))).
              rewrite Ha1. 
              assert (H: (g (f a)) = (gf a)). unfold gf. auto.
-             rewrite H. eapply s_map_intro2. auto. }
+             rewrite H. eapply img_intro2. auto. }
            { unfold Subset. intros c Hc.
              assert (Ha: exists a, In a l /\ c = g (f a)). auto.
              destruct Ha as [a Ha]. destruct Ha as [Ha1 Ha2].
@@ -320,24 +334,24 @@ Section Maps_on_A.
 
   Definition id:= fun (x:A)=> x.
 
-  Lemma id_is_identity1 (l:list A) : l [=] s_map id l.
+  Lemma id_is_identity1 (l:list A) : l [=] img id l.
   Proof.  { induction l.
           { simpl. auto. }
           { simpl.  split.
            { intros x h. destruct h as [h | h].
              subst a. unfold id. auto.
-             cut (In x (s_map id l)). auto.  apply IHl. auto. }
+             cut (In x (img id l)). auto.  apply IHl. auto. }
            { unfold id. fold id. intros x h.
-             cut (x=a \/ In x (s_map id l)).
+             cut (x=a \/ In x (img id l)).
              intro h1. destruct h1 as [h1a | h1b].
              subst x. all: auto. cut (In x l). auto. apply IHl. auto. } } }  Qed. 
   
 
-  Lemma id_is_identity (l:list A)(hl: IsOrd l): l = s_map id l.
+  Lemma id_is_identity (l:list A)(hl: IsOrd l): l = img id l.
   Proof. { induction l.
          { simpl. auto. }
          { apply set_equal. auto. auto. 
-           simpl. replace (s_map id l) with l.
+           simpl. replace (img id l) with l.
            split.
            { intros x h. destruct h as [h | h].
              subst a. unfold id. auto. unfold id. auto. }
