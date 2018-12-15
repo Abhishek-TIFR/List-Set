@@ -70,9 +70,9 @@ Section LovaszRepLemma.
           split.
           (* first subgoal: forall x:A, id (id x) = x *)
           { intros; unfold id; auto. } split.
-          (* second subgoal:  H' = s_map id (Repeat_in H a a') *)
+          (* second subgoal:  H' = img id (Repeat_in H a a') *)
           { subst H. simpl.
-            replace (s_map id (add a' (inter H' G))) with (add a' (inter H' G)).
+            replace (img id (add a' (inter H' G))) with (add a' (inter H' G)).
             apply set_equal. auto. auto. unfold Equal.
             split.
             { intros x h6.
@@ -278,11 +278,11 @@ Section LovaszRepLemma.
           specialize (h4 h5) as h6. destruct h6 as [f h6]. destruct h6 as [h6a h6b].
           destruct h6a as [h6a h6c].
           (* c0 as defined below is the new color for a' *)
-          set (c0 := maxin (Nat.leb) (s_map f G) 0 + 1).
-          assert (hc0: ~ In c0 (s_map f G)).
+          set (c0 := maxin (Nat.leb) (img f G) 0 + 1).
+          assert (hc0: ~ In c0 (img f G)).
           { intro h7. eapply maxin_spec with (lr:= Nat.leb )(d:=0) in h7.
             revert h7. unfold c0. move /leP. intro h7.
-            remember (maxin Nat.leb (s_map f G) 0) as n0. omega. all: auto.  }
+            remember (maxin Nat.leb (img f G) 0) as n0. omega. all: auto.  }
           (* following function f0 is the new coloring for graph G' *)
           set (f0:= fun x:A => match x == a' with
                             |true => c0
@@ -303,10 +303,10 @@ Section LovaszRepLemma.
             { move /eqP in hxa;move /eqP in hya. subst x;subst y. absurd (edg G' a' a'); auto. }
             { move /eqP in hya. assert (h10: In y G).
               { subst G';simpl in h7;simpl in h8; eauto. }
-              intro h11. absurd (In c0 (s_map f G)). auto. rewrite h11. auto. }
+              intro h11. absurd (In c0 (img f G)). auto. rewrite h11. auto. }
             { move /eqP in hxa. assert (h10: In x G).
               { subst G';simpl in h7;simpl in h8; eauto. }
-               intro h11. absurd (In c0 (s_map f G)). auto. rewrite <- h11. auto. }
+               intro h11. absurd (In c0 (img f G)). auto. rewrite <- h11. auto. }
             { move /eqP in hxa. move /eqP in hya. cut (In x G). cut (In y G).
                intros. apply h6a. all: auto. replace (edg G x y) with (edg G' x y).
                auto. symmetry. subst G'. auto.
@@ -314,10 +314,10 @@ Section LovaszRepLemma.
           {(* proof that  (| clrs_of f0 G' |) = (| K |) + 1 *)
             unfold Coloring_of in h6a.
             subst G'. simpl. unfold clrs_of.
-            replace (s_map f0 (add a' G)) with (add (f0 a') (s_map f0 G)).
-            replace (s_map f0 G) with (s_map f G). replace (f0 a') with c0.
+            replace (img f0 (add a' G)) with (add (f0 a') (img f0 G)).
+            replace (img f0 G) with (img f G). replace (f0 a') with c0.
             rewrite <- h6b. unfold clrs_of.
-            assert (h11: (| s_map f G |) + 1 = S (| s_map f G |)). omega.
+            assert (h11: (| img f G |) + 1 = S (| img f G |)). omega.
             rewrite h11. eapply add_card1. all: auto. } }
         } 
 
@@ -419,6 +419,12 @@ Section LovaszRepLemma.
         
         assert (hNs_G: forall x, In x Ns -> (In x G /\ ( (~~(f x == f a)) || (x == a))= true)).
         { intros x.  eapply filter_In. }
+        remember (fun x => ( (~~(f x == f a)) || (x == a))) as Ps.
+        assert (HPs: forall x, Ps x = ( (~~(f x == f a)) || (x == a)) ).
+        { subst Ps. auto. } 
+        assert (hG_Ns: forall x, (In x G) /\ (( ~~(f x == f a) || (x == a)) = true) -> In x Ns ).
+        { intros x.  rewrite <- (HPs x). unfold Ns. eapply filter_In. }
+        subst Ps.
         assert (h6a: forall x, In x Ns -> In x G).
         { intros x H1; apply hNs_G; auto. }
         assert (h6b: forall x, In x Ns -> (~~(f x == f a) || (x == a))= true ).
@@ -438,7 +444,8 @@ Section LovaszRepLemma.
         { intros x H1.
           assert(H2: x<> a). intros H2; subst x; contradiction.
           cut (~ edg G x a). intros H3 H4;apply H3.
-          cut(x<>a'). subst G'. eauto. intros H5. subst x. revert H4. eauto. auto. } clear hNs_G. clear h6b.
+          cut(x<>a'). subst G'. eauto. intros H5. subst x. revert H4. eauto. auto. }
+        clear hNs_G. clear h6b.
 
         set (Gs:= Ind_at Ns G). destruct (cliq_num_of Gs) as [wGs h7].
         assert(h_Gs_nice: Nice Gs).
@@ -448,11 +455,11 @@ Section LovaszRepLemma.
         (* largest cliq of G_star is smaller than that of G *)
         assert (h9: wGs < wG). admit.
         (* c0 is the color not used by fs for coloring any vertex of Gs *)
-        set (c0 := maxin (Nat.leb) (s_map fs Gs) 0 + 1).
-          assert (hc0: ~ In c0 (s_map fs Gs)).
+        set (c0 := maxin (Nat.leb) (img fs Gs) 0 + 1).
+          assert (hc0: ~ In c0 (img fs Gs)).
           { intro h17. eapply maxin_spec with (lr:= Nat.leb )(d:=0) in h17.
             revert h17. unfold c0. move /leP. intro h17.
-            remember (maxin Nat.leb (s_map fs Gs) 0) as n0. omega. all: auto.  }
+            remember (maxin Nat.leb (img fs Gs) 0) as n0. omega. all: auto.  }
         (* a new coloring scheme f' for G' *)
         set (f':= fun x:A => match (memb x Gs) with
                           |true => (fs x)
@@ -462,16 +469,89 @@ Section LovaszRepLemma.
           { unfold f'. replace (memb a' Gs) with false. auto.
             symmetry. apply /membP. intro H1. simpl in H1.
             absurd (In a' G). auto. eauto. }
-          
-          assert (h_clrs: (clrs_of f' G') = add c0 (clrs_of fs Gs)). admit.
+          assert (Hf'1: forall x, In x Gs -> f' x = fs x).
+          { intros x H1. unfold f'. replace (memb x Gs) with true. auto. symmetry;auto. }
+          assert (Hf'2:forall x, ~ In x Gs -> f' x = c0 ).
+          { intros x H1;unfold f'. replace (memb x Gs) with false. auto. symmetry;auto. }
+          assert (h_clrs: (clrs_of f' G') = add c0 (clrs_of fs Gs)).
+          { apply set_equal; unfold clrs_of;auto. split.
+            { replace (nodes G') with (Gs [u] (G' [\] Gs)).
+              { replace (img f' (Gs [u] (G' [\] Gs))) with (img f' Gs [u] img f' (G' [\] Gs)).
+                Focus 2. symmetry;auto. replace (img f' Gs) with (img fs Gs).
+                Focus 2. symmetry;auto. intros fx H1.
+                assert (H1a: In fx (img fs Gs) \/ In fx (img f' (G' [\] Gs))). auto.
+                destruct H1a as [H1a | H1b].
+                { auto. }
+                { assert (H2: exists x, In x (G' [\] Gs) /\ fx = f' x). auto.
+                  destruct H2 as [x H2]. destruct H2 as [H2a H2b].
+                  assert (H3: ~ In x Gs). eauto. replace fx with c0. auto.
+                  subst fx. symmetry;auto. } }
+              { symmetry. cut (Gs [<=] G'). auto. cut (Gs [<=] G). cut (G [<=] G').
+                auto. subst G';simpl. intros x; auto. unfold Gs. simpl. auto. } }
+            { intros fx H1. assert (H2: fx = c0 \/ In fx (img fs Gs)). auto.
+              destruct H2 as [H2a | H2b].
+              { subst fx. rewrite <- hfa'. cut (In a' G'); auto. subst G';simpl;auto. }
+              { replace (nodes G') with (Gs [u] (G' [\] Gs)).
+                Focus 2.
+                symmetry. cut (Gs [<=] G'). auto. cut (Gs [<=] G). cut (G [<=] G').
+                auto. subst G';simpl. intros x; auto. unfold Gs. simpl. auto.
+                replace (img f' (Gs [u] (G' [\] Gs))) with (img f' Gs [u] img f' (G' [\] Gs)).
+                Focus 2. symmetry;auto. replace (img f' Gs) with (img fs Gs).
+                Focus 2. symmetry;auto. auto. } } } 
+              
           eapply nice_intro with (n:= wG'). auto.
           exists f'.
-          assert (h10: Coloring_of G' f'). admit.
+          assert (h10: Coloring_of G' f').  
+          { assert (h11: Ind_subgraph Gs G). unfold Gs. auto.
+            assert (h12: Ind_subgraph G G'). subst G'. auto.
+            destruct h11 as [h11a h11]. destruct h12 as [h12a h12].
+            assert (H0: Coloring_of Gs fs). apply h8. 
+            unfold Coloring_of. intros x y H1 H2 H3. unfold f'.
+            
+            destruct (memb x Gs) eqn: Hx; destruct (memb y Gs) eqn: Hy.
+            { apply H0;auto. replace (edg Gs x y) with (edg G x y).
+              replace (edg G x y) with (edg G' x y). auto.
+              symmetry; apply h12; auto. symmetry; apply h11; auto. }
+            { intro H4. absurd (In c0 (img fs Gs)). auto. rewrite <- H4. auto. }
+            { intro H4. absurd (In c0 (img fs Gs)). auto. rewrite  H4. auto. }
+            { move /membP in Hx. move /membP in Hy. simpl in Hx. simpl in Hy.
+               assert (Hx1: x = a' \/ x <> a'). eauto.
+              assert (Hy1: y = a' \/ y <> a'). eauto.
+              destruct Hx1 as [Hx1 | Hx1]. 
+              { subst x. absurd (edg G' y a'). apply h6. intro H4. apply Hy.
+                cut (In y G); auto. auto. }
+              { destruct Hy1 as [Hy1 | Hy1].
+                { subst y. absurd (edg G' x a'). apply h6. intro H4. apply Hx.
+                  cut (In x G); auto. auto. }
+                { unfold Coloring_of in hX2. 
+                  assert (H4: In x G). subst G'; simpl in H1; eauto.
+                  assert (H5: In y G). subst G'; simpl in H2; eauto.
+                  assert (H6: edg G x y).
+                  { replace (edg G x y) with (edg G' x y). auto. symmetry;subst G';auto. }
+                  absurd (f x = f y). auto.
+                  replace (f x) with (f a). replace (f y) with (f a). auto.
+                  { replace (Ns [i] G) with (Ns) in Hx. replace (Ns [i] G) with (Ns) in Hy.
+                    symmetry.
+                    assert (H7: f y = f a \/ f y <> f a). eauto.
+                    destruct H7 as [H7 | H7]. auto.
+                    absurd (In y Ns). auto. apply hG_Ns. split. auto.
+                    left_.  apply /negP. auto.  cut (Ns [<=] G). cut (IsOrd Ns).
+                    auto. unfold Ns. auto. auto. cut (Ns [<=] G). cut (IsOrd Ns).
+                    auto. unfold Ns. auto. auto. }
+                  { replace (Ns [i] G) with (Ns) in Hx. replace (Ns [i] G) with (Ns) in Hy.
+                    symmetry.
+                    assert (H7: f x = f a \/ f x <> f a). eauto.
+                    destruct H7 as [H7 | H7]. auto.
+                    absurd (In x Ns). auto. apply hG_Ns. split. auto.
+                    left_.  apply /negP. auto.  cut (Ns [<=] G). cut (IsOrd Ns).
+                    auto. unfold Ns. auto. auto. cut (Ns [<=] G). cut (IsOrd Ns).
+                    auto. unfold Ns. auto. auto. } } } } } 
+            
           split. auto.
           assert (h_triv: (| clrs_of f' G' |) >= wG'). auto.
           cut ((| clrs_of f' G' |) <= wG'). omega.
           rewrite h_clrs. unfold clrs_of.
-          assert (H1: |add c0 (s_map fs Gs)| = S (|s_map fs Gs |)). auto.
+          assert (H1: |add c0 (img fs Gs)| = S (|img fs Gs |)). auto.
           rewrite H1. destruct h8 as [h8a h8]. rewrite h8. omega. } 
     } (*---------- End of Case C2 -------------------------------------------------- *)
 
