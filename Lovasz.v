@@ -325,12 +325,12 @@ Section Repeat_node.
             { replace (a==a) with true. replace (a==a') with false. all: symmetry;auto.  }
             { rewrite Hxa. rewrite Hxa'. auto. } } Qed.
 
-   (* -----   fact:   G'_a = (s_map f G) -------- *)
-   Lemma G'_a_is_s_mapG (P: In a G)(P': ~ In a' G): nodes (Ind_at N'_a G') = (s_map f G).
+   (* -----   fact:   G'_a = (img f G) -------- *)
+   Lemma G'_a_is_imgG (P: In a G)(P': ~ In a' G): nodes (Ind_at N'_a G') = (img f G).
    Proof. { assert (H0: a <> a'). auto.
-          assert (H1: Equal (Ind_at N'_a G') (s_map f G)).
+          assert (H1: Equal (Ind_at N'_a G') (img f G)).
           { split; unfold Subset.
-            { (* -- x in G_a' implies x in s_map f G --*)
+            { (* -- x in G_a' implies x in img f G --*)
               intros x H1.
               assert (H1a: x <> a). rewrite <- NG'_a in H1. 
               { eapply set_rmv_elim2 with (l:= (add a' G));auto. }
@@ -340,7 +340,7 @@ Section Repeat_node.
               { assert (H2: In x G).
                 { simpl in H1. cut (In x (add a' G)); eauto. }
                 replace x with (f x). auto. auto using fx_is_x.  } }
-            { (*--- x in s_map f G implie x in G_a' ---*)
+            { (*--- x in img f G implie x in G_a' ---*)
               intros y H1.
               assert (H1a: exists x, In x G /\ y= f x ). auto.
               destruct H1a as [x H1a]. destruct H1a as [H1a H1b].
@@ -431,8 +431,8 @@ Section Repeat_node.
           { (* ------------------ Proof of the fact that f (f x) = x -----------------*)
              apply f_is_invertible;auto. }
           split.
-          { (*----------------- Proof of the fact that G'_a = s_map f G -------------- *)
-            apply G'_a_is_s_mapG;auto. }
+          { (*----------------- Proof of the fact that G'_a = img f G -------------- *)
+            apply G'_a_is_imgG;auto. }
           { (*---------------  Proof that isomorphism preserves the edg relation-------*)
             intros x y. apply f_preserves_edg;auto.  } } Qed.
 
