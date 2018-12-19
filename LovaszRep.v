@@ -452,14 +452,57 @@ Section LovaszRepLemma.
         { cut (Ind_subgraph Gs G). auto. unfold Gs. auto. }
         unfold Nice in h_Gs_nice. apply h_Gs_nice in h7 as h8. destruct h8 as [fs h8].
         clear h_Gs_nice.
+        
         (* largest cliq of G_star is smaller than that of G *)
-        assert (h9: wGs < wG). admit.
+        assert (h9: wGs < wG).
+        { assert (H1: Ind_subgraph Gs G). unfold Gs. auto. 
+          assert (H2: wGs <= wG). eauto.
+          assert (H3: wGs = wG \/ wGs <> wG). eauto.
+          destruct H3 as [H3 | H3]. Focus 2. omega.
+          (* assuming H3:  wGs = wG we will show some contradiction *)
+          destruct h7 as [Ks H7]. destruct H7 as [H7a H7].
+          assert (H4: In a Ks).
+          { assert (H4a: In a Gs).
+            { unfold Gs. simpl. cut (In a Ns). auto. apply filter_In.
+              split. auto. right_. auto. }
+            assert (H4b: Ks [<=] Gs).
+            { apply H7a. }
+            assert (H4f: (img f Ks) [<=] (img f Gs)).
+            { auto. }
+            assert (H4: In a Ks \/ ~ In a Ks). eauto.
+            destruct H4 as [H4 | H4]. auto.
+            assert (H4c: forall x, In x Gs -> x <> a -> f x <> f a).
+            { intros x H5 H6.
+              assert (H8: f x <> f a \/ x = a). apply h6c. simpl in H5. eauto.
+              destruct H8. auto. contradiction. }
+            assert (H4d: ~ In (f a) (img f Ks)).
+            { intro H8. assert (H9: exists x, In x Ks /\ f a = f x). eauto.
+              destruct H9 as [x H9]. destruct H9 as [H9 H10].
+              absurd (f x = f a). apply H4c. auto. intro Hx. subst x. contradiction.
+              symmetry;auto. }
+            assert (H4e: In (f a) (img f Gs)).
+            { auto. }
+            assert (H4g: |img f Ks| < |img f Gs|).
+            { eauto. }
+            
+            assert (H4h: |img f Ks| = |Ks|).  admit.
+            assert (H4i: | img f Gs | = wGs). admit.
+            rewrite H4i in H4g. rewrite H7 in H4h. omega. }
+            
+          assert (H5: Max_K_in G Ks).
+          { apply Max_K_in_intro. cut (Cliq_in Gs Ks). eauto.  auto.
+            rewrite H7. rewrite H3.  destruct h3 as [K h3]. destruct h3 as [h3a h3].
+            rewrite <- h3.  intros K' H5. eapply Max_K_in_elim. eauto. auto. }
+          absurd (Max_K_in G Ks). apply C2b; auto. auto. }
+          
+          
         (* c0 is the color not used by fs for coloring any vertex of Gs *)
         set (c0 := maxin (Nat.leb) (img fs Gs) 0 + 1).
           assert (hc0: ~ In c0 (img fs Gs)).
           { intro h17. eapply maxin_spec with (lr:= Nat.leb )(d:=0) in h17.
             revert h17. unfold c0. move /leP. intro h17.
             remember (maxin Nat.leb (img fs Gs) 0) as n0. omega. all: auto.  }
+          
         (* a new coloring scheme f' for G' *)
         set (f':= fun x:A => match (memb x Gs) with
                           |true => (fs x)
