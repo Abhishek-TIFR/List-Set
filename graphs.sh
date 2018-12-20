@@ -1,10 +1,10 @@
 #!/bin/bash
 
-printf ‘DecUG
-coqc DecUG.v
+printf ‘UG
+coqc UG.v
 
-printf ‘MoreDecUG
-coqc MoreDecUG.v
+printf ‘MoreUG
+coqc MoreUG.v
 
 printf ‘IsoUG
 coqc IsoUG.v
