@@ -31,7 +31,7 @@
 
    ------------------------------------------------------------------------------------------*)
 
-Require Export MoreDecUG IsoUG.
+Require Export MoreUG IsoUG.
 
 Set Implicit Arguments.
 
