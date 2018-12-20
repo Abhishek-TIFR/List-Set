@@ -10,7 +10,7 @@ Require Export Lovasz.
 
 Set Implicit Arguments.
 
-Section LovaszRepLemma.
+Section PreLovasz.
 
   Context { A:ordType }.
 
@@ -214,10 +214,21 @@ Section LovaszRepLemma.
            { destruct h1 as [K h1]. destruct h1 as [h1 h1a].
              subst n. eapply Max_K_in_elim;eauto. } omega. } } Qed. 
   
-                                            
-  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
-  Proof. {
 
+End PreLovasz.
+
+Section LovaszRepLemma.
+
+  Context { A:ordType }.
+
+  Variable G: @UG A.
+  Variable a a': A.
+  Hypothesis P: In a G.
+  Hypothesis P': ~In a' G.
+  
+  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
+  Proof. 
+ 
    (* We will prove the result by well founded induction on the set of all UG. 
       To use the well founded induction we first need to prove that the relation 
       lt_graph is well founded on UG. This is proved as Lemma lt_graph_is_well_founded
@@ -239,7 +250,7 @@ Section LovaszRepLemma.
        C2 is the case when H' is same as G' (i.e. H' = G').  *)
     assert (HC: Equal H' G' \/ ~ Equal H' G'). eapply reflect_EM; eauto.
     destruct HC as [C2 | C1].
-
+ 
     (* Case C2 (H' = G'): Proof ---------------------------------------------------- *)
     { (* C2: In this case H' [=] G'.
          We further split this case into two subcases C2a and C2b.
@@ -249,10 +260,11 @@ Section LovaszRepLemma.
       assert (h_iso: iso G' H'). apply H'_iso_G';auto.
       cut(Nice G'). eauto.
       
-      set (Pb:= fun K => max_K_in G K && memb a K). 
-      specialize (exists_em_forall Pb (pw G)) as HC.
+      set (Pb:= fun (K: list A) => max_K_in G K && memb a K).
+      assert (HC:  (exists x : list A, In x (pw G) /\ Pb x) \/
+       (forall x : list A, In x (pw G) -> ~ Pb x)).  apply exists_em_forall.
       unfold Pb in HC.
-      destruct HC as [C2_a | C2_b].
+      destruct HC as [C2_a | C2_b]. 
       { (* C2_a : when a is present in some largest clique K of G.  *)
         destruct C2_a as [K C2_a]. destruct C2_a as [C2a C2b].
         move /andP in C2b. destruct C2b as [h2 h3]. move /max_K_inP in h2.
@@ -266,9 +278,10 @@ Section LovaszRepLemma.
         split.
         {(* Max_K_in G' (add a' K) *)
           apply Max_K_in_intro.
-          subst G'; apply cliq_in_G';auto.
+          subst G'. eapply cliq_in_G'. all: auto.
           intros K' h4. replace (| add a' K|) with (|K|+1).
-          eapply max_K_in_G'. exists K.
+          eapply max_K_in_G' with (a0:=a)(a'0:=a')(G0:= G). all: auto.
+          exists K.
           split;auto. subst G'; auto. symmetry. replace (|K|+1) with (S(|K|)).
           apply add_card1. auto. omega. }
         { replace (|K|+1) with (S(|K|)). apply add_card1. auto. omega. }
@@ -454,7 +467,7 @@ Section LovaszRepLemma.
         clear h_Gs_nice.
         
         (* largest cliq of G_star is smaller than that of G *)
-        assert (h9: wGs < wG).
+        assert (h9: wGs < wG). 
         { assert (H1: Ind_subgraph Gs G). unfold Gs. auto. 
           assert (H2: wGs <= wG). eauto.
           assert (H3: wGs = wG \/ wGs <> wG). eauto.
@@ -469,6 +482,7 @@ Section LovaszRepLemma.
             { apply H7a. }
             assert (H4f: (img f Ks) [<=] (img f Gs)).
             { auto. }
+            assert (H4ff: (img f Gs) [<=] (img f G)). auto.
             assert (H4: In a Ks \/ ~ In a Ks). eauto.
             destruct H4 as [H4 | H4]. auto.
             assert (H4c: forall x, In x Gs -> x <> a -> f x <> f a).
@@ -484,16 +498,22 @@ Section LovaszRepLemma.
             { auto. }
             assert (H4g: |img f Ks| < |img f Gs|).
             { eauto. }
+            assert (H4gg: | img f Gs| <= |img f G|). eauto.
             
-            assert (H4h: |img f Ks| = |Ks|).  admit.
-            assert (H4i: | img f Gs | = wGs). admit.
-            rewrite H4i in H4g. rewrite H7 in H4h. omega. }
+            assert (H4h: |img f Ks| = |Ks|).
+            { symmetry. cut (Cliq_in Gs Ks). cut (Coloring_of Gs f).
+              replace (|img f Ks|) with (|clrs_of f Ks|). intros.
+              eapply clrs_on_a_cliq. eauto. auto. unfold clrs_of. auto.
+              eauto. auto. }
+            unfold clrs_of in hX. rewrite hX in H4gg.
+            assert (H5:  (| img f Ks |) < wG ).
+            { omega. } rewrite H4h in H5. omega. }  
             
           assert (H5: Max_K_in G Ks).
           { apply Max_K_in_intro. cut (Cliq_in Gs Ks). eauto.  auto.
             rewrite H7. rewrite H3.  destruct h3 as [K h3]. destruct h3 as [h3a h3].
             rewrite <- h3.  intros K' H5. eapply Max_K_in_elim. eauto. auto. }
-          absurd (Max_K_in G Ks). apply C2b; auto. auto. }
+          absurd (Max_K_in G Ks). apply C2b; auto. auto. } 
           
           
         (* c0 is the color not used by fs for coloring any vertex of Gs *)
@@ -596,7 +616,8 @@ Section LovaszRepLemma.
           rewrite h_clrs. unfold clrs_of.
           assert (H1: |add c0 (img fs Gs)| = S (|img fs Gs |)). auto.
           rewrite H1. destruct h8 as [h8a h8]. rewrite h8. omega. } 
-    } (*---------- End of Case C2 -------------------------------------------------- *)
+    }
+    (*---------- End of Case C2 -------------------------------------------------- *)
 
     
     (* Case C1 (H' <> G'): Proof --------------------------------------------------- *)
@@ -634,7 +655,7 @@ Section LovaszRepLemma.
           subst H; simpl; auto.
           subst H; simpl. intros x y h5 h6. symmetry. auto. }
         assert (h6: iso (Repeat_in H a a') H').
-        { subst H. apply RepeatH_iso_H' with (G':=G');auto. }
+        { subst H. apply RepeatH_iso_H' with (G'0:=G');auto. }
         cut (Nice (Repeat_in H a a')). eauto.
         cut (Perfect (Repeat_in H a a')). auto.
         apply IH. auto. subst H; simpl; auto. subst H; simpl; auto. eauto. eauto.
@@ -666,9 +687,9 @@ Section LovaszRepLemma.
         cut(iso H H'). cut (Nice H). eauto. auto. eauto.
         (* subcase ~In a' H': In this case Ind_subgraph H' G *)
         assert (h3: Ind_subgraph H' G). subst G'. eauto using H'_sub_G. auto. }  }
-    (*----------- End of Case C1 -------------------------------------------------- *) 
+    (*----------- End of Case C1 -------------------------------------------------- *)
 
-    }  Admitted.  
+     Qed. 
       
   
   End LovaszRepLemma.
