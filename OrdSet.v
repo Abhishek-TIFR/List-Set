@@ -167,8 +167,8 @@ Section OrderedSet.
   Hint Resolve rmv_card rmv_card1 rmv_card2 rmv_card_min: core.
 
   Lemma rmv_prop1 (a:A)(l s: list A): NoDup l-> l [<=] s -> (rmv a l) [<=] (rmv a s).
-  Proof. intros h1 h2 x h3. assert (h4: In x l /\ x<>a). apply set_rmv_iff;auto.
-         destruct h4 as [h4 h5]. auto. Qed.
+  Proof. { intros h1 h2 x h3. assert (h4: In x l /\ x<>a). apply set_rmv_iff;auto.
+           destruct h4 as [h4 h5]. auto. }  Qed.
 
   Lemma rmv_prop2 (a:A)(l s: list A): NoDup l-> NoDup s-> l [=] s -> (rmv a l) [=] (rmv a s).
   Proof. intros h1 h2 h3. split;apply rmv_prop1; auto; apply h3. Qed.
@@ -208,8 +208,8 @@ Section OrderedSet.
   Hint Resolve set_add_intro1  set_add_intro3: core.
   
   Lemma set_add_not_empty (a: A)(l:list A): add a l <> (empty).
-  Proof. intro H. absurd (In a empty). simpl; auto. rewrite <- H.
-         eauto. Qed. 
+  Proof. { intro H. absurd (In a empty). simpl; auto. rewrite <- H.
+           eauto. } Qed. 
     
   Lemma set_add_elim (a b: A)(l: list A): In a (add b l)-> ( a= b \/ In a l).
   Proof. { induction l.
@@ -283,8 +283,8 @@ Section OrderedSet.
   Hint Resolve add_card add_card1 add_card_max add_same: core.
 
   Lemma add_prop1 (a:A)(l s: list A): l [<=] s -> (add a l) [<=] (add a s).
-  Proof. intros h1 x h2. assert (h3: x=a \/ In x l). auto.
-         destruct h3 as [h3 | h3]. subst x; auto. cut (In x s);auto. Qed.
+  Proof. { intros h1 x h2. assert (h3: x=a \/ In x l). auto.
+           destruct h3 as [h3 | h3]. subst x; auto. cut (In x s);auto. } Qed.
   
   Lemma add_prop2 (a:A)(l s: list A): l [=] s -> (add a l) [=] (add a s).
   Proof. intros h1. destruct h1 as [h1 h2]. split; auto using add_prop1. Qed.
@@ -367,12 +367,12 @@ Section OrderedSet.
   Proof. intros a h1. eauto using set_inter_elim2. Qed.
 
   Lemma set_inter_elim5 (x y: list A): x [<=] y -> x [=] (inter x y).
-  Proof. intros h. split. intros a h1. apply set_inter_intro. all: auto.
-         apply set_inter_elim3. Qed.
+  Proof. { intros h. split. intros a h1. apply set_inter_intro. all: auto.
+           apply set_inter_elim3. } Qed.
 
   Lemma set_inter_elim6  (x y: list A): y [<=] x -> y [=] (inter x y).
-  Proof. intros h. split. intros a h1. apply set_inter_intro. all: auto.
-         apply set_inter_elim4. Qed.
+  Proof. { intros h. split. intros a h1. apply set_inter_intro. all: auto.
+           apply set_inter_elim4. } Qed.
     
   Lemma set_inter_IsOrd (x y: list A): IsOrd (inter x y).
   Proof. { induction x.
@@ -394,15 +394,15 @@ Section OrderedSet.
   Proof.  { split; intros a H.
             assert (H1: In a x /\ In a y).
             { apply set_inter_elim. auto. } 
-         destruct H1; auto.
-         assert (H1: In a y /\ In a x). split;eauto.
-         destruct H1; auto. }  Qed.
+            destruct H1; auto.
+            assert (H1: In a y /\ In a x). split;eauto.
+            destruct H1; auto. }  Qed.
 
   Hint Resolve set_inter_comm: core.
 
   Lemma inter_equal (x y:list A): inter x y = inter y x.
-  Proof.  assert (H1: Equal (inter x y) (inter y x)). auto.
-          cut (IsOrd (inter x y)); cut (IsOrd (inter y x)); eauto. Qed.
+  Proof. { assert (H1: Equal (inter x y) (inter y x)). auto.
+          cut (IsOrd (inter x y)); cut (IsOrd (inter y x)); eauto. } Qed.
   
      
   (* ------------ set_union operation ----------------------------------------------  *)
@@ -437,14 +437,14 @@ Section OrderedSet.
   Proof. intros a h1. eauto using set_union_intro2. Qed.
 
   Lemma set_union_intro5 (x y: list A): x [<=] y -> y [=] (union x y).
-  Proof. intros h. split. intros a h1. apply set_union_intro2. auto.
-         intros a h1. cut(In a x \/ In a y).
-         intro h2; destruct h2 as [h2 | h2]. all: auto. Qed.
+  Proof. { intros h. split. intros a h1. apply set_union_intro2. auto.
+           intros a h1. cut(In a x \/ In a y).
+           intro h2; destruct h2 as [h2 | h2]. all: auto. } Qed.
 
   Lemma set_union_intro6  (x y: list A): y [<=] x -> x [=] (union x y).
-  Proof. intros h. split. intros a h1. apply set_union_intro1. auto.
-         intros a h1. cut(In a x \/ In a y).
-         intro h2; destruct h2 as [h2 | h2]. all: auto. Qed.
+  Proof. { intros h. split. intros a h1. apply set_union_intro1. auto.
+           intros a h1. cut(In a x \/ In a y).
+           intro h2; destruct h2 as [h2 | h2]. all: auto. } Qed.
 
   Hint Immediate set_union_intro3 set_union_intro4 set_union_intro5 set_union_intro6: core.
   
@@ -460,21 +460,26 @@ Section OrderedSet.
            cut (IsOrd (union x y)). auto. apply set_union_IsOrd;auto. } } Qed.
   Lemma set_union_comm (x y:list A): Equal (union x y) (union y x).
   Proof. { split; intros a H.
-         assert (H1: In a x \/ In a y); auto.
-         destruct H1; auto.
-         assert (H1: In a y \/ In a x); auto.
-         destruct H1; auto. } Qed.
+           assert (H1: In a x \/ In a y); auto.
+           destruct H1; auto.
+           assert (H1: In a y \/ In a x); auto.
+           destruct H1; auto. } Qed.
   
   Hint Resolve set_union_IsOrd set_union_nodup  : core.
 
   Lemma union_equal (x y:list A): IsOrd x -> IsOrd y -> union x y = union y x.
   Proof. { intros.
-         cut (Equal (union x y) (union y x)).
-         cut (IsOrd (union x y)). cut (IsOrd (union y x)).
-         eauto. all: eauto.
-         apply set_union_comm. } Qed.
+           cut (Equal (union x y) (union y x)).
+           cut (IsOrd (union x y)). cut (IsOrd (union y x)).
+           eauto. all: eauto.
+           apply set_union_comm. } Qed.
   
   Hint Resolve inter_equal union_equal set_union_comm: core.
+
+  Lemma union_intro7 (x y: list A)(a:A):  ~ In a y -> ~ In a x -> ~ In a (union x y).
+  Proof. Admitted.
+
+  Hint Immediate union_intro7: core.
 
   
   (* ------------ set_diff operation -----------------------------------------------  *)
@@ -514,8 +519,8 @@ Section OrderedSet.
            auto. intro H1. assert (H2: a= a0 \/ In a (diff l s)); auto.
            destruct H2. subst a. move /membP. switch_in H0. auto. auto. } } Qed.
   Lemma set_diff_empty (a:A)(l: list A): ~ In a (diff l l).
-  Proof. intro H. absurd (In a l). eapply set_diff_elim2;eauto.
-         eapply set_diff_elim1;eauto. Qed.
+  Proof. { intro H. absurd (In a l). eapply set_diff_elim2;eauto.
+           eapply set_diff_elim1;eauto. } Qed.
 
   Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_intro set_diff_empty: core.
 
@@ -530,7 +535,11 @@ Section OrderedSet.
   Hint Resolve set_diff_IsOrd set_diff_nodup: core.
 
   Lemma filter_IsOrd (l: list A)(f: A-> bool): IsOrd l -> IsOrd (filter f l).
-  Proof. Admitted.
+  Proof. { induction l.
+           { simpl. auto. }
+           { simpl. destruct (f a) eqn: H. intro H1.
+             apply IsOrd_intro. eauto. intros x H2. cut (In x l). all: eauto. } } Qed.
+             
   
           
 End OrderedSet.
@@ -559,6 +568,8 @@ Hint Immediate set_union_intro3 set_union_intro4 set_union_intro5 set_union_intr
 Hint Resolve set_union_IsOrd set_union_nodup  : core.
 
 Hint Resolve inter_equal union_equal: core.
+Hint Immediate union_intro7: core.
+
 
 Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_elim3 set_diff_intro set_diff_empty: core.
 Hint Resolve set_diff_IsOrd set_diff_nodup: core.
@@ -593,17 +604,85 @@ Section MoreOrdSet.
 
   Lemma y_as_disj_sum: x [<=] y -> y = x [u] (y [\] x).
   Proof. { intro h1. apply set_equal;auto. split. intros a h2. cut (In a x \/ ~ In a x).
-         intro h3. destruct h3. auto. cut (In a (y [\] x)). auto. auto. eauto.
-         intros a h2. assert (h3: In a x \/ In a (y [\] x)). auto. destruct h3;eauto. } Qed.
+           intro h3. destruct h3. auto. cut (In a (y [\] x)); auto. eauto.
+           intros a h2. assert (h3: In a x \/ In a (y [\] x)). auto. destruct h3;eauto. } Qed.
   
   Lemma y_as_disj_sum1 : y =  (y [i] x) [u] (y [\] x).
-  Proof. Admitted.
-  
-  Lemma inc_exc1: x [i] y = empty ->  | x [u] y | = |x| + |y|.
+  Proof. { apply set_equal;auto. split. intros a h2. cut (In a x \/ ~ In a x).
+           intro h3. destruct h3.  cut (In a (y [i] x)); auto.
+           cut (In a (y [\] x)); auto. eauto.
+           intros a h2. assert (h3: In a (y [i] x) \/ In a (y [\] x)). auto.
+           destruct h3;eauto. } Qed.
+
+  Lemma y_as_disj_sum2 : y =  (y [\] x) [u] (y [i] x).
+  Proof. replace ( y [\] x [u] y [i] x) with ((y [i] x) [u] (y [\] x)).
+         apply y_as_disj_sum1. auto. Qed.
+
+  Lemma union_minus_x : (x [u] y) [\] x = y [\] x.
+  Proof. { apply set_equal;auto. split.
+         { intros x0 h1. cut (In x0 y). cut (~ In x0 x). auto.
+           eauto. assert (h2: In x0 (x [u] y)). eauto.
+           assert (h3: ~ In x0 x). eauto. cut (In x0 x \/ In x0 y).
+           intro h4. destruct h4. contradiction. auto. auto. }
+         { intros x0 h1. cut (In x0 (x [u] y)). cut (~ In x0 x). auto.
+           eauto. cut (In x0 y). auto. eauto. } } Qed.
+
+  Lemma union_minus_y : (x [u] y) [\] y = x [\] y.
+  Proof. { apply set_equal;auto. split.
+         { intros x0 h1. cut (In x0 x). cut (~ In x0 y). auto.
+           eauto. assert (h2: In x0 (x [u] y)). eauto.
+           assert (h3: ~ In x0 y). eauto. cut (In x0 x \/ In x0 y).
+           intro h4. destruct h4. auto. contradiction. auto. }
+         { intros x0 h1. cut (In x0 (x [u] y)). cut (~ In x0 y). auto.
+           eauto. cut (In x0 x). auto. eauto. } } Qed.
+
+  Lemma union_as_disjoint_x: (x [u] y) = x [u] (y [\] x).
   Proof. Admitted.
 
-  Lemma inclusion_exclusion: | x [u] y | = |x| + |y| - | x [i] y |.
+  Lemma union_as_disjoint_y: (x [u] y) = y [u] (x [\] y).
   Proof. Admitted.
+  
+  Lemma x_disj_with: x [i] (y [\] x) = empty.
+  Proof. { unfold empty. cut (x [i] (y [\] x) [<=] nil). auto.
+           intros x0 h1. absurd (In x0 x). cut (In x0 (y [\] x));eauto. eauto. } Qed.
+
+  Lemma yx_disj_with: (y [i] x) [i] (y [\] x) = empty.
+  Proof. { unfold empty. cut ( y [i] x [i] (y [\] x) [<=] nil). auto.
+           intros x0 h1. absurd (In x0 x). cut (In x0 (y [\] x)). eauto.
+           eauto. cut (In x0 (y [i] x)); eauto. } Qed.
+
+  Lemma y_disj_with: y [i] (x [\] y) = empty.
+  Proof.  { unfold empty. cut ( y [i] (x [\] y) [<=] nil). auto.
+           intros x0 h1. absurd (In x0 y). cut (In x0 (x [\] y));eauto. eauto. } Qed.
+
+  Lemma xy_disj_with: (x [i] y) [i] (x [\] y) = empty.
+  Proof. { unfold empty. cut ( (x [i] y) [i] (x [\] y) [<=] nil). auto.
+           intros x0 h1. absurd (In x0 y). cut (In x0 (x [\] y)). eauto.
+           eauto. cut (In x0 (x [i] y)); eauto. } Qed.
+  
+
+  Hint Immediate union_minus_x union_minus_y union_as_disjoint_x union_as_disjoint_y: core.
+  Hint Resolve x_disj_with y_disj_with xy_disj_with yx_disj_with : core.
+  
+  Lemma inc_exc1: x [i] y = empty ->  | x [u] y | = |x| + |y|.
+  Proof. { intro h1. induction x.
+           { simpl;auto. } 
+           { simpl.
+             assert (h1a: (a :: l) [i] y [<=] empty). rewrite h1. auto.
+             assert (h1b: empty [<=] a :: l [i] y). rewrite h1. auto.
+             assert (h1c: l [i] y = empty).
+             { apply set_equal;unfold empty;(auto || constructor). 
+               intros x0 h2. apply h1a. cut (In x0 (a::l)). cut (In x0 y).
+               auto. eauto. eauto. auto. }
+             assert (h2:  (| add a (l [u] y) |) = S (|l [u] y|) ).
+             { cut (~ In a (l [u] y)). auto. cut (~ In a l). cut (~ In a y).
+               auto. intro h2. absurd (In a nil). auto. apply h1a. auto. auto. }
+             rewrite h2.
+             assert (h3:  (| l [u] y |) = (| l |) + (| y |)). eauto. rewrite h3.
+             omega. } } Qed.
+
+
+ 
 
     
 End MoreOrdSet.
@@ -611,4 +690,27 @@ End MoreOrdSet.
 
 Hint Resolve set_inter_elim15 set_inter_elim16: core.
 Hint Resolve set_union_intro15 set_union_intro16: core.
-Hint Resolve y_as_disj_sum: core.
+Hint Resolve y_as_disj_sum y_as_disj_sum1 y_as_disj_sum2: core.
+
+ Hint Immediate union_minus_x union_minus_y union_as_disjoint_x union_as_disjoint_y: core.
+ Hint Resolve x_disj_with y_disj_with xy_disj_with yx_disj_with : core.
+
+
+ Section Inc_Exc.
+
+  Context { A: ordType }. (* to declare A as implicit outside the section *)
+  Variable x y: list A.
+  Hypothesis hx: IsOrd x.
+  Hypothesis hy: IsOrd y.
+
+  Lemma inclusion_exclusion: | x [u] y | = |x| + |y| - | x [i] y |.
+  Proof. { assert (h1: | x [u] y | = |x| + | y [\] x |).
+           { replace (x [u] y) with (x [u] (y [\] x)).
+             eapply inc_exc1. auto. auto. symmetry;auto. }
+           assert (h2: | y | = |y [i] x| + | y [\] x |).
+           {  replace y with ((y [i] x) [u] (y [\] x)) at 1.
+              eapply inc_exc1. auto. auto. symmetry. auto. }
+           assert (h3: | x [i] y | = | y [i] x |).
+           { replace (x [i] y) with (y [i] x). auto. auto. } omega. } Qed.
+  
+  End Inc_Exc.
