@@ -477,7 +477,8 @@ Section OrderedSet.
   Hint Resolve inter_equal union_equal set_union_comm: core.
 
   Lemma union_intro7 (x y: list A)(a:A):  ~ In a y -> ~ In a x -> ~ In a (union x y).
-  Proof. Admitted.
+  Proof. { intros h1 h2 h3. cut (In a x \/ In a y).
+           intro h4. destruct h4; contradiction. auto. } Qed.
 
   Hint Immediate union_intro7: core.
 
@@ -637,10 +638,22 @@ Section MoreOrdSet.
            eauto. cut (In x0 x). auto. eauto. } } Qed.
 
   Lemma union_as_disjoint_x: (x [u] y) = x [u] (y [\] x).
-  Proof. Admitted.
+  Proof. { apply set_equal;auto. split.
+           { intros x0 h1. assert (h2: In x0 x \/ ~ In x0 x). eauto.
+             cut (In x0 x \/ In x0 y). intro h3.
+             destruct h2. auto. destruct h3. contradiction.
+             cut (In x0 (y [\] x)). all: auto.  }
+           { intros x0 h1. cut (In x0 x \/ In x0 (y [\] x)).
+             intro h2. destruct h2. auto. cut (In x0 y). auto. eauto. auto. } } Qed.
 
   Lemma union_as_disjoint_y: (x [u] y) = y [u] (x [\] y).
-  Proof. Admitted.
+  Proof.  { apply set_equal;auto. split.
+           { intros x0 h1. assert (h2: In x0 y \/ ~ In x0 y). eauto.
+             cut (In x0 x \/ In x0 y). intro h3.
+             destruct h2. auto. destruct h3.
+             cut (In x0 (x [\] y)). all: auto.  }
+           { intros x0 h1. cut (In x0 y \/ In x0 (x [\] y)).
+             intro h2. destruct h2. auto. cut (In x0 x). auto. eauto. auto. } } Qed.
   
   Lemma x_disj_with: x [i] (y [\] x) = empty.
   Proof. { unfold empty. cut (x [i] (y [\] x) [<=] nil). auto.
@@ -713,4 +726,6 @@ Hint Resolve y_as_disj_sum y_as_disj_sum1 y_as_disj_sum2: core.
            assert (h3: | x [i] y | = | y [i] x |).
            { replace (x [i] y) with (y [i] x). auto. auto. } omega. } Qed.
   
-  End Inc_Exc.
+ End Inc_Exc.
+
+ Hint Immediate inclusion_exclusion: core.
