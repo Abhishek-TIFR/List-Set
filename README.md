@@ -30,9 +30,9 @@ The project is split into the following files:
 
 13. Powerset.v: Power sets as sets
 
-14. DecUG.v: Undirected graphs with decidable edge relations.
+14. UG.v: Undirected graphs with decidable edge relations.
 
-15. MoreDecUG.v: Graph theory on decidable undirected graphs
+15. MoreUG.v: Graph theory on decidable undirected graphs
 
 16. IsoUG.v: Graph Isomorphism  
 
@@ -42,4 +42,4 @@ The project is split into the following files:
 
 
 The file sets.sh can be used to compile the files on sets and power sets (i.e. up to Powerset.v)
-The file graphs.sh can be used to compile the files on undirected graphs (i.e. DecUG.v MoreDecUG.v and IsoUG.v) 
+The file graphs.sh can be used to compile the files on undirected graphs (i.e. UG.v MoreUG.v and IsoUG.v) 
