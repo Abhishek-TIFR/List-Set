@@ -56,6 +56,15 @@ Section DecidableGraphs.
   Lemma sym_in_sub (l s: list A)(E: A->A-> bool): l [<=] s -> sym_in s E -> sym_in l E.
   Proof.  unfold sym_in. intros h1 h2. apply /forall_xyP. move /forall_xyP in h2. auto. Qed.
 
+  Lemma irefl_imp_irefl_in (l: list A)(E: A-> A-> bool): irefl E -> irefl_in l E.
+  Proof.  unfold irefl_in. unfold irefl.
+          intro H. apply /forallbP. intros. apply /negP. switch. auto. Qed.
+  
+  Lemma sym_imp_sym_in (l: list A)(E: A-> A-> bool): sym E -> sym_in l E.
+  Proof. unfold sym_in. unfold sym. intro H. apply /forall_xyP. intros;auto. Qed.
+
+  Hint Resolve irefl_imp_irefl_in sym_imp_sym_in: core.
+
   Hint Resolve irefl_in_sub sym_in_sub: core.
   
   Definition edg_only_at (K: list A)(E: A-> A-> bool):= forall x y, E x y -> (In x K /\ In y K).
@@ -438,7 +447,7 @@ Hint Resolve lt_graph_is_well_founded: core.
   
 End DecidableGraphs.
 
-
+Hint Resolve irefl_imp_irefl_in sym_imp_sym_in: core.
 Hint Resolve irefl_in_sub sym_in_sub: core.
 
 Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
