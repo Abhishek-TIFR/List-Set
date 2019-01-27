@@ -61,7 +61,7 @@ Section Repeat_node.
           destruct (x==a) eqn:Hxa.
           { case (y == a'). all: auto. }
           { destruct (y == a') eqn:Hya'.
-            { move /eqP in Hya'. subst y. absurd (In a' G). auto. eauto. }
+            { move /eqP in Hya'. subst y. absurd (In a' G). auto.  eauto. }
             { auto. } } } Qed.
 
    Lemma nw_edg_xy_xy1 (G: UG)(a a' x y:A)(P: In a G)(P': ~In a' G):
