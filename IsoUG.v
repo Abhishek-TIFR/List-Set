@@ -7,7 +7,7 @@ predicates:
 
 Definition iso (G G': @UG A) :=
      exists (f: A->A), (forall x, f (f x) = x) /\ (nodes G') = (img f G) /\
-                 (forall x y, edg G x y = edg G' (f x) (f y)).
+                 (forall x y, In x G -> In y G-> edg G x y = edg G' (f x) (f y)).
 
  Definition iso_using (f: A->A)(G G': @UG A) :=
      (forall x, f (f x) = x) /\ 
@@ -85,10 +85,11 @@ Section GraphIsomorphism.
 
    Definition iso (G G': @UG A) :=
      exists (f: A->A), (forall x, f (f x) = x) /\ (nodes G') = (img f G) /\
-                 (forall x y, edg G x y = edg G' (f x) (f y)).
+                 (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
 
    Definition iso_using (f: A->A)(G G': @UG A) :=
-     (forall x, f (f x) = x) /\ (nodes G') = (img f G) /\ (forall x y, edg G x y = edg G' (f x) (f y)).
+     (forall x, f (f x) = x) /\ (nodes G') = (img f G) /\
+     (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
 
    (*--------------------- properties of bijective function for isomorphism----------------*)
 
@@ -124,7 +125,7 @@ Section GraphIsomorphism.
    Hint Resolve f_is_one_one fx_is_one_one img_of_img img_of_img1: core.   
 
    (* ---------------------- Isomorphism is commutative and transitive------------------*)
-  Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
+   Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
     Proof. { intro H. destruct H as [Ha H]; destruct H as [Hb H].
            split.
            { auto. }
@@ -132,8 +133,17 @@ Section GraphIsomorphism.
            { rewrite Hb;  auto. }
            { intros; symmetry.
              replace (edg G' x y) with ( edg G' (f (f x)) (f (f y))).
-             auto.
-             replace (f (f x)) with x. replace (f (f y)) with y.
+             assert (H2: In (f x) G). 
+             { rewrite Hb in H0.
+               assert (h1: exists x0, In x0 G /\ x = f x0). auto.
+               destruct h1 as [x0 h1]. destruct h1 as [h1 h2].
+               subst x. specialize (Ha x0) as Hx0. rewrite Hx0. auto. }
+             assert (H3: In (f y) G).
+              { rewrite Hb in H1.
+               assert (h1: exists y0, In y0 G /\ y = f y0). auto.
+               destruct h1 as [y0 h1]. destruct h1 as [h1 h2].
+               subst y. specialize (Ha y0) as Hy0. rewrite Hy0. auto. }
+             auto. replace (f (f x)) with x. replace (f (f y)) with y.
              auto. all: symmetry;auto. } } Qed.
 
   Lemma iso_elim1 (G G': @UG A)(f: A->A)(x:A): iso_using f G G'-> In x G-> In (f x) G'.
@@ -191,12 +201,12 @@ Section GraphIsomorphism.
   Proof. { intros H H0.
          assert (H2: one_one_on G f). eauto.
          assert (H2a: one_one_on X f). eauto. auto. } Qed.
-
-  Lemma iso_edg1  (G G': @UG A)(f: A-> A)(x y:A): iso_using f G G' ->
+  
+   Lemma iso_edg1  (G G': @UG A)(f: A-> A)(x y:A): iso_using f G G' -> In x G -> In y G->
                                                 (edg G x y = edg G' (f x) (f y)).
   Proof. intro H;apply H. Qed.
 
-  Lemma iso_edg2  (G G': @UG A)(f: A-> A)(x y: A): iso_using f G G' ->
+  Lemma iso_edg2  (G G': @UG A)(f: A-> A)(x y: A): iso_using f G G' -> In x G'-> In y G'->
                                                 (edg G' x y = edg G (f x) (f y)).
   Proof. intro H0. cut (iso_using f G' G). intro H;apply H. auto. Qed.
 
@@ -204,22 +214,22 @@ Section GraphIsomorphism.
 
   Hint Immediate iso_cardinal iso_sub_cardinal iso_edg1 iso_edg2: core.
 
-  Lemma iso_edg3  (G G': @UG A)(f: A-> A)(x y:A): iso_using f G G' ->
+   Lemma iso_edg3(G G': @UG A)(f: A-> A)(x y:A): iso_using f G G' -> In x G -> In y G->
                                                 edg G x y -> edg G' (f x) (f y).
-  Proof. intro H; replace (edg G' (f x) (f y)) with (edg G x y); eauto. Qed.
+  Proof.  intros; replace (edg G' (f x) (f y)) with (edg G x y); auto.  Qed.
 
-  Lemma iso_edg4  (G G': @UG A)(f: A-> A)(x y: A): iso_using f G G' ->
-                                                ~ edg G' x y -> ~ edg G (f x) (f y).
-  Proof. intro H; replace (edg G' (f x) (f y)) with (edg G x y); eauto. Qed.
+  Lemma iso_edg4  (G G': @UG A)(f: A-> A)(x y: A): iso_using f G G' -> In x G -> In y G-> 
+                                                ~ edg G x y -> ~ edg G' (f x) (f y).
+  Proof. intros ; replace (edg G' (f x) (f y)) with (edg G x y); auto. Qed.
 
   Hint Immediate iso_edg3 iso_edg4: core.
 
 
   (* ------------- Isomorphism preserves Cliques and Cliq_num for a graph-----------------*)
-  
-  Lemma iso_cliq (G G': @UG A)(f: A-> A)(K: list A):
-    iso_using f G G' -> Cliq G K -> Cliq G' (img f K).
-  Proof. {  unfold Cliq. intros H H1.  intros x y Hx Hy.
+
+   Lemma iso_cliq (G G': @UG A)(f: A-> A)(K: list A):
+    iso_using f G G' -> K [<=] G-> Cliq G K -> Cliq G' (img f K).
+  Proof. {  unfold Cliq. intros H H1 h1.  intros x y Hx Hy.
           assert (H2: exists x0, In x0 K /\ x = f x0). auto.
           destruct H2 as [x0 H2]. destruct H2 as [H2a H2b].
           assert (H3: exists y0, In y0 K /\ y = f y0). auto.
@@ -229,14 +239,15 @@ Section GraphIsomorphism.
           destruct H2.
           { left. subst x0. auto. }
           { right. replace (edg G' (f x0) (f y0)) with (edg G x0 y0).
-            auto. apply H. }  }  Qed.
+            auto. apply H. all: auto. }  }  Qed.
   
-   Lemma iso_cliq1 (G G': @UG A)(K: list A): iso G G' -> Cliq G K -> NoDup K ->
+  Lemma iso_cliq1 (G G': @UG A)(K: list A): iso G G' -> K [<=] G -> Cliq G K -> NoDup K ->
                                            (exists K', Cliq G' K' /\ |K|=|K'|).
-  Proof. { intros H H1 H2. destruct H as [f H].
+  Proof. { intros H h1 H1 H2. destruct H as [f H].
          exists (img f K). split. eauto using iso_cliq.
          assert (H3: one_one_on K f). eauto.
          auto. } Qed.
+  
 
   Lemma iso_cliq_in (G G': @UG A)(f: A-> A)(K: list A):
     iso_using f G G' -> Cliq_in G K -> Cliq_in G' (img f K).
@@ -282,8 +293,8 @@ Section GraphIsomorphism.
   (*---------- Isomorphism preserves Stable set and i_num ----------------------------*)
 
    Lemma iso_stable (G G': @UG A)(f: A-> A)(I: list A):
-    iso_using f G G' -> Stable G I -> Stable G' (img f I).
-  Proof. {  unfold Stable. intros H H1.  intros x y Hx Hy.
+    iso_using f G G' -> I [<=] G-> Stable G I -> Stable G' (img f I).
+  Proof. {  unfold Stable. intros H h1 H1.  intros x y Hx Hy.
           assert (H2: exists x0, In x0 I /\ x = f x0). auto.
           destruct H2 as [x0 H2]. destruct H2 as [H2a H2b].
           assert (H3: exists y0, In y0 I /\ y = f y0). auto.
@@ -291,11 +302,11 @@ Section GraphIsomorphism.
           replace x with (f x0). replace y with (f y0).
           assert (H2: edg G x0 y0 = false). auto. 
           replace (edg G' (f x0) (f y0)) with (edg G x0 y0).
-            auto. apply H. } Qed.
+            auto. apply H. all: auto. } Qed.
   
-   Lemma iso_stable1 (G G': @UG A)(I: list A): iso G G' -> Stable G I -> NoDup I ->
+   Lemma iso_stable1 (G G': @UG A)(I: list A): iso G G' -> I [<=] G-> Stable G I -> NoDup I ->
                                            (exists I', Stable G' I' /\ |I|=|I'|).
-  Proof. { intros H H1 H2. destruct H as [f H].
+  Proof. { intros H h1 H1 H2. destruct H as [f H].
          exists (img f I). split. eauto using iso_stable.
          assert (H3: one_one_on I f). eauto.
          auto. } Qed.
@@ -340,7 +351,7 @@ Section GraphIsomorphism.
   
   Hint Immediate max_I_in_G' i_num_G': core.
 
-  (*----------- Isomorphism , graph coloring and chromatic number-------------------------*)
+  (*----------- Isomorphism, graph coloring and chromatic number -------------------------*)
   
   
   Lemma iso_coloring (G G': @UG A)(f: A->A)(C: A->nat):
@@ -378,7 +389,7 @@ Section GraphIsomorphism.
   Hint Immediate chrom_num_G': core.
 
 
-  (*------------Isomorphism , nice graphs and perfect graph--------------------------------*)
+  (*------------Isomorphism, nice graphs and perfect graph--------------------------------*)
 
   Lemma nice_G' (G G': @UG A): iso G G' -> Nice G -> Nice G'.
   Proof. { intro H.  assert (H0: iso G' G). auto.
@@ -387,7 +398,8 @@ Section GraphIsomorphism.
 
   Lemma iso_subgraphs (G G' H: @UG A)(f: A->A):
     iso_using f G G' -> Ind_subgraph H G -> (exists H', Ind_subgraph H' G' /\ iso_using f H H').
-  Proof.  { intros F1 F2. assert (F0: iso_using f G' G). auto. 
+  Proof.  { intros F1 F2.
+            assert (F0: iso_using f G' G). auto. 
             assert (Nk: IsOrd (img f H)). auto.
             pose H' := (Ind_at (img f H) G').
             exists H'.
@@ -406,41 +418,20 @@ Section GraphIsomorphism.
             {  unfold Ind_subgraph. split.
                { auto. }
                { unfold H'. simpl. intros. symmetry. auto. } }
-            (* iso_using f H H' *)
-            { (* unfold H'. *) unfold iso_using.
+           
+            {  (* iso_using f H H' *)
+              unfold iso_using.
               split.
               { apply F1. }
               split.
               { simpl. symmetry. auto.  }
               { (* forall x y : A, edg H x y = edg (Ind_at Nk G') (f x) (f y) *)
-              simpl. intros x y.
-              assert (Hx: In x H \/ ~In x H). eauto.
-              assert (Hy: In y H \/ ~In y H). eauto.
-              destruct Hx; destruct Hy.
-              { (* Case1: In x H /\ In y H *)
-                replace (edg H x y) with (edg G x y). rewrite <- h2.
-                assert (H2: In (f x) (img f H)). auto.
-                assert (H3: In (f y) (img f H)). auto.
-                replace ((edg G' at_ img f H) (f x) (f y)) with (edg G' (f x)(f y)).
-                auto. auto. symmetry. auto. }
-              { (* Case2: In x H /\ ~ In y H *)
-                assert (H2: ~ In (f y) (img f H)).
-                { intro H2. apply H1. cut (one_one f); eauto. }
-                  rewrite <- h2.
-                  replace ((edg G' at_ img f H) (f x) (f y)) with false.
-                switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
-              { (* Case3: ~ In x H /\ In y H *)
-                assert (H2: ~ In (f x) (img f H)).
-                { intro H2. apply H0. cut (one_one f); eauto. } 
-                  rewrite <- h2. replace ((edg G' at_ img f H) (f x) (f y)) with false.
-                switch. eauto. symmetry. switch. intro H3. apply H2. eauto. }
-              { (* Case4: ~ In x H /\ ~ In y H *)
-                assert (H2: ~ In (f y) (img f H)).
-                { intro H2. apply H1. cut (one_one f); eauto. } 
-                  rewrite <- h2. replace ((edg G' at_ img f H) (f x) (f y)) with false.
-                switch. eauto. symmetry. switch. intro H3. apply H2. eauto. } } }  } Qed. 
-            
+                simpl. intros x y Hx Hy.
+                replace (edg H x y) with (edg G x y).
+                cut (In y G). cut (In x G). auto.
+                apply F2; auto. apply F2; auto. symmetry; auto. } } } Qed.
 
+ 
   Lemma perfect_G' (G G': @UG A): iso G G' -> Perfect G -> Perfect G'.
   Proof. { intro F.  assert (F0: iso G' G). auto.
          unfold Perfect. destruct F0 as [f F0].
