@@ -110,12 +110,21 @@ Section Repeat_node.
 
    Definition Repeat_in (G: @UG A)(a: A)(a':A): @UG A.
     refine({| nodes:= add a' G; edg:= (ex_edg G a a');
-           |}); unfold ex_edg.  apply /isOrdP. all: auto. Defined.
+           |}); unfold ex_edg.  all: auto. Defined.
 
   Variable G: @UG A.
   Variable a a': A.
 
   Let G':= (Repeat_in G a a').
+
+  Hypothesis out_edg: forall x y, edg G x y -> (In x G /\ In y G).
+
+  Lemma no_edg1 (x y:A): edg G x y -> In x G.
+  Proof. intros. eapply out_edg. eauto. Qed.
+  Lemma no_edg2 (x y:A): edg G x y -> In y G.
+  Proof. intros. eapply out_edg. eauto. Qed.
+
+  Hint Resolve no_edg1 no_edg2: core.
 
   Lemma edge_aa': In a G-> a<>a' ->(edg G') a a'.
   Proof.  { simpl. intros H H1.  unfold ex_edg.  auto. } Qed.
@@ -125,24 +134,29 @@ Section Repeat_node.
          assert (H2: a <> a'). intro Heq; subst a; contradiction.
          apply edge_aa';auto. } Qed.
 
-  Lemma Exa_E'xa' (x: A)(P: In a G)(P': ~In a' G): In x G -> (edg G) x a-> (edg G') x a'.
-  Proof. { simpl. intros Hb H. unfold ex_edg. 
+  Lemma Exa_E'xa' (x: A)(P: In a G)(P': ~In a' G):(edg G) x a-> (edg G') x a'.
+  Proof. { simpl. intros H.
+           assert (Hb: In x G). eauto. unfold ex_edg. 
            assert (Ha: a <> a'). intro; subst a; contradiction. 
            assert (Hc: x <> a'). intro; subst x; contradiction.  
            auto. } Qed.
 
-  Lemma Eay_E'a'y (y: A)(P: In a G)(P': ~In a' G): In y G -> (edg G) a y -> (edg G') a' y.
-  Proof. intros h0 h. apply sym_edg; simpl; auto.
-         cut (edg G y a = true). intro h1. apply Exa_E'xa'. all: auto. Qed.
+  Lemma Eay_E'a'y (y: A)(P: In a G)(P': ~In a' G): (edg G) a y -> (edg G') a' y.
+  Proof. { intros h. assert (h0: In y G). eauto.
+           apply sym_edg; simpl; auto.
+           cut (edg G y a = true). intro h1. apply Exa_E'xa'. all: auto. } Qed.
   
 
    Lemma a_not_eq_a' (P: In a G)(P': ~In a' G): a <> a'.
    Proof. intro. subst a. absurd (In a' G); auto. Qed.
 
-  Hint Resolve edge_aa' edg_aa' Exa_E'xa' Eay_E'a'y a_not_eq_a': core.
+  Hint Resolve edge_aa' edg_aa' Exa_E'xa' Eay_E'a'y a_not_eq_a': core. 
    
-  Lemma Exy_E'xy (x y:A)(P: In a G)(P': ~In a' G): In x G-> In y G-> edg G x y -> edg G' x y.
-  Proof. { intros Hx Hy H. simpl. unfold ex_edg. 
+  Lemma Exy_E'xy (x y:A)(P: In a G)(P': ~In a' G): edg G x y -> edg G' x y.
+  Proof. { intros H.
+           assert (Hx: In x G). eauto.
+           assert (Hy: In y G). eauto.
+           simpl. unfold ex_edg. 
            assert (Hxy: x=y \/ x<>y). eauto.
            destruct Hxy. 
            { subst x; absurd (edg G y y); auto. }
@@ -151,7 +165,6 @@ Section Repeat_node.
   Hint Immediate Exy_E'xy: core.
 
  
-
   (* --- following three results true only for x y both in G  --- *)
   
   Lemma In_E'xy_Exy (x y:A)(P: In a G)(P': ~In a' G):
@@ -198,7 +211,18 @@ Section Repeat_node.
              { replace (nw_edg G a a' y x) with (edg G y x).
                auto. auto. }
              auto. } } Qed.
-    Hint Immediate E'xy_Exy: core.
+    Lemma Exy_E'xy1 (x y:A)(P: In a G)(P': ~In a' G):
+      x<>a'-> y<>a'-> edg G x y -> edg G' x y.
+    Proof. { intros H1 H2 H3. unfold G'. simpl.
+             unfold ex_edg.
+             assert (H4: x <> y).
+             { intro h1. subst y. absurd (edg G x x); auto. }
+             cut ((nw_edg G a a') x y = true). auto.
+             (*---nw_edg G a a' x y = true ---*)
+             unfold nw_edg. replace (y==a') with false.
+             destruct (x==a);auto. auto. } Qed.
+    
+    Hint Immediate E'xy_Exy Exy_E'xy1: core.
 
     Lemma Exy_eq_E'xy (x y:A)(P: In a G)(P': ~In a' G):
       x <> a'-> y<> a'->  edg G x y = edg G' x y.
@@ -208,26 +232,29 @@ Section Repeat_node.
     Hint Immediate Exy_eq_E'xy: core.
 
     (*------------- other special cases of interest------------*)
-   Lemma E'xa_Exa (x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G' x a -> edg G x a.
+
+    Lemma E'xa_Exa (x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G' x a -> edg G x a.
       Proof. intros. apply E'xy_Exy;auto. Qed.
    
    Lemma E'xa'_Exa (x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'-> edg G' x a' -> edg G x a.
     Proof. { intros H1 H2. simpl.  unfold ex_edg.
            apply /impP.
            destruct (edg G x a) eqn:H3.
-           { right_;auto. }
+           { right_;auto. } 
            { switch_in H3. left_. apply /negP.
              assert (H3b: ~ edg G a x); auto.
              assert (H4a: ~ (nw_edg G a a') x a' ).
              { replace (nw_edg G a a' x a') with (edg G x a); auto. }
              assert (H4b: ~ (nw_edg G a a') a' x ).
-             { replace (nw_edg G a a' a' x) with (edg G a' x). auto. auto. }
+             { replace (nw_edg G a a' a' x) with (edg G a' x).
+               intro h1. absurd (In a' G); auto.
+               cut (In a' G /\ In x G). tauto. auto. auto. }
              auto. } } Qed.
 
    Lemma Exa_eq_E'xa'(x:A)(P: In a G)(P': ~In a' G): x <> a-> x<> a'->  edg G x a = edg G' x a'.
-   Proof. { intros H1 H2.
+   Proof. intros H1 H2.
           assert (H3: edg G x a -> edg G' x a'). auto.
-          assert (H4: edg G' x a' -> edg G x a). auto using E'xa'_Exa. auto. } Qed.
+          assert (H4: edg G' x a' -> edg G x a). auto using E'xa'_Exa. auto.  Qed.
             
   Lemma Eay_eq_E'a'y (y:A)(P: In a G)(P': ~In a' G): y<>a -> y<> a' -> edg G a y = edg G' a' y.
   Proof. { replace (edg G a y) with (edg G y a);
@@ -267,6 +294,8 @@ Section Repeat_node.
 
    Hint Resolve Ind_sub_GG': core.
 
+   
+
    (* The term G'_a is used to define the induced subgraph of G' at G' \ {a} *)
    (*-------------------- G'_a is isomorphic to G  -----------------------*)
 
@@ -277,7 +306,7 @@ Section Repeat_node.
    Let G'_a:= (Ind_at (rmv a G') G').
 
    (*  Definition Ind_at (K: list A)(G: UG): UG.
-     refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined. *)
+     refine {|nodes:= (inter K G); edg:= G.(edg); |}. all: auto. Defined. *)
 
    Lemma NG'_a: N'_a = nodes (Ind_at N'_a G').
    Proof.  apply set_equal;auto. unfold N'_a. auto. 
@@ -357,12 +386,13 @@ Section Repeat_node.
    
    (* -----   fact: f preserves edg relation ----- *)
    Lemma f_preserves_edg (P: In a G)(P': ~ In a' G)(x y:A):
-     edg G x y = edg (Ind_at N'_a G') (f x) (f y).
-   Proof. {  assert (H0: a <> a'). auto.
+     In x G -> In y G -> edg G x y = edg (Ind_at N'_a G') (f x) (f y).
+   Proof. { intros hx hy.  assert (H0: a <> a'). auto.
           assert (H0a: a == a' = false). switch. move /eqP. auto.
           assert (H0b: (rmv a G') [<=] G'). auto.
-          assert (H0c: forall x, x <> a -> memb x G'= memb x (rmv a G')). auto.
-          assert (H0d: In a' G'). simpl;  auto.
+          
+          assert (H0d: In a' G'). simpl;  auto. 
+         
           destruct (x==y) eqn: Hxy.
           { (* when x =y : easy case*)
             assert (H1: x=y). auto. subst y.
@@ -379,51 +409,29 @@ Section Repeat_node.
               rewrite H.
               destruct (y == a') eqn: Hya'.
               { (*when y=a'*)
-                assert (y=a'). auto. subst y.
-                replace (edg G a a') with false.
-                symmetry;switch. cut (~ In a (Ind_at N'_a G')).
-                eauto. rewrite <- NG'_a; unfold N'_a. cut (NoDup G'); auto.
-                symmetry. switch. cut (~ In a' G); eauto. }
+                assert (y=a'). auto. subst y. contradiction. }
               { (*when y <> a'*)
                 assert (y<>a'). move /eqP. switch. auto. 
                 replace (edg G a y) with (edg G' a' y). 
                 Focus 2. symmetry. apply Eay_eq_E'a'y;auto.
-                assert (H3: In a' (rmv a G')). simpl. auto.
-                assert (H3a: memb a' G' = memb a' (rmv a G')). symmetry; auto.
-                assert (H4: memb y G' = memb y (rmv a G')); auto. } }
+                assert (H3: In a' (rmv a G')). simpl. all: auto. } } 
             { (*when x<>a*)
               assert (x<> a). move /eqP. switch; auto.
               destruct (x==a') eqn: Hxa'.
               { (* when x =a'*)
-                assert (x=a'). auto. subst x.
-                replace (edg G a' y) with false.
-                Focus 2. symmetry; switch; eauto.
-                symmetry. replace (y==a') with false.
-                switch. cut (~ In a (Ind_at N'_a G')). eauto.
-                rewrite <- NG'_a; unfold N'_a. cut (NoDup G');auto. rewrite <- Hxy. auto. }
+                assert (x=a'). auto. subst x. contradiction. }
               { (* when x <> a'*)
                 assert (x<> a'). switch_in Hxa'. intro H2; apply Hxa'; auto.
                 destruct (y==a) eqn: Hya; destruct (y== a') eqn: Hya'.
                 { move /eqP in Hya. move /eqP in Hya'. subst y. contradiction. }
                 { move /eqP in Hya. subst y.
                   replace (edg G x a) with (edg G' x a').
-                  Focus 2. auto.
-                  assert (memb x G' = memb x (rmv a G')). auto.
-                  assert (memb a' G' = memb a' (rmv a G')). auto.
-                  auto. }
-                { move /eqP in Hya'. subst y.
-                  replace (edg G x a') with false.
-                  symmetry. switch.
-                  cut (~ In a (Ind_at N'_a G')). eauto.
-                  rewrite <- NG'_a; unfold N'_a. cut (NoDup G'); auto.
-                  symmetry;switch. eauto. }
+                  Focus 2. auto. auto. }
+                { move /eqP in Hya'. subst y. contradiction. } 
                 { assert (y<>a). move /eqP; switch; auto.
                   assert (y<>a'). move /eqP; switch; auto.
                   replace (edg G x y) with (edg G' x y).
-                  Focus 2. auto.
-                  assert (memb x G' = memb x (rmv a G')). auto.
-                  assert (memb y G' = memb y (rmv a G')). auto.
-                  auto. } } } }  } Qed.
+                  Focus 2. auto. auto. } } } }  } Qed.
                   
    Lemma G_iso_G'_a (P: In a G)(P': ~ In a' G): iso_using f G (Ind_at N'_a G').
    Proof. { assert (H0: a <> a'). auto.
@@ -444,9 +452,9 @@ Section Repeat_node.
 End Repeat_node.
 
  Hint Resolve edge_aa' edg_aa' Exa_E'xa' Eay_E'a'y a_not_eq_a': core.
- Hint Immediate Exy_E'xy: core.
+ Hint Immediate Exy_E'xy Exy_E'xy1: core.
  Hint Immediate In_E'xy_Exy In_E'xy_Exy1 In_Exy_eq_E'xy: core.
- Hint Immediate E'xy_Exy: core.
+ Hint Immediate E'xy_Exy : core.
  Hint Immediate Exy_eq_E'xy: core.
  Hint Immediate E'xa_Exa E'xa'_Exa Exa_eq_E'xa' Eay_eq_E'a'y: core.
  Hint Immediate E'xa_E'xa' E'xa'_E'xa: core.
