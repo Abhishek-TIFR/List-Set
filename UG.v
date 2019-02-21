@@ -56,11 +56,21 @@ Section DecidableGraphs.
                         nodes_IsOrd : IsOrd nodes;
                         edg: A-> A -> bool;
                         edg_irefl: irefl edg;
-                        edg_sym: sym edg
+                        edg_sym: sym edg;
+                        out_edg: edg only_at nodes             
                    }.
   
-  Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
+  Hint Resolve nodes_IsOrd edg_irefl edg_sym out_edg: core.
   Hint Resolve IsOrd_S: core.
+
+  Lemma no_edg1(G:UG)(x y:A): edg G x y -> In x G.
+  Proof. apply out_edg. Qed.
+  Lemma no_edg2 (G:UG)(x y:A): edg G x y -> In y G.
+  Proof. apply out_edg. Qed.
+  Lemma no_edg (G:UG)(x y:A): edg G x y -> (In x G /\ In y G).
+  Proof. apply out_edg. Qed.
+
+  Hint Resolve  no_edg1 no_edg2 : core.
   
   (*------ Following declaration expresses that nodes of Graph are ordered sets -----------*)
 
@@ -76,10 +86,13 @@ Section DecidableGraphs.
   Proof. intros H Hxy; subst x; absurd (edg G y y); [ switch;apply edg_irefl | auto]. Qed.
   Lemma no_self_edg1 (G: UG)(x:A): ~ edg G x x.
   Proof. intros H. absurd (edg G x x); [ switch;apply edg_irefl | auto]. Qed.
+  Lemma no_self_edg2 (G: UG)(x:A): edg G x x = false.
+  Proof. apply edg_irefl. Qed.
+  
   Lemma sym_edg (G: UG)(x y:A): edg G x y -> edg G y x.
     Proof. rewrite edg_sym; auto. Qed.
 
-    Hint Resolve  no_self_edg no_self_edg1 : core.
+    Hint Resolve  no_self_edg no_self_edg1 no_self_edg2 : core.
     Hint Immediate edg_sym sym_edg: core.
 
  (*------------------------ Essentially Equal Graphs are Isomorphic --------------------*)
@@ -158,6 +171,68 @@ Hint Resolve lt_graph_is_well_founded: core.
            destruct (x== y) eqn:H1;destruct (y == x) eqn:H2. auto.
            move /eqP in H1; subst x; by_conflict.
            move /eqP in H2; subst x; by_conflict. auto.  } Qed.
+
+   (*------------------ E at_ K := relation E restricted on the set of nodes K ------------*)
+  Definition E_res_to (K: list A)(E: A-> A-> bool)(x y:A):bool:= match (memb2 x y K) with
+                                                            |true => E x y
+                                                            |false => false
+                                                            end.
+   Notation "E 'at_' K":= (E_res_to K E)(at level 70).
+
+   Lemma edg_equal_at_K (K: list A)(E: A-> A-> bool)(x y: A):
+     In x K -> In y K -> E x y = (E at_ K) x y.
+   Proof. { intros H1 H2. assert (H3: memb2 x y K).
+            apply /memb2P. split; auto. unfold E_res_to. rewrite H3. reflexivity. } Qed.  
+   
+   Lemma no_edg_E_at_K (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> (In x K /\ In y K).
+   Proof. { intros x y. unfold E_res_to. destruct (memb2 x y K)  eqn: H.
+          intro H1. assert(H2: IN x y K). apply /memb2P. eauto. auto.
+          intro H1. inversion H1. } Qed.
+   Lemma no_edg_E_at_K1 (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> In x K.
+   Proof. intros x y H; apply no_edg_E_at_K in H; tauto.  Qed.
+   Lemma no_edg_E_at_K2 (E: A-> A-> bool)(K: list A): forall x y, (E at_ K) x y-> In y K.
+   Proof. intros x y H; apply no_edg_E_at_K in H; tauto.  Qed.
+   
+   Hint Immediate no_edg_E_at_K1 no_edg_E_at_K2 no_edg_E_at_K : core.
+   
+   Lemma Exy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A):
+     In x K -> In y K -> E x y -> (E at_ K) x y.
+   Proof. intros H1 H2 H3; unfold E_res_to; replace (memb2 x y K) with true.
+          auto. symmetry;apply /memb2P; split;auto. Qed.
+   Lemma Exy_inv_for_at_K1 (K: list A)(E: A-> A-> bool)(x y: A): (E at_ K) x y -> E x y.
+   Proof. unfold E_res_to. destruct (memb2 x y K); auto. Qed.
+   Lemma negExy_inv_for_at_K (K: list A)(E: A-> A-> bool)(x y: A): ~ E x y -> ~ (E at_ K) x y.
+   Proof. intros H H0. apply H. eauto using Exy_inv_for_at_K1. Qed.
+
+   
+   Hint Resolve Exy_inv_for_at_K edg_equal_at_K: core.
+
+   Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
+   
+   Lemma only_at_inv_for_E_at_K1 (E: A-> A-> bool)(K: list A): (E at_ K) only_at K.
+   Proof. unfold "only_at". eapply no_edg_E_at_K. Qed.
+   Lemma only_at_inv_for_E_at_K (G: UG)(K: list A): ((edg G) at_ K) only_at K.
+   Proof. simpl. apply only_at_inv_for_E_at_K1. Qed.
+
+   (*------  E at_ K preserves the irreflexive and symmetric property of relation----------- *)
+   Lemma irefl_inv_for_E_at_K (E: A-> A-> bool)(K: list A): irefl E -> irefl (E at_ K).
+   Proof. unfold irefl. intros H x. unfold "at_". destruct (memb2 x x K) eqn:H1.
+          auto. auto.  Qed.
+   Lemma sym_inv_for_E_at_K(E: A-> A-> bool)(K: list A): sym E -> sym (E at_ K).
+   Proof. { unfold sym. intros H x y. unfold "at_".
+          destruct (memb2 x y K) eqn:H1. destruct (memb2 y x K) eqn: H2.
+          auto. assert (H3: memb2 y x K = memb2 x y K).
+          eauto.  rewrite H1 in H3; rewrite H2 in H3; discriminate H3.
+          replace (memb2 y x K) with (memb2 x y K).
+          rewrite H1;simpl; auto. eauto.  } Qed.
+
+   (*--------- mk_irefl and mk_sym preserves the " E only_at K" property of relation-----------*)
+   Lemma only_at_inv_for_mk_irefl(E:A-> A-> bool)(K:list A): E only_at K -> (mk_irefl E) only_at K.
+   Proof. { unfold "only_at". intro H. intros x y. unfold mk_irefl. case (x == y).
+          intros H2. inversion H2. intros H1. apply H;auto. } Qed.
+   Lemma only_at_inv_for_mk_sym(E: A-> A-> bool)(K:list A): E only_at K -> (mk_sym E) only_at K.
+   Proof. { unfold "only_at". intros H x y. unfold mk_sym. move /orP. intro H1.
+            elim H1. auto.  intro H2. cut (In y K /\ In x K). tauto. auto. } Qed.
   
 
    (*-------compl inverts a relation at every point while preserving irreflexivity-------- *)
@@ -186,9 +261,18 @@ Hint Resolve lt_graph_is_well_founded: core.
             case (x == y) eqn:H1; case (y == x) eqn:H2.
             auto. move /eqP in H1. by_conflict. move /eqP in H2. by_conflict.  auto. } Qed.
   
-   Hint Resolve mk_ireflP mk_symP complP complP1: core.
+  (* Hint Resolve mk_ireflP mk_symP complP complP1: core.
    Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl : core.
-   Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl : core.
+   Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl : core. *)
+
+   Hint Resolve mk_ireflP mk_symP complP complP1: core.
+   Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
+   Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl sym_inv_for_E_at_K: core.
+   Hint Resolve  only_at_inv_for_E_at_K only_at_inv_for_E_at_K1: core.
+   Hint Resolve only_at_inv_for_mk_irefl only_at_inv_for_mk_sym: core.
+   Hint Resolve edg_equal_at_K: core.
+
+
 
    (*------Concepts of Subgraph and the Induced Subgraph of a given  graph G ---------- *)
    Definition Subgraph (G1 G2: UG): Prop := G1 [<=] G2 /\
@@ -260,29 +344,67 @@ Hint Resolve lt_graph_is_well_founded: core.
    Hint Resolve subgraphP ind_subgraphP: core.
    Hint Resolve self_is_induced induced_is_subgraph: core.
 
-    (*------------ Complement of a graph G and its edge relation--------------------- *)
+   (*------------ Complement of a graph G and its edge relation--------------------- *)
+
+    Lemma only_at_inv_for_compl1 (E:A-> A-> bool)(K:list A): ((compl E) at_ K) only_at K.
+  Proof. { unfold "only_at". intros x y. unfold compl. unfold "at_".
+         case (memb2 x y K) eqn: H.
+         intro H1. cut (IN x y K). unfold IN;tauto. apply /memb2P; eauto.
+         intro H1; discriminate H1. } Qed.
+  Lemma only_at_inv_for_compl (G:UG): ((compl (edg G)) at_ G) only_at G.
+  Proof. eapply only_at_inv_for_compl1. Qed.
+  
+  
+  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
 
   Definition Compl (G: UG): UG.
     refine ({|nodes:= G.(nodes);
              nodes_IsOrd := G.(nodes_IsOrd);
-             edg:= (compl G.(edg)); |}). all: auto. Defined.
+             edg:= (compl G.(edg)) at_ G.(nodes); |}). all: auto. Defined.
 
   (* Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
      refine {|nodes:= K; nodes_IsOrd := Pk;
               edg:= (G.(edg) at_ K); |}. all: auto. Defined. *)
 
-   Definition Ind_at (K: list A)(G: UG): UG.
+  (* Definition Ind_at (K: list A)(G: UG): UG.
      refine {|nodes:= (inter K G); edg:= (G.(edg)); |}. all: auto. Defined.  
 
-   Lemma induced_fact1: forall (K:list A) (G: UG),
+   Lemma Induced_fact1: forall (K:list A) (G: UG),
         K[<=]G -> Ind_subgraph (Ind_at K G) G.
    Proof. { intros K G H. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed.
 
    (*------------ description of the following lemma while explainig Ind_at ----------- *)
 
-   Lemma induced_fact2 (K:list A) (G: UG)(x y:A): edg G x y = edg (Ind_at K G) x y.
+   Lemma Induced_fact2 (K:list A) (G: UG)(x y:A): edg G x y = edg (Ind_at K G) x y.
    Proof.  simpl. auto. Qed.
+
+
+   Hint Immediate Induced_fact1 Induced_fact2: core. *)
+
+    Definition ind_at (K: list A)(G: UG): UG.
+     refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined.  
+
+   Lemma induced_fact1: forall (K:list A) (G: UG),
+        K[<=]G -> Ind_subgraph (ind_at K G) G.
+   Proof. { intros K G H. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed. 
+
+   (*------------ description of the following lemma while explainig Ind_at ----------- *)
+
+   Lemma induced_fact2 (K:list A) (G: UG)(x y:A):
+     K[<=]G -> (memb x G = memb x K)-> (memb y G = memb y K)-> edg G x y = edg (ind_at K G) x y.
+   Proof. { intros H H1 H2. simpl. unfold "at_".
+            assert (h3: K [=] (inter K G)). auto.
+            replace ( memb2 x y (inter K G)) with ( memb2 x y K).
+            Focus 2. auto.
+          destruct (memb2 x y K) eqn: H3.
+          { auto. }
+          { assert (H4: (memb2 x y G) = false).
+            unfold memb2. rewrite H1. rewrite H2. apply H3.
+            switch. intro H5.
+            assert (H6: In x G). eapply no_edg;eauto.
+            assert (H7: In y G). eapply no_edg;eauto.
+            move /memb2P in H4. absurd (IN x y G). auto. split; auto. } } Qed.
 
 
    Hint Immediate induced_fact1 induced_fact2: core.
@@ -291,23 +413,28 @@ End DecidableGraphs.
 
 
 Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
+Hint Resolve no_edg1 no_edg2: core.
 
- Hint Resolve  no_self_edg no_self_edg1 : core.
+ Hint Resolve  no_self_edg no_self_edg1 no_self_edg2 : core.
  Hint Immediate edg_sym sym_edg: core.
+ 
 
  Hint Resolve lt_graph_is_well_founded: core.
  
  Hint Resolve IsOrd_S: core.
 
  Hint Resolve Exy_inv_for_mk_irefl1 Exy_inv_for_mk_sym Exy_inv_for_mk_sym1: core.
- 
+ Hint Immediate no_edg_E_at_K1 no_edg_E_at_K2  no_edg_E_at_K: core.
+ Hint Resolve Exy_inv_for_at_K edg_equal_at_K: core.
 
- Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym : core.
+ Hint Resolve negExy_inv_for_mk_irefl negExy_inv_for_mk_sym negExy_inv_for_at_K: core.
   
  Hint Resolve mk_ireflP mk_symP complP complP1: core.
- Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl : core.
- Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl : core.
-
+ Hint Resolve irefl_inv_for_mk_sym irefl_inv_for_compl irefl_inv_for_E_at_K: core.
+ Hint Resolve sym_inv_for_mk_irefl sym_inv_for_compl sym_inv_for_E_at_K: core.
+ Hint Resolve  only_at_inv_for_E_at_K only_at_inv_for_E_at_K1: core.
+ Hint Resolve only_at_inv_for_mk_irefl only_at_inv_for_mk_sym: core.
+ Hint Resolve edg_equal_at_K: core.
  
  Hint Immediate Ind_subgraph_elim1 Ind_subgraph_elim2: core.
 
@@ -316,12 +443,20 @@ Hint Resolve nodes_IsOrd edg_irefl edg_sym: core.
 
  Hint Resolve subgraphP ind_subgraphP: core.
  Hint Resolve self_is_induced induced_is_subgraph: core.
+ Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
+ 
+ (* Hint Immediate Induced_fact1 Induced_fact2: core. *)
  Hint Immediate induced_fact1 induced_fact2: core.
     
 
-  Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
-  Hint Unfold edg_only_at.
+ Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
+ Notation "E 'at_' K":= (E_res_to K E)(at level 70).
+ Hint Unfold edg_only_at.
+
+
+
+
 
 
 
