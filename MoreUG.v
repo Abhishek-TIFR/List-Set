@@ -70,10 +70,12 @@ Section MoreOnDecidableGraphs.
   Lemma nil_is_stable (G: UG): stable G nil.
   Proof. unfold stable. apply /forall_xyP. auto. Qed.
 
+  Hint Resolve Stable_elim:core.
   
   Hint Resolve Stable_in_elim Stable_in_elim1 Stable_in_elim2: core.
   Hint Resolve stableP nil_is_stable: core.
   
+  (*------ Largest stable set and its properties------------------------------*)
   Definition Max_I_in (G: UG)(I: list A):= Max_sub_in G I (fun I => stable G I).
   Definition max_I_in (G: UG)(I: list A):= max_sub_in G I (fun I => stable G I).
 
@@ -124,7 +126,8 @@ Section MoreOnDecidableGraphs.
          intros I' H2 H3. apply H1. split. auto. split. eauto.
          apply /stableP;auto. } Qed.
 
-   Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
+  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
+  Hint Resolve Max_I_in_elim: core. 
   
   Lemma i_num_same (G: UG)(n m:nat): i_num G n -> i_num G m -> n=m.
   Proof. {  intros Hn Hm.
@@ -232,9 +235,8 @@ Section MoreOnDecidableGraphs.
          intros K' H2 H3. apply H1. split. auto. split. eauto.
          apply /cliqP;auto. } Qed.
   
-  
-
   Hint Resolve max_K_inP exists_Max_K_in Max_K_in_elim1 Max_K_in_elim2 : core.
+  Hint Resolve Max_K_in_elim: core.
   
   Lemma cliq_num_same (G: UG)(n m:nat): cliq_num G n -> cliq_num G m -> n=m.
   Proof.  {  intros Hn Hm.
@@ -380,6 +382,7 @@ Section MoreOnDecidableGraphs.
               apply H1;auto.  eapply Cliq_elim;eauto. } }    
           cut (|clrs_of f K| <= | clrs_of f G|). omega. 
           destruct H as [H H']. auto. } Qed.
+   
    Lemma more_clrs_than_cliq_num (G: UG)(n:nat)(f: A->nat):
      cliq_num G n-> Coloring_of G f -> n <= |clrs_of f G|.
    Proof. { intros H H1. destruct H as [K H]. destruct H as [Ha H].
@@ -406,16 +409,18 @@ End MoreOnDecidableGraphs.
 
 
 
-
+ Hint Resolve Stable_elim:core.
  Hint Resolve Stable_in_elim Stable_in_elim1 Stable_in_elim2: core.
  Hint Resolve stableP nil_is_stable: core.
  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
+ Hint Resolve Max_I_in_elim: core.
  Hint Resolve i_num_same:core.
  Hint Immediate Stable_in_HG i_num_HG:core.
 
  Hint Resolve Cliq_in_elim Cliq_in_elim1 Cliq_in_elim2: core.
  Hint Resolve  Cliq_elim cliqP nil_is_cliq: core.
  Hint Resolve max_K_inP exists_Max_K_in  Max_K_in_elim1 Max_K_in_elim2: core.
+ Hint Resolve Max_K_in_elim: core.
  Hint Resolve cliq_num_same:core.
  Hint Immediate Cliq_in_HG cliq_num_HG:core.
  
