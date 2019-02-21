@@ -401,7 +401,7 @@ Section GraphIsomorphism.
   Proof.  { intros F1 F2.
             assert (F0: iso_using f G' G). auto. 
             assert (Nk: IsOrd (img f H)). auto.
-            pose H' := (Ind_at (img f H) G').
+            pose H' := (ind_at (img f H) G').
             exists H'.
             assert (h0: H' [<=] G').
             { replace (nodes G') with (img f G). simpl.
@@ -423,14 +423,15 @@ Section GraphIsomorphism.
               unfold iso_using.
               split.
               { apply F1. }
-              split.
+              split. 
               { simpl. symmetry. auto.  }
               { (* forall x y : A, edg H x y = edg (Ind_at Nk G') (f x) (f y) *)
                 simpl. intros x y Hx Hy.
-                replace (edg H x y) with (edg G x y).
-                cut (In y G). cut (In x G). auto.
-                apply F2; auto. apply F2; auto. symmetry; auto. } } } Qed.
-
+                replace (edg H x y) with (edg G x y). rewrite <- h2.
+                assert (H2: In (f x) (img f H)). auto.
+                replace ((edg G' at_ img f H) (f x) (f y)) with (edg G' (f x)(f y)).
+                destruct F2. cut(In x G). cut(In y G). all: auto. symmetry. auto. } } } Qed.
+                
  
   Lemma perfect_G' (G G': @UG A): iso G G' -> Perfect G -> Perfect G'.
   Proof. { intro F.  assert (F0: iso G' G). auto.
