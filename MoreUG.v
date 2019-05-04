@@ -6,7 +6,7 @@
 
  In this file we define the concept of Stable Set, Cliq and Coloring for an undirected
  graph.  We also define boolean functions to check these properties. We connect these 
- properties with boolean functions using reflection lemmas.
+ properties with boolean functions using the following reflection lemmas.
  
  Predicate              Boolean function       Joining Lemma
  Stable G I             stable G I             stableP

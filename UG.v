@@ -9,11 +9,13 @@
                         edg: A-> A -> bool;
                         edg_irefl: irefl edg;
                         edg_sym: sym edg
+                        out_edg: edg only_at nodes
                    }.
 
  In order to be lazy while declaring an instance for UG we provide functions such as
  mk_irefl, mk_sym and E_res_to  which can be used to convert any graph into
  the exact specifications of an undirected graph (UG). 
+
  Moreover, we prove that these functions work well when used together. They do not 
  disturb the properties established by each other. 
 
@@ -28,6 +30,11 @@
     refine ({|nodes:= G.(nodes);
              nodes_IsOrd := G.(nodes_IsOrd);
              edg:= (compl G.(edg)); |}). all: auto. Defined.
+
+The following definition produces an induced subgraph of G at the set of vertices K.
+
+ Definition ind_at (K: list A)(G: UG): UG.
+     refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined. 
 
 ---------------------------------------------------------------------------------------*)
 
@@ -406,8 +413,19 @@ Hint Resolve lt_graph_is_well_founded: core.
             assert (H7: In y G). eapply no_edg;eauto.
             move /memb2P in H4. absurd (IN x y G). auto. split; auto. } } Qed.
 
+   Lemma induced_fact3 (K: list A)(G: UG)(x y:A):
+     K[<=]G -> In x K -> In y K ->  edg G x y = edg (ind_at K G) x y.
+   Proof. intros h1 h2 h3. eapply induced_fact2.  auto. all: symmetry;auto. Qed.
+
+
+   Lemma induced_fact4 (K: list A)(G: UG)(x y:A):
+     K[<=]G -> ~ In x G -> ~ In y G ->  edg G x y = edg (ind_at K G) x y.
+   Proof. intros h1 h2 h3. eapply induced_fact2.  auto. all: symmetry;auto. Qed.
+   
+
 
    Hint Immediate induced_fact1 induced_fact2: core.
+   Hint Immediate induced_fact3 induced_fact4: core.
   
 End DecidableGraphs.
 
@@ -448,6 +466,7 @@ Hint Resolve no_edg1 no_edg2: core.
  
  (* Hint Immediate Induced_fact1 Induced_fact2: core. *)
  Hint Immediate induced_fact1 induced_fact2: core.
+ Hint Immediate induced_fact3 induced_fact4: core.
     
 
  Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).

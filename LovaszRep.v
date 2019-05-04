@@ -6,11 +6,11 @@
 
 
 
-Require Export Lovasz.
+Require Export PreLovasz.
 
 Set Implicit Arguments.
 
-Section PreLovasz.
+Section Lovasz.
 
   Context { A:ordType }.
 
@@ -18,6 +18,7 @@ Section PreLovasz.
   Variable a a': A.
   Hypothesis P: In a G.
   Hypothesis P': ~In a' G.
+  Hypothesis no_edg: forall x y, edg G x y -> (In x G /\ In y G).
 
   (* Let G':= Repeat_in G a a'. *)
 
@@ -37,28 +38,22 @@ Section PreLovasz.
            symmetry;auto. } } Qed.
 
   Lemma H'_iso_G' (H' G': @UG A): Ind_subgraph H' G' -> H' [=] G'-> iso G' H'.
-  Proof. { intros h1 C2.
+  Proof. { intros h1 C2. 
             exists id. split.
              { unfold id; auto. } split.
              { apply set_equal. auto. auto. auto. }
-             { unfold id. intros x y. symmetry.
+             { unfold id. intros x y h1a h1b. symmetry.
                destruct (memb2 x y H') eqn: h2.
                { cut (In x H'). cut (In y H'). auto.
                  move /memb2P in h2; apply h2. move /memb2P in h2; apply h2. }
                { assert (h3: ~ In x H' \/ ~ In y H'). auto.
                  destruct h3 as [h3a | h3b].
-                 { replace (edg H' x y) with false. symmetry. switch. intro h3.
-                   assert (h4: In x G').
-                   eapply no_edg1. apply h3. absurd (In x H'). auto. apply C2. auto.
-                   symmetry. switch. intro h3. apply h3a. eapply no_edg1;eauto. }
-                 { replace (edg H' x y) with false. symmetry. switch.
-                   intro h3. assert (h4: In y G').
-                   eapply no_edg2. apply h3. absurd (In y H'). auto. apply C2. auto.
-                   symmetry. switch. intro h3. apply h3b. eapply no_edg2;eauto. } } } } Qed.
+                 { absurd (In x H'). auto. apply C2. auto. }
+                 { absurd (In y H'). auto. apply C2. auto. } } } } Qed.
 
   Lemma RepeatH_iso_H' (H' G': @UG A): G'= Repeat_in G a a'-> Ind_subgraph H' G' -> In a H' ->
-                                       In a' H'-> iso (Repeat_in (Ind_at H' G) a a') H'.
-  Proof. { intros HeqG' h1 C1_b h3a. remember (Ind_at H' G) as H.
+                                       In a' H'-> iso (Repeat_in (ind_at H' G) a a') H'.
+  Proof. { intros HeqG' h1 C1_b h3a. remember (ind_at H' G) as H.
          assert (h0: H' [<=] G'). apply h1.
          assert (h0a: H [<=] H').
          { subst H; simpl; auto. }
@@ -66,15 +61,16 @@ Section PreLovasz.
          { unfold Ind_subgraph. split.
           subst H; simpl; auto.
           subst H; simpl. intros x y h5 h6. symmetry. auto. }
-          { exists id.
-          split.
-          (* first subgoal: forall x:A, id (id x) = x *)
-          { intros; unfold id; auto. } split.
-          (* second subgoal:  H' = img id (Repeat_in H a a') *)
-          { subst H. simpl.
+         { (*----------- iso (Repeat_in H a a') H' ---------*)
+           exists id.
+           split.
+           (* first subgoal: forall x:A, id (id x) = x *)
+           { intros; unfold id; auto. } split.
+           (* second subgoal:  H' = img id (Repeat_in H a a') *)
+           { subst H. simpl.
             replace (img id (add a' (inter H' G))) with (add a' (inter H' G)).
             apply set_equal. auto. auto. unfold Equal.
-            split.
+            split. 
             { intros x h6.
               assert (h7: x = a' \/ x<> a'). eapply reflect_EM;eauto.
               destruct h7 as [h7a | h7b].
@@ -84,9 +80,15 @@ Section PreLovasz.
             { intros x h6.
               assert (h7: x = a' \/ In x (inter H' G)). auto.
               destruct h7 as [h7 | h7].
-              subst x. auto. eauto. } apply id_is_identity. auto. }
+              subst x. auto. eauto. } apply id_is_identity. auto. } 
           (* third subgoal: edg (Repeat_in H a a') x y = edg H' (id x) (id y) *)
-          { simpl. unfold id. intros x y.
+           { simpl. unfold id. intros x y hx0 hy0.
+             assert(hxH': In x H').
+             { cut (x=a' \/ In x H). intro h6. destruct h6 as [h6 | h6].
+               subst x;auto. auto. auto. }
+             assert(hyH': In y H').
+             { cut (y=a' \/ In y H). intro h6. destruct h6 as [h6 | h6].
+               subst y;auto. auto. auto. }
             unfold Ind_subgraph in h1.  unfold Ind_subgraph in h5.
             destruct (memb2 x y H') eqn: h7.
             { (* when both x and y is in H' *)
@@ -114,8 +116,9 @@ Section PreLovasz.
                 { subst x. replace (ex_edg H a a' a' y) with (edg H a y).
                   replace (edg G' a' y) with (edg G a y).
                   apply h5. subst H. simpl. auto. auto. subst G'. auto.  
-                  eapply Eay_eq_E'a'y; subst H; simpl;auto. intro h10.
-                  absurd (In a' G);eauto. } }
+                  eapply Eay_eq_E'a'y;subst H; simpl; auto. intros; eauto. 
+                  intro h10.
+                   absurd (In a' G);eauto. } }
               { (* when x <> a' and y = a' *)
                 assert (h8: In x H).
                 { subst H. simpl. cut (In x G). auto.
@@ -128,7 +131,8 @@ Section PreLovasz.
                 { subst y. replace (ex_edg H a a' x a') with (edg H x a).
                   replace (edg G' x a') with (edg G x a).
                   apply h5; subst H; simpl; auto. subst G'; auto.  
-                  eapply Exa_eq_E'xa'; subst H; simpl;auto. intro h10.
+                  eapply Exa_eq_E'xa'; subst H; simpl;auto. intros; eauto.
+                  intro h10.
                   absurd (In a' G);eauto. } }
               { (* when x <> a' and y <> a'*)
                 assert (hx1: In x H).
@@ -145,22 +149,8 @@ Section PreLovasz.
                 symmetry;apply h5;auto.  apply Exy_eq_E'xy; subst H; simpl.
                 auto. intro h10. absurd (In a' G). auto. eauto. all: auto. }  }
             { (* when either x or y is not in H'*)
-              assert (h8: ~ In x H' \/ ~ In y H'). auto.
-              destruct h8 as [h8 | h8].
-              { replace (edg H' x y) with false. 
-                replace (ex_edg H a a') with (edg (Repeat_in H a a')). switch.
-                cut (~ In x (Repeat_in H a a')).  eauto.
-                simpl. subst H. simpl. intro h9. assert (h10: x=a' \/ In x (inter H' G)).
-                auto.  destruct h10 as [h10 | h10].
-                subst x;contradiction. absurd (In x H'); eauto. simpl;auto.
-                symmetry. switch. intro h9;apply h8. eapply no_edg1;eauto. }
-               { replace (edg H' x y) with false. 
-                replace (ex_edg H a a') with (edg (Repeat_in H a a')). switch.
-                cut (~ In y (Repeat_in H a a')).  eauto.
-                simpl. subst H. simpl. intro h9. assert (h10: y=a' \/ In y (inter H' G)).
-                auto.  destruct h10 as [h10 | h10].
-                subst y;contradiction. absurd (In y H'); eauto. simpl;auto.
-                symmetry; switch. intro h9;apply h8. eapply no_edg1;eauto. } } } } } Qed.   
+              assert (h8: ~ In x H' \/ ~ In y H'). auto. 
+              destruct h8 as [h8 | h8]; contradiction. } } } } Qed.    
          
 
   Lemma cliq_in_G' (K: list A): In a K ->  Cliq_in G K ->  Cliq_in (Repeat_in G a a') (add a' K).
@@ -215,7 +205,7 @@ Section PreLovasz.
              subst n. eapply Max_K_in_elim;eauto. } omega. } } Qed. 
   
 
-End PreLovasz.
+End Lovasz.
 
 Section LovaszRepLemma.
 
@@ -225,6 +215,8 @@ Section LovaszRepLemma.
   Variable a a': A.
   Hypothesis P: In a G.
   Hypothesis P': ~In a' G.
+
+  Hypothesis no_edg: forall x y, edg G x y -> (In x G /\ In y G).
   
   Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
   Proof. 
