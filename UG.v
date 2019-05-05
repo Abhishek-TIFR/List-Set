@@ -291,7 +291,7 @@ Hint Resolve lt_graph_is_well_founded: core.
      Ind_subgraph G1 G2 ->  In x G1 -> In y G1 -> edg G1 x y = edg G2 x y.
    Proof. intros H Hx Hy. destruct H as [H1 H2]. auto. Qed.
    
-    Lemma Ind_subgraph_elim2 (G1 G2:UG) (x y:A):
+    Lemma Ind_subgraph_elim2 (G1 G2:UG):
      Ind_subgraph G1 G2 -> G1 [<=] G2.
     Proof. intros H. apply H. Qed.
 
