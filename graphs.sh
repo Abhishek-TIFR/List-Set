@@ -6,7 +6,7 @@ coqc UG.v
 printf ‘MoreUG
 coqc MoreUG.v
 
-printf ‘IsoUG
-coqc IsoUG.v
+printf ‘GenIso
+coqc GenIso.v
 
 echo \
