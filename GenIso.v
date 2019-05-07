@@ -3,74 +3,92 @@
 
 (*---------------------------------- Descriptions ---------------------------------------
 
-In this file we define the idea of graph isomorphism between graphs on two different domain say A and B. This is done by defining following predicates:
+In this file we define the idea of graph isomorphism between graphs on two different 
+domains say A and B. This is done by defining following predicates:
 
-Definition morph_using (f: A-> B)  
+  Definition iso_usg (f: A->A)(G G': @UG A) :=
+     (forall x, In x G -> f (f x) = x) /\ (nodes G') = (img f G) /\
+     (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
+
+ Definition morph_using (f: A-> B)(G: @UG A)(G': @UG B):=
+  (nodes G') = (img f G) /\  (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
+
+ Definition iso_using (f: A-> B)(g: B-> A)(G: @UG A)(G': @UG B):=
+    morph_using f G G' /\ morph_using g G' G /\ (forall x, In x G -> g (f x) = x).
+
+ Definition iso (G: @UG A)(G': @UG B):=
+    exists (f: A-> B)(g: B-> A), iso_using f g G G'.
+  
+
+When we say (iso_using f g G1 G2), we mean f and g are the function establishing the
+isomorphism between graphs G1 and G2. 
+
+Lemma iso_is_isomorph (G G': @UG A)(f: A-> A): iso_usg f G G' -> iso_using f f G G'.
+Lemma isomorph_is_iso (G G': @UG A)(f: A-> A): iso_using f f G G' ->  iso_usg f G G'.
 
 
- Definition iso_using (f: A->A)(G G': @UG A) :=
-     (forall x, f (f x) = x) /\ 
-     (nodes G') = (img f G) /\ 
-     (forall x y, edg G x y = edg G' (f x) (f y)).
+We also prove that this relation is symmetric and transitive. Note the mutually 
+invertible nature of f and g that makes them one_one on both G1 and G2. 
 
-When we say (iso_using f G1 G2), we mean f is the function establishing the isomorphism
-between G1 and G2. We also prove that this relation is symmetric and transitive.
-Note that the self invertible nature of f makes it one_one on both G1 and G2. 
-Following are some useful property of f:
- 
- Lemma fx_is_one_one (l: list A)(f: A->A): (forall x, f (f x) = x) -> one_one_on l f.
- Lemma img_of_img (l: list A)(f: A->A)(Hl: IsOrd l):
-    (forall x, f (f x) = x)-> img f (img f l) = l.
 
- Lemma iso_sym1 (G G': @UG A)(f: A-> A): iso_using f G G' -> iso_using f G' G.
- Lemma iso_sym (G G': @UG A): iso G G' -> iso G' G.
+Following are some useful property of functions f and g establishing the isomorphism:
 
- Lemma iso_one_one1 (G G': @UG A)(f: A-> A): iso_using f G G' -> one_one_on G f.
- Lemma iso_using_G' (G G': @UG A)(f: A-> A): iso_using f G G' -> nodes G' = (img f G).
- Lemma iso_one_one (G G': @UG A)(f: A-> A)(l: list A): iso_using f G G'-> one_one_on l f.
- Lemma iso_cardinal (G G': @UG A)(f: A-> A): iso_using f G G' -> |G|=|G'|.
- Lemma iso_sub_cardinal (G G': @UG A)(X: list A)(f: A->A): iso_using f G G' ->
-                                                           NoDup X -> |X|= | img f X |.
- Lemma iso_edg1  (G G': @UG A)(f: A-> A)(x y:A): iso_using f G G' ->
-                                                (edg G x y = edg G' (f x) (f y)).
- Lemma iso_edg2  (G G': @UG A)(f: A-> A)(x y: A): iso_using f G G' ->
-                                                (edg G' x y = edg G (f x) (f y)).
+Lemma fx_is_one_one (l: list A)(f: A->B)(g: B->A): 
+            (forall x, In x l ->  g (f x) = x) ->  one_one_on l f.
+Lemma f_gx_is_x (l: list A)(s: list B)(f: A->B)(g: B->A):
+    (forall x, In x l-> g (f x) = x) -> (s = (img f l)) -> (forall y, In y s -> f (g y) = y).
+
+Lemma img_of_img (l: list A)(f: A->B)(g: B-> A)(Hl: IsOrd l):
+    (forall x, In x l-> g (f x) = x) -> img g (img f l) = l.
+Lemma img_of_img2 (l: list B)(f: A->B)(g: B-> A)(Hl: IsOrd l):
+      (forall x, In x l-> f (g x) = x) -> img f (img g l) = l.
+Lemma iso_sym1 (G : @UG A)(G': @UG B)(f: A-> B)(g: B-> A): 
+      iso_using f g G G' -> iso_using g f G' G.
+
+Lemma iso_one_one_on_l (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(l: list A):
+    iso_using f g G G'-> l [<=] G -> one_one_on l f.
+Lemma iso_one_one_on_s (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(s: list B):
+    iso_using f g G G'-> s [<=] G' -> one_one_on s g.
+Lemma iso_cardinal (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A) : iso_using f g G G' -> |G|=|G'|.
+Lemma iso_sub_cardinal (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(X: list A):
+    iso_using f g G G' -> NoDup X -> X [<=] G -> |X|= | img f X |.
+Lemma iso_sub_cardinal1 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(Y: list B):
+    iso_using f g G G' -> NoDup Y -> Y [<=] G' -> |Y|= | img g Y |. 
+Lemma iso_edg1 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(x y:A):
+     iso_using f g G G' -> In x G -> In y G-> (edg G x y = edg G' (f x) (f y)).
+Lemma iso_edg2  (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(x y: B):
+    iso_using f g G G' -> In x G'-> In y G'-> (edg G' x y = edg G (g x) (g y)).
+Lemma iso_img_of_img3 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(l: list A):
+    IsOrd l -> l [<=] G -> iso_using f g G G' -> l = img g (img f l).
+Lemma iso_img_of_img4 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(l: list B):
+    IsOrd l -> l [<=] G' -> iso_using f g G G' -> l = img f (img g l).
+
 -------------------------------------------------------------------------------------
 
  Stable Set, Cliq and Coloring of graphs has exact counterpart in the isomorphic Graphs.
- These results of existence of counterparts are summarized below: 
+ These results of existence of isomorphic counterparts are summarized below: 
 
 
- Lemma iso_cliq_in (G G': @UG A)(f: A-> A)(K: list A): iso_using f G G' -> 
-                                                      Cliq_in G K -> Cliq_in G' (img f K).
- Lemma iso_cliq_in1 (G G': @UG A)(K: list A): iso G G' -> Cliq_in G K ->
-                                              (exists K', Cliq_in G' K' /\ |K|=|K'|).
- Lemma max_K_in_G' (G G': @UG A)(f: A-> A)(K: list A): iso_using f G G' ->
-                                                    Max_K_in G K -> Max_K_in G' (img f K).
+Lemma iso_cliq_in (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(K: list A):
+    iso_using f g G G' -> Cliq_in G K -> Cliq_in G' (img f K).
+Lemma iso_stable_in (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(I: list A):
+    iso_using f g G G' -> Stable_in G I -> Stable_in G' (img f I).
 
+Lemma max_K_in_G' (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(K: list A):
+    iso_using f g G G' -> Max_K_in G K -> Max_K_in G' (img f K). 
+Lemma cliq_num_G' (G: @UG A)(G':@UG B)(n: nat):iso G G' -> cliq_num G n -> cliq_num G' n.
+Lemma max_I_in_G' (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(I: list A):
+    iso_using f g G G' -> Max_I_in G I -> Max_I_in G' (img f I).
+Lemma i_num_G' (G: @UG A)(G':@UG B)(n: nat): iso G G' -> i_num G n -> i_num G' n.
+Lemma chrom_num_G'(G: @UG A)(G':@UG B)(n: nat):iso G G'->chrom_num G n-> chrom_num G' n.
 
-Lemma iso_stable (G G': @UG A)(f: A-> A)(I: list A): iso_using f G G' -> 
-                                                     Stable G I -> Stable G' (img f I).
-Lemma iso_stable_in (G G': @UG A)(f: A-> A)(I: list A): iso_using f G G'-> 
-                                                Stable_in G I -> Stable_in G' (img f I).
-Lemma max_I_in_G' (G G': @UG A)(f: A-> A)(I: list A): iso_using f G G' -> 
-                                                  Max_I_in G I -> Max_I_in G' (img f I).
+Lemma nice_G' (G: @UG A)(G':@UG B) : iso G G' -> Nice G -> Nice G’.
+Lemma iso_subgraphs (G H: @UG A)(G':@UG B)(f: A->B)(g: B-> A): iso_using f g G G'->
+        Ind_subgraph H G ->(exists H', Ind_subgraph H' G'/\ iso_using f g H H’).
+Lemma perfect_G' (G: @UG A)(G':@UG B): iso G G' -> Perfect G -> Perfect G’.
 
-Lemma cliq_num_G' (G G': @UG A)(n: nat): iso G G' -> cliq_num G n -> cliq_num G' n.
-Lemma i_num_G' (G G': @UG A)(n: nat):  iso G G' -> i_num G n -> i_num G' n. 
-Lemma chrom_num_G' (G G': @UG A)(n:nat): iso G G' -> chrom_num G n -> chrom_num G' n.
+Lemma iso_trans (G1 :@UG A)(G2: @UG B)(G3: @UG C): iso G1 G2 -> iso G2 G3 -> iso G1 G3.
 
-Lemma nice_G' (G G': @UG A): iso G G' -> Nice G -> Nice G'.
-Lemma iso_subgraphs (G G' H: @UG A)(f: A->A):  iso_using f G G' -> Ind_subgraph H G -> 
-                                      (exists H', Ind_subgraph H' G' /\ iso_using f H H').
-Lemma perfect_G' (G G': @UG A): iso G G' -> Perfect G -> Perfect G'.
-
-
-Following definition represents the Graph G restricted to the vertex set K:
-
-  Definition Ind_at (K: list A)(Pk: IsOrd K)(G: @UG A): @UG A.
-     refine {|nodes:= K; nodes_IsOrd := Pk;
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined. 
 
 ------------------------------------------------------------------------------------------*)
 
@@ -86,13 +104,11 @@ Section GraphMorphism.
   Definition morph_using (f: A-> B)(G: @UG A)(G': @UG B):=
     (nodes G') = (img f G) /\  (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
 
-   (* Definition iso (G G': @UG A) :=
-     exists (f: A->A), (forall x, In x G -> f (f x) = x) /\ (nodes G') = (img f G) /\
-                 (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)). *)
-
    Definition iso_usg (f: A->A)(G G': @UG A) :=
      (forall x, In x G -> f (f x) = x) /\ (nodes G') = (img f G) /\
      (forall x y, In x G-> In y G-> edg G x y = edg G' (f x) (f y)).
+
+    (* Definition iso (G G': @UG A) := exists (f: A->A), iso_usg f G G'. *)
 
   
 End GraphMorphism.
@@ -106,7 +122,7 @@ Section GraphIsomorphism.
   Definition iso_using (f: A-> B)(g: B-> A)(G: @UG A)(G': @UG B):=
     morph_using f G G' /\ morph_using g G' G /\ (forall x, In x G -> g (f x) = x).
 
-  Definition isomorphic (G: @UG A)(G': @UG B):=
+  Definition iso (G: @UG A)(G': @UG B):=
     exists (f: A-> B)(g: B-> A), iso_using f g G G'.
   
 End GraphIsomorphism.
@@ -244,16 +260,16 @@ Section GraphIsoProp.
            { auto. }
            { eapply f_gx_is_x with (l:= G). auto. apply Ha. } } Qed.
 
-    Lemma iso_sym (G: @UG A)(G': @UG B): isomorphic G G' -> isomorphic G' G.
+    Lemma iso_sym (G: @UG A)(G': @UG B): iso G G' -> iso G' G.
     Proof. { intro H. destruct H as [f H]. destruct H as [g H].
              exists g. exists f. apply iso_sym1. auto. } Qed.
 
     Lemma iso_using_iso (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A):
-      iso_using f g G G' -> isomorphic G G'.
+      iso_using f g G G' -> iso G G'.
     Proof. intros h. exists f. exists g. auto. Qed.
 
     Lemma iso_using_iso1 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A):
-      iso_using f g G G' -> isomorphic G' G.
+      iso_using f g G G' -> iso G' G.
     Proof. intro h. apply iso_sym. eapply iso_using_iso. eauto. Qed.
 
     Lemma iso_elim1 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(x:A):
@@ -397,7 +413,7 @@ Section GraphIsoProp.
             auto. apply H. all: auto. }  }  Qed.
   
   Lemma iso_cliq1 (G: @UG A)(G':@UG B)(K: list A):
-    isomorphic G G' -> K [<=] G -> Cliq G K -> NoDup K -> (exists K', Cliq G' K' /\ |K|=|K'|).
+    iso G G' -> K [<=] G -> Cliq G K -> NoDup K -> (exists K', Cliq G' K' /\ |K|=|K'|).
   Proof. { intros H h1 H1 H2. destruct H as [f H]. destruct H as [g H].
          exists (img f K). split. eauto using iso_cliq.
          assert (H3: one_one_on K f). eauto. auto. } Qed.
@@ -415,7 +431,7 @@ Section GraphIsoProp.
          { eauto using iso_cliq. }  } Qed.
 
   Lemma iso_cliq_in1 (G: @UG A)(G':@UG B)(K: list A):
-    isomorphic G G' -> Cliq_in G K -> (exists K', Cliq_in G' K' /\ |K|=|K'|).
+    iso G G' -> Cliq_in G K -> (exists K', Cliq_in G' K' /\ |K|=|K'|).
   Proof. { intros H H1. destruct H as [f H]. destruct H as [g H].
            exists (img f K). split. eauto using iso_cliq_in.
            assert (H3: one_one_on K f). cut (K [<=] G). eauto. apply H1.
@@ -438,7 +454,7 @@ Section GraphIsoProp.
             auto. apply H. all: auto. } Qed.
   
   Lemma iso_stable1 (G: @UG A)(G':@UG B)(I: list A):
-    isomorphic G G' -> I [<=] G-> Stable G I -> NoDup I -> (exists I', Stable G' I' /\ |I|=|I'|).
+    iso G G' -> I [<=] G-> Stable G I -> NoDup I -> (exists I', Stable G' I' /\ |I|=|I'|).
   Proof. { intros H h1 H1 H2. destruct H as [f H]. destruct H as [g H].
          exists (img f I). split. eauto using iso_stable.
          assert (H3: one_one_on I f). eauto.
@@ -456,7 +472,7 @@ Section GraphIsoProp.
          { eauto using iso_stable. }  } Qed.
 
   Lemma iso_stable_in1 (G: @UG A)(G':@UG B)(I: list A):
-    isomorphic G G' -> Stable_in G I -> (exists I', Stable_in G' I' /\ |I|=|I'|).
+    iso G G' -> Stable_in G I -> (exists I', Stable_in G' I' /\ |I|=|I'|).
   Proof. { intros H H1. destruct H as [f H]. destruct H as [g H].
            exists (img f I). split. eauto using iso_stable_in.
            assert (H3: one_one_on I f).
@@ -517,7 +533,7 @@ Section IsoMaxIKC.
 
   Context {A B: ordType }.
 
-  (*-------------------- Max_K has an isomorphic counterpart--------------------- *)
+  (*-------------------- Max_K has an iso counterpart--------------------- *)
 
   Lemma max_K_in_G' (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(K: list A):
     iso_using f g G G' -> Max_K_in G K -> Max_K_in G' (img f K). 
@@ -531,7 +547,7 @@ Section IsoMaxIKC.
            eauto using Max_K_in_elim. eapply iso_sub_cardinal;eauto.
            symmetry. eapply iso_sub_cardinal; eauto. } } Qed.
 
-  Lemma cliq_num_G' (G: @UG A)(G':@UG B)(n: nat):isomorphic G G' -> cliq_num G n -> cliq_num G' n.
+  Lemma cliq_num_G' (G: @UG A)(G':@UG B)(n: nat):iso G G' -> cliq_num G n -> cliq_num G' n.
   Proof. { intros H H1. destruct H as [f H]. destruct H as [g H].
            destruct H1 as [K H1].
            destruct H1 as [H1 H1b]. exists (img f K).
@@ -541,7 +557,7 @@ Section IsoMaxIKC.
   Hint Immediate max_K_in_G' cliq_num_G': core.
 
 
-  (*------------------- Max_I has an isomorphic counterpart----------------------- *)
+  (*------------------- Max_I has an iso counterpart----------------------- *)
 
    Lemma max_I_in_G' (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(I: list A):
     iso_using f g G G' -> Max_I_in G I -> Max_I_in G' (img f I).
@@ -556,7 +572,7 @@ Section IsoMaxIKC.
            symmetry. eapply iso_sub_cardinal; eauto. } } Qed.
 
   Lemma i_num_G' (G: @UG A)(G':@UG B)(n: nat):
-    isomorphic G G' -> i_num G n -> i_num G' n.
+    iso G G' -> i_num G n -> i_num G' n.
   Proof. { intros H H1. destruct H as [f H]. destruct H as [g H].
            destruct H1 as [I H1].
            destruct H1 as [H1 H1b]. exists (img f I).
@@ -584,7 +600,7 @@ Section IsoMaxIKC.
            apply H2. eauto using iso_coloring. } } Qed. 
                   
   Lemma chrom_num_G' (G: @UG A)(G':@UG B)(n: nat):
-    isomorphic G G' -> chrom_num G n -> chrom_num G' n.
+    iso G G' -> chrom_num G n -> chrom_num G' n.
   Proof. { intros H H1. destruct H as [f H]. destruct H as [g H].
            destruct H1 as [C H1]. destruct H1 as [H1 H2].
            exists (fun (x:B) => C (g x)). split. eauto using best_coloring_of_G'.
@@ -606,14 +622,14 @@ Hint Immediate chrom_num_G': core.
 
 
 
-Section IsomorphicNicePerfect.
+Section IsoNicePerfect.
 
   Context { A B: ordType }.
   
   (*------------Isomorphism, nice graphs and perfect graph--------------------------------*)
 
-  Lemma nice_G' (G: @UG A)(G':@UG B) : isomorphic G G' -> Nice G -> Nice G'.
-  Proof. { intro H.  assert (H0: isomorphic G' G). auto.
+  Lemma nice_G' (G: @UG A)(G':@UG B) : iso G G' -> Nice G -> Nice G'.
+  Proof. { intro H.  assert (H0: iso G' G). auto.
          unfold Nice. intros H1 n H2.
          cut (chrom_num G n). eauto. cut (cliq_num G n); eauto. } Qed.
 
@@ -676,7 +692,7 @@ Section IsomorphicNicePerfect.
                 
 
 
-End IsomorphicNicePerfect.
+End IsoNicePerfect.
 
 Hint Immediate nice_G' iso_subgraphs : core.
 
@@ -686,15 +702,15 @@ Section IsoPerfect.
   
   Context {A B: ordType}.
 
-Lemma perfect_G' (G: @UG A)(G':@UG B): isomorphic G G' -> Perfect G -> Perfect G'.
-  Proof. { intro F.  assert (F0: isomorphic G' G). auto.
+Lemma perfect_G' (G: @UG A)(G':@UG B): iso G G' -> Perfect G -> Perfect G'.
+  Proof. { intro F.  assert (F0: iso G' G). auto.
          unfold Perfect. destruct F0 as [g F0]. destruct F0 as [f F0].
          intros F1 H' F2.
          assert (F3: exists H, Ind_subgraph H G /\ iso_using g f H' H).
          { eapply iso_subgraphs. apply F0. auto. }
          destruct F3 as [H F3]. destruct F3 as [F3 F4]. 
          cut (Nice H).
-         { cut (isomorphic H H'). eauto using nice_G'.
+         { cut (iso H H'). eauto using nice_G'.
            exists f. exists g. cut (iso_using f g H H'); auto. } auto.  } Qed.
 
 End IsoPerfect.
@@ -709,7 +725,7 @@ Section IsomorphTrans.
   Context {A B C: ordType}.
 
   Lemma iso_trans (G1 :@UG A)(G2: @UG B)(G3: @UG C):
-    isomorphic G1 G2 -> isomorphic G2 G3 -> isomorphic G1 G3.
+    iso G1 G2 -> iso G2 G3 -> iso G1 G3.
   Proof. { intros h1 h2. destruct h1 as [f h1]. destruct h1 as [g h1].
            destruct h2 as [f' h2]. destruct h2 as [g' h2].
            assert (h3: nodes G2 = img f G1). eauto.
