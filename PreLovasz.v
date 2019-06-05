@@ -1,6 +1,6 @@
 
 
-(*------------------- This file is renamed and new version of Lovasz.v -------------------- *)
+(*------------------- This file is new version of Lovasz.v -------------------- *)
 
 (* --------------------------   Description ---------------------------------------------------  
 
@@ -16,11 +16,15 @@
                   end.
 
       This is a lazy description which does not ensure the symmetric and ireflexive property of
-      edge relation. Later on we give a more accurate description of edge relation which uses 
+      edge relation. However it is restricted to the vertex set (add a' G).
+
+      Lemma nw_edg_only_at_Ga'(G:UG)(a a':A)(Pa: In a G): (nw_edg G a a') only_at (add a' G).
+
+      Later, we give a more accurate description of edge relation which uses 
       mk_iref and mk_sym function to modify the nw_edg relation. The following edge 
       relation (i.e. ex_edg)  is irreflexive, symmetric and restricted to nodes of G'.
 
-      Definition ex_edg (G: UG)(a a': A):= mk_sym (mk_irefl ((nw_edg G a a') at_ (add a' G))).
+      Definition ex_edg (G: UG)(a a': A):= mk_sym (nw_edg G a a').
 
       Then, we can use the following definition to represent G'.
 
@@ -31,7 +35,7 @@
 
    ------------------------------------------------------------------------------------------*)
 
-Require Export MoreUG IsoUG.
+Require Export MoreUG GenIso.
 
 Set Implicit Arguments.
 
@@ -137,21 +141,28 @@ Section Repeat_node.
    
    Definition ex_edg (G: UG)(a a': A):= mk_sym (nw_edg G a a').
 
-   Definition Repeat_in (G: @UG A)(a: A)(a':A)(P: In a G)(P': ~In a' G): @UG A.
+   (* Definition Repeat_in (G: @UG A)(a: A)(a':A)(P: In a G)(P': ~In a' G): @UG A.
     refine({| nodes:= add a' G; edg:= (ex_edg G a a');
-           |}); unfold ex_edg.  all: auto. Defined.
+           |}); unfold ex_edg.  all: auto. Defined. *)
 
   Variable G: @UG A.
   Variable a a': A.
+  
   Hypothesis P: In a G.
   Hypothesis P': ~In a' G.
+
+   Definition Repeat_in: @UG A.
+    refine({| nodes:= add a' G; edg:= (ex_edg G a a');
+           |}); unfold ex_edg.  all: auto. Defined.
+
+ 
 
   Lemma a_not_a': a <> a'.
   Proof. intro h1. subst a. contradiction. Qed.
 
   Hint Resolve a_not_a': core.
 
-  Let G':= (Repeat_in G a a' P P'). 
+  Let G':= (Repeat_in). 
   
 
   Lemma edg_aa': (edg G') a a'.
@@ -358,7 +369,8 @@ Section Repeat_node.
    Lemma f_is_invertible: forall x : A, f (f x) = x.
    Proof. { assert (H0: a <> a'). auto.
             intro x. unfold f.  destruct (x==a) eqn: Hxa;destruct (x==a') eqn: Hxa'.
-            {  absurd (a=a'). auto. move /eqP in Hxa; move /eqP in Hxa'. subst a;auto. }
+            {  absurd (a=a'). auto. move /eqP in Hxa; move /eqP in Hxa'.
+               rewrite <- Hxa; auto.  }
             { replace (a'== a) with false.
               { replace (a'==a') with true. symmetry;auto. symmetry;auto. }
               { symmetry. switch.  move /eqP. intro H1;apply H0;auto. } }
@@ -452,19 +464,19 @@ Section Repeat_node.
                   assert (memb y G' = memb y (rmv a G')). auto.
                   auto. } } } }  } Qed.
                   
-   Lemma G_iso_G'_a : iso_using f G (ind_at N'_a G').
+   Lemma G_iso_G'_a : iso_usg f G (ind_at N'_a G').
    Proof. { assert (H0: a <> a'). auto.
           split.
           { (* ------------------ Proof of the fact that f (f x) = x -----------------*)
-             apply f_is_invertible;auto. }
+             intros x hx. apply f_is_invertible;auto. }
           split.
           { (*----------------- Proof of the fact that G'_a = img f G -------------- *)
             apply G'_a_is_imgG;auto. }
           { (*---------------  Proof that isomorphism preserves the edg relation-------*)
-            intros x y. apply f_preserves_edg;auto.  } } Qed.
+            intros x y. intros hx hy. apply f_preserves_edg;auto.  } } Qed.
 
    Lemma G_isomorphic_G'_a: iso G (ind_at N'_a G').
-     Proof. exists f.  apply G_iso_G'_a;auto. Qed.
+     Proof. exists f.  exists f. cut (iso_usg f G (ind_at N'_a G')). auto. apply G_iso_G'_a;auto. Qed.
     
 End Repeat_node.
 
