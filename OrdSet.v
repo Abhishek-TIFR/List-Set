@@ -320,6 +320,14 @@ Section OrderedSet.
    Hint Immediate add_prop1 add_prop2 add_add_is_add add_add_is_add1: core.
    Hint Resolve add_a_add_b add_a_b: core.
 
+   Lemma app_add_same (a:A)(l: list A): IsOrd (a::l) -> a::l = add a l.
+   Proof. { intro h1. apply set_equal. auto. eauto. split.
+            intros x hx. destruct hx. subst x. auto. auto.
+            intros x hx. assert (h2: x = a \/ In x l). auto.
+            destruct h2. subst x. auto. auto. } Qed.
+
+   Hint Resolve app_add_same: core.
+
    
   (* ------------ set_inter operation ----------------------------------------------  *)
   
@@ -557,6 +565,8 @@ Hint Resolve set_add_IsOrd set_add_nodup memb_prop_add: core.
 Hint Resolve add_card add_card1 add_card_max add_same: core.
 Hint Immediate add_prop1 add_prop2 add_add_is_add add_add_is_add1: core.
 Hint Resolve add_a_add_b add_a_b: core.
+Hint Resolve app_add_same: core.
+
 
 
  Hint Immediate set_inter_intro set_inter_elim set_inter_elim1 set_inter_elim2: core.
