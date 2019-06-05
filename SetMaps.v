@@ -9,7 +9,7 @@ counterpart.
 
 Following are the notions defined in this file:
 
- s_map f l                  : range set of f on list l
+ img f l                  : range set of f on list l
  one_one_on l f             : f is one one on l
  one_one_onb l f            : boolean counterpart of (one_one_on l f)
 
@@ -259,17 +259,74 @@ Section Set_maps.
   Hint Resolve img_add img_same: core.
 
   Lemma img_inter1 (l s: list A)(f: A-> B): img f (l [i] s) [<=] (img f l) [i] (img f s).
-  Proof. Admitted.
-  Lemma img_inter2 (l s: list A)(f: A-> B): one_one_on l f -> one_one_on s f->
+  Proof. { intros y hy.
+           assert(h1: exists x, In x (l [i] s) /\ y = f  x); auto.
+           destruct h1 as [x h1]. destruct h1 as [h1a h1].
+           cut (In y (img f s)). cut (In y (img f l)). auto.
+           subst y. cut (In x l); auto. eauto.
+           subst y. cut (In x s); auto. eauto. } Qed.
+  
+  Lemma img_inter2 (l s: list A)(f: A-> B): one_one_on (l [u] s) f ->
                                              img f (l [i] s) = (img f l) [i] (img f s).
-  Proof. Admitted.
+  Proof. { intros h. apply set_equal. all: auto.
+           split. apply img_inter1. intros y h1.
+           assert (h1a: In y (img f l)). eauto.
+           assert (h1b: In y (img f s)). eauto.
+           assert (hx1: exists x, In x l /\ y = f x). auto.
+           destruct hx1 as [x1 hx1]. destruct hx1 as [hx1 h2].
+           assert (hx2: exists x, In x s /\ y = f x). auto.
+           destruct hx2 as [x2 hx2]. destruct hx2 as [hx2 h3].
+           subst y. assert (h4: x1 = x2).
+           cut (In x1 (l [u] s)). cut (In x2 (l [u] s)). eauto.
+           all: auto.
+           assert (h5: In x1 (l [i] s)). rewrite <- h4 in hx2; auto. auto. } Qed.
 
   Lemma img_union (l s: list A)(f: A-> B): img f (l [u] s) = (img f l) [u] (img f s).
-  Proof. Admitted.
+  Proof.  { apply set_equal. all: auto.
+            split.
+            { intros y h1.
+              assert (hx1: exists x, In x (l [u] s) /\ y = f x). auto.
+              destruct hx1 as [x1 hx1]. destruct hx1 as [hx1 h2].
+              assert (h3: In x1 l \/ In x1 s). auto. destruct h3 as [h3 | h3].
+              cut (In y (img f l)). auto. subst y. auto.
+              cut (In y (img f s)). auto. subst y. auto. }
+            { intros y h1.
+              assert (h2: In y (img f l) \/ In y (img f s)). auto.
+              destruct h2 as [h2a | h2b].
+              { assert (hx1: exists x, In x l /\ y = f x). auto.
+                destruct hx1 as [x1 hx1]. destruct hx1 as [hx1 h3].
+                assert (h4: In x1 (l [u] s)). auto. subst y. auto. }
+              { assert (hx1: exists x, In x s /\ y = f x). auto.
+                destruct hx1 as [x1 hx1]. destruct hx1 as [hx1 h3].
+                assert (h4: In x1 (l [u] s)). auto. subst y. auto. } } } Qed.
+            
 
-  Lemma img_diff (l s: list A)(f: A-> B): one_one_on l f -> one_one_on s f->
+  Lemma img_diff (l s: list A)(f: A-> B): one_one_on (l [u] s) f ->
                                            img f (l [\] s) = (img f l) [\] (img f s).
-  Proof. Admitted.
+  Proof.  { intros h. apply set_equal. all: auto.
+            split.
+            { intros y h1.
+              assert (hx1: exists x, In x (l [\] s) /\ y = f x). auto.
+              destruct hx1 as [x1 hx1]. destruct hx1 as [hx1 h2].
+              assert (hx1l: In x1 l). eauto.
+              assert (hx1s: ~ In x1 s). eauto.
+              cut (~ In y (img f s)). cut ( In y (img f l)). auto.
+              subst y. auto. intro h3.
+              assert (hx2: exists x, In x s /\ y = f x). auto.
+              destruct hx2 as [x2 hx2]. destruct hx2 as [hx2 h4].
+              assert (h5: x1 = x2).
+              cut(In x1 (l [u] s)). cut(In x2 (l [u] s)). cut (f x1 = f x2).
+              eauto. subst y;auto. all: auto.
+              absurd (In x2 s). subst x2. all: auto. }
+            { intros y h1.
+              assert (hyl: In y (img f l)). eauto.
+              assert (hys: ~ In y (img f s)). eauto.
+              assert (hx: exists x, In x l /\ y = f x). auto.
+              destruct hx as [x hx]. destruct hx as [hx h2].
+              assert (hxs: ~ In x s).
+              { intro h3. absurd (In y (img f s)). auto.
+                subst y. auto. }
+              cut (In x (l [\] s)). subst y. auto. auto. } } Qed.
   
   Hint Resolve img_inter1 img_inter2 img_union img_diff: core.
   
@@ -363,7 +420,88 @@ Section Maps_on_A.
 
   End Maps_on_A.
 
-  Hint Immediate id_is_identity id_is_identity1: core.
+Hint Immediate id_is_identity id_is_identity1: core.
+
+
+Section One_one_onto.
+
+  Context {A B: ordType}.
+  Variable (da:A).
+  
+
+   (*-------------invertible functions --------------------------------------- *)
+
+  Lemma one_one_onto (l: list A)(s: list B)(f: A-> B):
+    IsOrd l -> IsOrd s -> one_one_on l f -> s = img f l ->
+    exists g, (one_one_on s g /\ l = img g s /\ forall x, In x l -> g (f x) = x).
+  Proof. { revert s. induction l.
+         { (*-------base step: when l is nil------*)
+           simpl. intros s h1 h2 h3 h4.
+           exists (fun x:B => da).
+           subst s. split. auto. split. auto. auto. } 
+         { (*------ induction step: when l is a::l ---------*)
+           intros s h1 h2 h3 h4. simpl in h4. subst s. simpl.
+           assert (h5: exists g : B -> A, one_one_on (img f l) g /\
+                                    l = img g (img f l) /\ (forall x : A, In x l -> g (f x) = x)).
+           { apply IHl. all: auto. eauto. eauto. }
+           destruct h5 as [g0 h5].
+           set (g:= fun y:B => match (y == f(a)) with
+                            | true => a
+                            | false => g0 y
+                            end).
+           assert (hga: g (f a) = a).
+           { unfold g. replace (f a == f a) with true. auto. auto. }
+           assert (hg_g0: forall x:A, In x l -> g (f x) = g0 (f x)).
+           { intros x h6. unfold g.
+             assert (h6a: x <> a).
+             { intro  h7. subst x; absurd (In a l); auto. }
+             assert (h6b: f x <> f a). auto.
+             { replace (f x == f a) with false. auto. auto. } }
+           assert (hgg0: img g0 (img f l) = img g (img f l)).
+           { eapply img_same. intros y h6.
+             assert (h7: exists x, In x l /\ y = f x ). auto.
+             destruct h7 as [x h7]. destruct h7 as [h7a h7].
+             symmetry. subst y. auto. }
+           
+           exists g. split. 
+           { (*-------one_one_on (add (f a) (img f l)) g -------*)
+             apply one_one_on_intro. intros x y hx hy h6.
+             unfold g in h6.
+             destruct (x == f a) eqn: hxa; destruct (y == f a) eqn: hya.
+             { move /eqP in hxa;move /eqP in hya. subst x. auto. }
+             { absurd (a = g0 y).
+               cut (In (g0 y) l). cut (NoDup (a::l)). eauto.
+               auto.
+               assert (h5a: l = img g0 (img f l)). apply h5.
+               rewrite h5a. cut (In y (img f l)). auto. move /eqP in hya. eauto.
+               auto. }
+             { absurd (a = g0 x).
+               cut (In (g0 x) l). cut (NoDup (a::l)). eauto.
+               auto.
+               assert (h5a: l = img g0 (img f l)). apply h5.
+               rewrite h5a. cut (In x (img f l)). auto. move /eqP in hxa. eauto.
+               auto. }
+             { assert (h5a: one_one_on (img f l) g0). apply h5.
+               move /eqP in hxa. move /eqP in hya.
+               cut (In x (img f l)). cut (In y (img f l)). eauto.
+               all: eauto. } }
+           split.
+           { (*------- a :: l = img g (add (f a) (img f l)) -------*)
+             destruct h5 as [h5a h5]. destruct h5 as [h5b h5].  
+             assert (h6: img g (add (f a) (img f l)) = add (g (f a)) (img g (img f l))).
+             auto. rewrite h6. rewrite <- hgg0. rewrite <- h5b. rewrite hga.
+             auto. }
+           { (*--------  forall x : A, a = x \/ In x l -> g (f x) = x --------*)
+             intros x h6. destruct h6 as [h6 | h6]. subst x. auto.
+             replace (g (f x)) with (g0 (f x)). apply h5. auto.
+             symmetry;auto. } } } Qed.
+  
+             
+           
+  
+End One_one_onto.
+
+Hint Resolve one_one_onto: core.
 
 
 
