@@ -63,6 +63,12 @@ Lemma iso_img_of_img3 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(l: list A):
 Lemma iso_img_of_img4 (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A)(l: list B):
     IsOrd l -> l [<=] G' -> iso_using f g G G' -> l = img f (img g l).
 
+Lemma iso_intro (G: @UG A)(G': @UG B)(f: A-> B)(da: A):
+    morph_using f G G' -> one_one_on G f -> iso G G'.
+
+
+
+
 -------------------------------------------------------------------------------------
 
  Stable Set, Cliq and Coloring of graphs has exact counterpart in the isomorphic Graphs.
@@ -394,6 +400,34 @@ Section GraphIsoProp.
     
   Hint Resolve iso_image1 iso_image2: core.
   Hint Resolve iso_img_of_img1 iso_img_of_img2 iso_img_of_img3 iso_img_of_img4: core.
+
+
+  (* ------------ minimal requirement for isomorphism ------------------ *)
+
+  Lemma iso_intro (G: @UG A)(G': @UG B)(f: A-> B)(da: A):
+    morph_using f G G' -> one_one_on G f -> iso G G'.
+  Proof. { intros h h2. destruct h as [h h1].
+           assert (h3:exists g,(one_one_on G' g /\ (nodes G)= img g G' /\ forall x,In x G -> g (f x) = x)).
+           eapply one_one_onto. eauto. all: auto.
+           destruct h3 as [g h3].
+           destruct h3 as [h3a h3]. destruct h3 as [h3b h3].
+           exists f. exists g. split.
+           { (* -------- morph_using f G G' ------- *)
+             split. auto. apply h1. } split.
+           { (* -------- morph_using g G' G --------*)
+             split. auto. intros x' y' h4 h5.
+             assert (h4a: exists x, In x G /\ x' = f x ).
+             { rewrite h in h4. auto. }
+             assert (h5a: exists y, In y G /\ y' = f y ).
+             { rewrite h in h5. auto. }
+             destruct h4a as [x h4a]. destruct h5a as [y h5a].
+             destruct h4a as [h4a h4b]. destruct h5a as [h5a h5b].
+             subst x'. subst y'.
+             replace (g (f x)) with x. replace (g (f y)) with y.
+             symmetry;apply h1;auto.
+             all: symmetry;apply h3;auto. }
+           apply h3. }  Qed.
+         
   
 
    (* ------------- Isomorphism preserves Cliques and for a graph-----------------*)
