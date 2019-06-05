@@ -18,41 +18,40 @@ Section Lovasz.
   Variable a a': A.
   Hypothesis P: In a G.
   Hypothesis P': ~In a' G.
-  Hypothesis no_edg: forall x y, edg G x y -> (In x G /\ In y G).
+  
+  (* Hypothesis no_edg: forall x y, edg G x y -> (In x G /\ In y G). *)
 
   (* Let G':= Repeat_in G a a'. *)
 
   Lemma H'_sub_G (H': @UG A):
-    Ind_subgraph H' (Repeat_in G a a') -> ~ In a' H' -> Ind_subgraph H' G.
+    Ind_subgraph H' (Repeat_in G a a' P P') -> ~ In a' H' -> Ind_subgraph H' G.
   Proof. { intros h1 h2. unfold Ind_subgraph.
          assert (h3: H' [<=] G).
          { intros x h3.
-           assert (h4: In x (Repeat_in G a a')).
+           assert (h4: In x (Repeat_in G a a' P P')).
            { apply h1. auto. }
            simpl in h4. cut (x<>a').  intro h5. eauto. intro h5. subst x. contradiction. } 
          split. auto.
          { destruct h1 as [h1a h1].
            intros x y h4 h5.
-           replace (edg H' x y) with (edg (Repeat_in G a a') x y).
+           replace (edg H' x y) with (edg (Repeat_in G a a' P P') x y).
            symmetry. cut (In x G). cut (In y G). all: auto.
            symmetry;auto. } } Qed.
 
   Lemma H'_iso_G' (H' G': @UG A): Ind_subgraph H' G' -> H' [=] G'-> iso G' H'.
-  Proof. { intros h1 C2. 
-            exists id. split.
+  Proof. { intros h1 C2.
+           assert (H10: nodes H' = nodes G'). auto.
+           exists id. exists id. cut (iso_usg id G' H'). auto.
+           split.
              { unfold id; auto. } split.
              { apply set_equal. auto. auto. auto. }
-             { unfold id. intros x y h1a h1b. symmetry.
-               destruct (memb2 x y H') eqn: h2.
-               { cut (In x H'). cut (In y H'). auto.
-                 move /memb2P in h2; apply h2. move /memb2P in h2; apply h2. }
-               { assert (h3: ~ In x H' \/ ~ In y H'). auto.
-                 destruct h3 as [h3a | h3b].
-                 { absurd (In x H'). auto. apply C2. auto. }
-                 { absurd (In y H'). auto. apply C2. auto. } } } } Qed.
+             { unfold id. intros x y h1a h1b. symmetry. apply h1.
+               all: rewrite H10;auto. } } Qed.
 
-  Lemma RepeatH_iso_H' (H' G': @UG A): G'= Repeat_in G a a'-> Ind_subgraph H' G' -> In a H' ->
-                                       In a' H'-> iso (Repeat_in (ind_at H' G) a a') H'.
+                         
+
+  Lemma RepeatH_iso_H' (H' G': @UG A): G'= Repeat_in G a a' P P'-> Ind_subgraph H' G' -> In a H' ->
+                                       In a' H'-> iso (Repeat_in (ind_at H' G) a a' P P') H'.
   Proof. { intros HeqG' h1 C1_b h3a. remember (ind_at H' G) as H.
          assert (h0: H' [<=] G'). apply h1.
          assert (h0a: H [<=] H').
@@ -153,7 +152,7 @@ Section Lovasz.
               destruct h8 as [h8 | h8]; contradiction. } } } } Qed.    
          
 
-  Lemma cliq_in_G' (K: list A): In a K ->  Cliq_in G K ->  Cliq_in (Repeat_in G a a') (add a' K).
+  Lemma cliq_in_G' (K: list A): In a K ->  Cliq_in G K ->  Cliq_in (Repeat_in G a a' P P') (add a' K).
   Proof.  { intros h1 h2. assert (h2b: K [<=] G). auto.
           assert (h2c: IsOrd K). eauto. assert (h2d: Cliq G K). auto.
           unfold Cliq in h2d.
@@ -173,7 +172,7 @@ Section Lovasz.
                left;auto. right. cut (In x G). cut (In y G). all: auto. } } Qed.
              
   
-  Lemma max_K_in_G' (K': list A)(n:nat): cliq_num G n -> Cliq_in (Repeat_in G a a') K' -> |K'| <= n+1.
+  Lemma max_K_in_G' (K': list A)(n:nat): cliq_num G n -> Cliq_in (Repeat_in G a a' P P') K' -> |K'| <= n+1.
   Proof. { intros h1 h2. assert (h3: In a' K' \/ ~ In a' K'). eauto.
          destruct h3 as [h3 | h3].
          { (* In this case K' \ a' is a cliq in G *)
@@ -184,7 +183,7 @@ Section Lovasz.
            assert (h5: Cliq_in G (rmv a' K')).
            { destruct h2 as [h2a h2];destruct h2 as [h2b h2]. split. auto. split. 
              auto. unfold Cliq in h2. unfold Cliq. intros x y h5 h6.
-             replace (edg G x y) with (edg (Repeat_in G a a') x y).
+             replace (edg G x y) with (edg (Repeat_in G a a' P P') x y).
              apply h2;eauto. symmetry. cut (In x G). cut (In y G). all: auto. }
            assert (h6: | rmv a' K' | <= n). 
            { destruct h1 as [K h1]. destruct h1 as [h1 h1a].
@@ -198,7 +197,7 @@ Section Lovasz.
            assert (h5: Cliq_in G K').
            { destruct h2 as [h2a h2];destruct h2 as [h2b h2]. split. auto. split. 
              auto. unfold Cliq in h2. unfold Cliq. intros x y h5 h6.
-             replace (edg G x y) with (edg (Repeat_in G a a') x y).
+             replace (edg G x y) with (edg (Repeat_in G a a' P P') x y).
              apply h2;eauto. symmetry. cut (In x G). cut (In y G). all: auto. }
            assert (h6: |K'| <= n).
            { destruct h1 as [K h1]. destruct h1 as [h1 h1a].
@@ -218,7 +217,7 @@ Section LovaszRepLemma.
 
   Hypothesis no_edg: forall x y, edg G x y -> (In x G /\ In y G).
   
-  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a').
+  Lemma ReplicationLemma: Perfect G -> Perfect (Repeat_in G a a' P P').
   Proof. 
  
    (* We will prove the result by well founded induction on the set of all UG. 
@@ -229,7 +228,7 @@ Section LovaszRepLemma.
     apply well_founded_ind with (R:= @lt_graph A).  apply lt_graph_is_well_founded.
     intros G IH a a' P P' h.
 
-    remember (Repeat_in G a a') as G'.
+    remember (Repeat_in G a a' P P') as G'.
     unfold lt_graph in IH.
     
     unfold Perfect. intros H' h1.
