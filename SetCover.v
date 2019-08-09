@@ -2,12 +2,14 @@
 
 (*-------------Description --------------------------------------------------------------  
 
-This file implements the union of all sets present in a list (union_over). We 
-also define the notion of sets covers (Set_Cov C S) as a proposition which 
-states that the collection of sets C is a cover for the set S. 
+This file implements the union of all sets present in a list C as (union_over C). We 
+then define the notion of sets covers (Set_Cov C l) as a proposition which 
+states that the collection of sets C is a cover for the set l. Furthermore, we also
+define a function (mk_disj C) which produces another collection of sets which are 
+disjoint to each other.  
  
 
-Following are the notions defined in this file:
+Following are the exact deinition of these  notions present in this file:
 
  Fixpoint union_over (C: list (list A)): list A:= match C with
                                                    | nil => nil
@@ -27,7 +29,7 @@ Following are the notions defined in this file:
  Definition Set_cover (C: list (list A)) (l: list A):= l [=] (union_over C).
  
 
-Furthermore, we have following results on these definitions:
+Furthermore, we have the following results specifying these definitions:
 
 Lemma union_over_intro (C: list (list A))(l: list A)(a: A):
  In a l -> In l C -> In a (union_over C).
