@@ -35,5 +35,8 @@ coqc SetMaps.v
   
 printf ‘Powerset
 coqc Powerset.v
+
+printf ‘SetCover
+coqc SetCover.v
  
 echo \
