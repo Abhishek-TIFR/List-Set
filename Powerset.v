@@ -424,3 +424,49 @@ Hint Resolve min_sub_inbP min_sub_inP: core.
 Hint Resolve max_sub_same_size min_sub_same_size: core.
 
 (* Eval compute in (pw (1::2::3::nil)). *)
+
+Section MoreOnPower.
+
+  Context {A: ordType}.
+
+  Definition max_subs_of (G: list A)(B: list A -> bool):= filter (fun I => max_sub_in G I B) (pw G).
+
+  Lemma max_subs_of_IsOrd (G: list A)(B: list A -> bool): IsOrd G -> IsOrd (max_subs_of G B).
+  Proof. unfold max_subs_of. intro h1. cut (IsOrd (pw G)); auto. Qed.
+
+
+  Lemma max_subs_of_intro (G I: list A)(B: list A -> bool):
+    IsOrd G ->  Max_sub_in G I B-> In I (max_subs_of G B).
+    Proof. { unfold max_subs_of.  set (f:= (fun I0 : list A => max_sub_in G I0 B)).
+             intros h0 h1. move /max_sub_inbP in h1.
+             replace (max_sub_in G I B) with (f I) in h1.
+             cut (In I (pw G)). auto. unfold f in h1.
+             move /max_sub_inbP in h1. cut ( I [<=] G).
+             cut (IsOrd I). all: ( apply h1 || auto ). } Qed.
+
+  Lemma max_subs_of_intro1 (G I: list A)(B: list A -> bool):
+    IsOrd G -> max_sub_in G I B -> In I (max_subs_of G B).
+  Proof. { unfold max_subs_of.  set (f:= (fun I0 : list A => max_sub_in G I0 B)).
+           replace (max_sub_in G I B) with (f I). intros h0 h1.
+           cut (In I (pw G)). auto. unfold f in h1. move /max_sub_inbP in h1.
+           cut ( I [<=] G). cut (IsOrd I). all: ( apply h1 || auto ). } Qed.
+
+  Lemma max_subs_of_elim (G I: list A)(B: list A -> bool):
+    IsOrd G ->  In I (max_subs_of G B) -> Max_sub_in G I B.
+  Proof. { unfold max_subs_of. 
+           set (f:= (fun I0 : list A => max_sub_in G I0 B)).
+           intros h1 h2.
+           assert (h3: f I). eauto. apply /max_sub_inbP. apply h3. } Qed.
+
+  Lemma max_subs_of_elim1 (G I: list A)(B: list A -> bool):
+    IsOrd G ->  In I (max_subs_of G B) -> max_sub_in G I B.
+  Proof. { unfold max_subs_of.
+           set (f:= (fun I0 : list A => max_sub_in G I0 B)).
+           intros h1 h2.
+           assert (h3: f I). eauto.  apply h3. } Qed.
+
+  Hint Immediate max_subs_of_intro max_subs_of_elim: core.
+
+End MoreOnPower.
+
+Hint Immediate max_subs_of_intro max_subs_of_elim: core.
