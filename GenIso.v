@@ -430,7 +430,7 @@ Section GraphIsoProp.
          
   
 
-   (* ------------- Isomorphism preserves Cliques and for a graph-----------------*)
+   (* ------------- Isomorphism preserves Cliques for a graph-----------------*)
 
    Lemma iso_cliq (G: @UG A)(G':@UG B)(f: A->B)(g: B-> A) (K: list A):
     iso_using f g G G' -> K [<=] G-> Cliq G K -> Cliq G' (img f K).
