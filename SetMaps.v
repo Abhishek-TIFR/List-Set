@@ -29,6 +29,42 @@ Require Export OrdSet.
 
 Set Implicit Arguments.
 
+Section List_maps.
+
+  Context { A B: Type }.
+
+  (*------- This definition of map on lists is from standard library --------------*)
+
+  (*  Lemma map_cons (x:A)(l:list A) : map (x::l) = (f x) :: (map l).
+
+      Lemma in_map :
+      forall (l:list A) (x:A), In x l -> In (f x) (map l).
+
+      Lemma in_map_iff : forall l y, In y (map l) <-> exists x, f x = y /\ In x l.
+
+      Lemma map_length : forall l, length (map l) = length l.   *)
+
+  Lemma map_intro (f: A-> B): forall (l:list A) (x:A), In x l -> In (f x) (map f l).
+  Proof. apply in_map. Qed.
+
+  Lemma map_intro1 (f: A-> B)(l: list A) (y:B): (exists x, In x l /\ y = f x) -> In y (map f l).
+  Proof. { intros h1. apply in_map_iff. destruct h1 as [x h1].
+           destruct h1 as [h1 h2]. exists x. split;auto. } Qed.
+
+  Lemma map_elim (f: A-> B)(l: list A) (y:B): In y (map f l) -> (exists x, In x l /\ y = f x).
+  Proof. { intros h1. apply in_map_iff in h1 as h2.
+           destruct h2 as [x h2]. destruct h2 as [h2a h2].
+           exists x. split;auto. } Qed.
+  Lemma map_length_same (f: A-> B)(l: list A): |l| = |map f l|.
+  Proof. symmetry;apply map_length. Qed.
+
+  Hint Immediate map_elim map_intro map_intro1 map_length_same: core.
+
+End List_maps.
+
+Hint Immediate map_elim map_intro map_intro1 map_length_same: core.
+
+
 Section Set_maps.
   Context { A B: ordType }.    
 
