@@ -95,6 +95,13 @@ Section SetCover.
   Hint Resolve union_over_intro union_over_intro1: core.
   Hint Immediate union_over_elim: core.
 
+  Lemma union_over_intro2 (C: list (list A))(S: list A):
+    (forall X, In X C -> X [<=] S) -> (union_over C [<=] S).
+  Proof. { intros h1 x h2. specialize (union_over_elim C x h2) as h3.
+           destruct h3 as [l h3]. cut (In x l). apply h1. all: apply h3. } Qed.
+
+  Hint Immediate union_over_intro2: core.
+
   (*------------- Definition of (fix_nat n l) which appends n behind each entry in l ----- *)
 
   Fixpoint fix_nat (n:nat)(l: list A): list (A * nat):= match l with
@@ -165,6 +172,15 @@ Section SetCover.
            eapply union_over_intro. apply h3. auto. } Qed.
   
 End SetCover.
+
+
+
+
+Hint Resolve in_map map_cons map_length: core.
+Hint Immediate in_map_iff: core.
+Hint Immediate union_over_elim: core.
+Hint Immediate union_over_intro2: core.
+Hint Resolve Set_cover_elim:core.
 
  Notation "l [,] n" := (fix_nat n l) (at level 65).
   
