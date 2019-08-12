@@ -119,7 +119,7 @@ Hint Resolve Stable_cover_elim: core.
              unfold Stable_cover.
              split.
              { (*----Set_cover C G----*)
-               unfold Set_cover.
+               unfold Set_cover. apply set_equal. all: auto.
                split.
                { (*--  G [<=] union_over C ---*)
                  intros x h2. set (Cx := F (f x)).
@@ -165,19 +165,24 @@ Hint Resolve Stable_cover_elim: core.
                  subst I. unfold F. cut (IsOrd G). auto. auto. }  }  }
            { (*-- (| C |) = (| cl |)--*)
              unfold C. symmetry. auto.  } } Qed.
-         
+
+
          
 
   Lemma cover_to_color (G:UG) (C: list (list A)): Stable_cover C G ->
-                                                  ( exists f, Coloring_of G f /\ |C| = |clrs_of f G|).
+                                                  ( exists f, Coloring_of G f /\ |clrs_of f G| <= |C|).
   Proof. Admitted.
 
-  Lemma nice_intro1 (G: UG)(n:nat):
-    cliq_num G n -> (exists C, Stable_cover C G /\ | C | = n) -> Nice G.
-  Proof. Admitted.
+  Lemma nice_intro1 (G: UG)(n:nat): cliq_num G n -> (exists C, Stable_cover C G /\ | C | = n) -> Nice G.
+  Proof. { intros h1 h2. eapply nice_intro with (n0:=n).
+           auto. destruct h2 as [C h2]. destruct h2 as [h2a h2b].
+           specialize (cover_to_color  h2a) as h3.
+           destruct h3 as [f h3]. destruct h3 as [h3a h3b].
+           exists f. split. auto. rewrite h2b in h3b.
+           cut ((| clrs_of f G |) >= n). intros. omega. auto. } Qed.
   
   
-  (*---- Stable_cover and Cliq_cover in the Graph G and its complement G'--- *)
+  (*--------- Stable_cover and Cliq_cover in the Graph G and its complement G' ------- *)
 
   
           
