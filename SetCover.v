@@ -287,12 +287,38 @@ Proof. { revert x. induction C as [|l C'].
            absurd (In x l). move /membP in Hxl; auto. apply h4.
            symmetry;auto. } } } Qed.
 
+Lemma idc_eq_both_in (x y: A)(C: list (list A)): In x (union_over C) -> idc x C = idc y C ->
+                                                 In y (union_over C).
+Proof. { intros h1 h2.
+         assert (h3: In y (union_over C) \/ ~ In y (union_over C)). eauto.
+         destruct h3 as [h3 | h3]. auto.
+         replace (idc y C) with 0 in h2.
+         absurd (In x (union_over C));auto. symmetry;auto. } Qed.
+
+
+Lemma idc_eq_same_set (x y: A)(C: list (list A)): In x (union_over C) -> idc x C = idc y C ->
+                                                  exists c, In c C /\ In x c /\ In y c.
+Proof. { intros h1 h2. specialize (idc_eq_both_in x y C h1 h2) as h3.
+         apply idc_from_idx in h1 as h1a. apply idc_from_idx in h3 as h3a.
+         destruct h1a as [c1 h1a]. destruct h3a as [c2 h3a].
+         assert (h4: c1 = c2).
+         { cut (idx c1 C = idx c2 C).
+           cut (In c2 C).
+           cut (In c1 C).
+           apply same_index. apply h1a. apply h3a.
+           cut (idc x C = idx c1 C).
+           cut (idc y C = idx c2 C).
+           intros;omega. apply h3a. apply h1a. }
+         subst c2. exists c1.
+         split. apply h1a.  split. apply h1a. apply h3a. } Qed.
+
+
          
 End LocateInC.
 
 Hint Immediate absnt_idc_zero idc_zero_absnt idc_gt_zero idc_is_one: core.
 
-Hint Immediate idc_from_idx: core.
+Hint Immediate idc_from_idx idc_eq_same_set: core.
   
   
  
