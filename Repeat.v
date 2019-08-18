@@ -369,8 +369,8 @@ Hint Immediate In_E'xy_Exy In_E'xy_Exy1 In_Exy_eq_E'xy: core.
           { (*---------------  Proof that isomorphism preserves the edg relation-------*)
             intros x y. intros hx hy. apply f_preserves_edg;auto.  } } Qed.
 
-   Lemma G_isomorphic_G'_a: iso G (ind_at N'_a G').
-     Proof. exists f.  exists f. cut (iso_usg f G (ind_at N'_a G')). auto. apply G_iso_G'_a;auto. Qed.
+   Lemma G_isomorphic_G'_a: exists f, iso_usg f G (ind_at N'_a G').
+     Proof.  exists f. apply G_iso_G'_a;auto. Qed.
     
 End Repeat_node.
 
@@ -393,3 +393,4 @@ Hint Resolve E'_aa' Exa_E'xa' Eay_E'a'y : core.
  Hint Resolve G_isomorphic_G'_a: core.
 
  Hint Resolve no_edg1 no_edg2: core.
+ Hint Resolve G_iso_G'_a: core.
