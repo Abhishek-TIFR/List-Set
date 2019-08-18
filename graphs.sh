@@ -9,4 +9,7 @@ coqc MoreUG.v
 printf ‘GenIso
 coqc GenIso.v
 
+printf ‘GraphCovers
+coqc GraphCovers.v
+
 echo \
