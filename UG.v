@@ -421,11 +421,16 @@ Hint Resolve lt_graph_is_well_founded: core.
    Lemma induced_fact4 (K: list A)(G: UG)(x y:A):
      K[<=]G -> ~ In x G -> ~ In y G ->  edg G x y = edg (ind_at K G) x y.
    Proof. intros h1 h2 h3. eapply induced_fact2.  auto. all: symmetry;auto. Qed.
+
+   Lemma induced_fact5 (K: list A)(G: UG)(x y:A):
+     In x (K [i] G) ->  In y (K [i] G) ->  edg G x y = edg (ind_at K G) x y.
+   Proof. simpl. auto. Qed.
+   
    
 
 
    Hint Immediate induced_fact1 induced_fact2: core.
-   Hint Immediate induced_fact3 induced_fact4: core.
+   Hint Immediate induced_fact3 induced_fact4 induced_fact5: core.
   
 End DecidableGraphs.
 
@@ -466,13 +471,13 @@ Hint Resolve no_edg1 no_edg2: core.
  
  (* Hint Immediate Induced_fact1 Induced_fact2: core. *)
  Hint Immediate induced_fact1 induced_fact2: core.
- Hint Immediate induced_fact3 induced_fact4: core.
+ Hint Immediate induced_fact3 induced_fact4 induced_fact5: core.
     
 
  Notation "E 'only_at' K":= (edg_only_at K E) (at level 70).
  Notation "E 'at_' K":= (E_res_to K E)(at level 70).
  Hint Unfold edg_only_at.
-
+ 
 
 
 
