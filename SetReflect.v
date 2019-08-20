@@ -408,9 +408,14 @@ Section MoreReflection.
     reflect (forall x y, In x l-> In y l-> g x y)  (forall_yxb g l).
   Proof. eapply iffP with (P:= (forall y, In y l -> (forall x, In x l -> g x y))).
          unfold forall_yxb; auto. all: auto. Qed.
+  Lemma forall_xy_EM (B: A-> A-> bool)(l: list A):
+    (forall x y, In x l -> In y l -> B x y) \/ (exists x y, In x l /\ In y l /\ ~ B x y).
+  Proof. Admitted.
+  
   
 End MoreReflection.
 
 Hint Resolve forall_xyP forall_yxP: core.
+Hint Resolve forall_xy_EM: core.
 
 
