@@ -404,6 +404,32 @@ Section MoreOnDecidableGraphs.
             
    Hint Immediate perfect_sub_perfect more_clrs_than_cliq_size more_clrs_than_cliq_num: core.
    Hint Immediate nice_intro: core.
+
+   Lemma nil_is_nice (G: UG): nodes G = nil -> Nice G.
+   Proof. { intros h1.
+            eapply nice_intro with (n:=0).
+            { unfold cliq_num. 
+              exists nil.
+              split.
+              { apply Max_K_in_intro.
+                unfold Cliq_in. split. auto. split. constructor. 
+                unfold Cliq. intros x y. simpl. auto.
+                intros K' h2.
+                assert (h3: K' = nil).
+                { cut (K' [<=] G). intro h3. rewrite h1 in h3. auto. apply h2. }
+                rewrite h3. auto. }
+              { simpl. auto. } } 
+            set (f:= fun x: A => 0).
+            exists f. split. unfold Coloring_of. rewrite h1. simpl. auto.
+            rewrite h1; simpl; auto. } Qed.
+
+   Lemma nil_is_perfect (G: UG): nodes G = nil -> Perfect G.
+   Proof. { intros h1. intros H h2.
+            assert (h3: nodes H = nil).
+            { cut (H [<=] G). intro h3. rewrite h1 in h3. auto. apply h2. }
+            auto using nil_is_nice. } Qed.
+
+   Hint Resolve nil_is_nice nil_is_perfect: core.
    
 End MoreOnDecidableGraphs.
 
@@ -431,5 +457,8 @@ End MoreOnDecidableGraphs.
  Hint Immediate perfect_sub_perfect more_clrs_than_cliq_size more_clrs_than_cliq_num: core.
  Hint Resolve clrs_on_a_cliq: core.
  Hint Immediate nice_intro: core.
+
+
+ (* Hint Resolve nil_is_nice nil_is_perfect: core. *)
   
  
