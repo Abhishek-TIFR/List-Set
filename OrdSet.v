@@ -548,6 +548,36 @@ Section OrderedSet.
            { simpl. auto. }
            { simpl. destruct (f a) eqn: H. intro H1.
              apply IsOrd_intro. eauto. intros x H2. cut (In x l). all: eauto. } } Qed.
+
+  Lemma add_rmv (l: list A) (a:A): IsOrd l -> ~ In a l -> l = rmv a (add a l).
+  Proof. { intros h1 h2. apply set_equal. all: auto.
+           split.
+           { intros x h3.
+             assert (h4: x <> a).
+             { intro h4; subst x; contradiction. }
+             cut (In x (add a l)); auto. }
+           { intros x h3.
+             assert (h4: x <> a).
+             { intro h4; subst x. absurd (In a (rmv a (add a l))).
+               apply set_rmv_elim3. auto. auto. }
+             assert (h5: In x (add a l)). eauto.
+             eauto. } } Qed. 
+
+  Lemma rmv_add (l: list A)(a: A): IsOrd l -> In a l -> l = add a (rmv a l).
+  Proof.  { intros h1 h2. apply set_equal. all: auto.
+           split.
+           { intros x h3.
+             assert (h4: x = a \/ x <> a). eauto.
+             destruct h4 as [h4 | h4].
+             { subst x. auto. }
+             { cut (In x (rmv a l)). auto. auto. } }
+           { intros x h3.
+             assert (h4: x = a \/ In x (rmv a l)). auto.
+             destruct h4 as [h4 | h4].
+             subst x;auto. eauto.  } } Qed.
+
+  Hint Resolve add_rmv rmv_add: core.
+  
              
   
           
@@ -586,6 +616,8 @@ Hint Immediate set_diff_elim1 set_diff_elim2 set_diff_elim3 set_diff_intro set_d
 Hint Resolve set_diff_IsOrd set_diff_nodup: core.
 
 Hint Resolve filter_IsOrd: core.
+
+ Hint Resolve add_rmv rmv_add: core.
 
 
 Notation "s [i] t" := (inter s t) (at level 67, left associativity).
