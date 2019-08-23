@@ -365,36 +365,44 @@ Hint Resolve lt_graph_is_well_founded: core.
   Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
 
-  Definition Compl (G: UG): UG.
+  Definition compl_of (G: UG): UG.
     refine ({|nodes:= G.(nodes);
              nodes_IsOrd := G.(nodes_IsOrd);
              edg:= (compl G.(edg)) at_ G.(nodes); |}). all: auto. Defined.
 
-  (* Definition Ind_at (K: list A)(Pk: IsOrd K)(G: UG): UG.
-     refine {|nodes:= K; nodes_IsOrd := Pk;
-              edg:= (G.(edg) at_ K); |}. all: auto. Defined. *)
+  Definition Compl (G G': UG) :=
+    (nodes G = nodes G') /\ (forall x y, In x G -> In y G -> (edg G x y <-> ~ edg G' x y)).
 
-  (* Definition Ind_at (K: list A)(G: UG): UG.
-     refine {|nodes:= (inter K G); edg:= (G.(edg)); |}. all: auto. Defined.  
+  Lemma Compl_elim1 (G G':UG): Compl G G' -> (nodes G = nodes G').
+  Proof. intros h;apply h. Qed.
 
-   Lemma Induced_fact1: forall (K:list A) (G: UG),
-        K[<=]G -> Ind_subgraph (Ind_at K G) G.
-   Proof. { intros K G H. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed.
+  Lemma Compl_elim1a (G G':UG)(x:A): Compl G G' -> In x G -> In x G'.
+  Proof. intros h1. replace (nodes G') with (nodes G). auto. apply h1. Qed.
 
-   (*------------ description of the following lemma while explainig Ind_at ----------- *)
+  Hint Resolve Compl_elim1a: core.
+  
+  Lemma Compl_elim2 (G G':UG)(x y: A): Compl G G' -> In x G -> In y G -> edg G x y -> ~ edg G' x y.
+  Proof. intros h;apply h. Qed.
 
-   Lemma Induced_fact2 (K:list A) (G: UG)(x y:A): edg G x y = edg (Ind_at K G) x y.
-   Proof.  simpl. auto. Qed.
+  Lemma Compl_elim3 (G G':UG)(x y: A): Compl G G' -> In x G -> In y G -> ~ edg G x y -> edg G' x y.
+  Proof. intros h hx hy h1. destruct (edg G' x y) eqn:hxy.  auto. switch_in hxy.
+         absurd (edg G x y). auto. apply h;auto. Qed.
 
+  Lemma Compl_elim4 (G G':UG)(x y: A): Compl G G' -> In x G' -> In y G' -> edg G' x y -> ~ edg G x y.
+  Proof. intros h hx hy h1 h2. absurd (edg G' x y). apply h;eauto. auto. Qed.
 
-   Hint Immediate Induced_fact1 Induced_fact2: core. *)
+  Lemma Compl_elim5 (G G':UG)(x y: A): Compl G G' -> In x G' -> In y G'-> ~ edg G' x y -> edg G x y.
+  Proof. intros h hx hy.  apply h; replace (nodes G) with (nodes G');auto.
+          all: symmetry; apply h. Qed.
 
-    Definition ind_at (K: list A)(G: UG): UG.
+  Hint Immediate Compl_elim1 Compl_elim3 Compl_elim4 Compl_elim5: core.
+
+   
+  Definition ind_at (K: list A)(G: UG): UG.
      refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined.  
 
-   Lemma induced_fact1: forall (K:list A) (G: UG),
-        K[<=]G -> Ind_subgraph (ind_at K G) G.
-   Proof. { intros K G H. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed. 
+   Lemma induced_fact1: forall (K:list A) (G: UG), Ind_subgraph (ind_at K G) G.
+   Proof. { intros K G. split. simpl. auto. simpl;intros;symmetry;auto. }  Qed. 
 
    (*------------ description of the following lemma while explainig Ind_at ----------- *)
 
@@ -468,8 +476,10 @@ Hint Resolve no_edg1 no_edg2: core.
  Hint Resolve self_is_induced induced_is_subgraph: core.
  Hint Resolve only_at_inv_for_compl only_at_inv_for_compl1: core.
 
- 
- (* Hint Immediate Induced_fact1 Induced_fact2: core. *)
+ Hint Resolve Compl_elim1a: core.
+ Hint Immediate Compl_elim1 Compl_elim3 Compl_elim4 Compl_elim5: core.
+
+
  Hint Immediate induced_fact1 induced_fact2: core.
  Hint Immediate induced_fact3 induced_fact4 induced_fact5: core.
     
