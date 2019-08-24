@@ -175,11 +175,32 @@ Section IsoVsIsomorph.
   Lemma isomorph_is_iso (G G': @UG A)(f: A-> A): iso_using f f G G' ->  iso_usg f G G'.
   Proof.  { intro h1. destruct h1 as [h1 h2]. destruct h2 as [h2 h3].
             split; (auto || split;apply h1). } Qed.
+
+  Lemma ind_sub_eq_iso (H G: @UG A): Ind_subgraph H G -> nodes H = nodes G -> iso H G.
+  Proof. { intros h1 h2. unfold Ind_subgraph in h1. 
+           exists id. exists id. unfold iso_using.
+           split.
+           { (*  morph_using id H G  *)
+             unfold morph_using. rewrite h2.
+             split.  auto.
+             intros x y hx hy. unfold id;simpl.
+             apply h1; rewrite h2;auto. }
+           split.
+           { (*  morph_using id G H  *)
+             unfold morph_using. 
+             split.  rewrite h2;auto.
+             intros x y hx hy. unfold id;simpl;symmetry.
+             apply h1; rewrite h2;auto. }
+           { (* forall x : A, In x H -> id (id x) = x  *)
+             intros x h3; unfold id;simpl;auto. } } Qed. 
+
+  
              
 
 End IsoVsIsomorph.
 
 Hint Immediate img_of_imgf iso_is_isomorph isomorph_is_iso: core.
+Hint Immediate ind_sub_eq_iso: core.
 
 
 
