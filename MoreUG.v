@@ -430,6 +430,73 @@ Section MoreOnDecidableGraphs.
             auto using nil_is_nice. } Qed.
 
    Hint Resolve nil_is_nice nil_is_perfect: core.
+
+   (*--------- Graph and its Complement---------------------------------*)
+
+  Lemma stable_is_cliq (G G': @UG A)(I: list A): Compl G G'-> Stable_in G I-> Cliq_in G' I.
+  Proof. { unfold Compl; unfold Stable_in; unfold Cliq_in.
+           unfold Stable; unfold Cliq.
+           intros h1 h2. replace (nodes G') with (nodes G).
+           split. apply h2. split. apply h2.
+           intros x y hx hy. right. 
+           destruct (edg G' x y) eqn: hxy.
+           auto.
+           absurd (edg G x y).
+           { switch;apply h2;auto. }
+           { destruct h2 as [h2a h2].
+             apply h1; auto. switch;auto. }
+           apply h1. } Qed.
+
+  Lemma cliq_is_stable (G G': @UG A)(K: list A): Compl G G' -> Cliq_in G K -> Stable_in G' K.
+  Proof. { unfold Compl; unfold Stable_in; unfold Cliq_in.
+           unfold Stable; unfold Cliq.
+           intros h1 h2. replace (nodes G') with (nodes G).
+           split. apply h2. split. apply h2.
+           intros x y hx hy.
+           assert (h3: x = y \/ edg G x y).
+           { apply h2;auto. }
+           destruct h3 as [h3 | h3].
+           { subst x; auto. }
+           { destruct h2 as [h2a h2]. switch;apply h1;auto. }
+           apply h1. } Qed. 
+
+  Lemma cliq_num_i_num (G G': @UG A)(n: nat): Compl G G' -> cliq_num G n -> i_num G' n.
+  Proof. { intros h1 h2. 
+           assert (h1a: Compl G' G). auto.
+           assert (gg': nodes G = nodes G').
+           { apply h1. }
+           destruct h2 as [K h2].
+           destruct h2 as [h2a h2].
+           exists K. split.
+           { apply Max_I_in_intro.
+             { cut (Cliq_in G K). apply cliq_is_stable;auto. auto. }
+             { intros I h3.
+               assert (h4: Cliq_in G I).
+               { eapply stable_is_cliq;auto. exact h1a. auto. }
+               apply h2a. rewrite gg'.
+               cut (I [<=] G'). cut (IsOrd I). auto. apply h4. apply h3.
+               apply /cliqP. auto. } }
+             auto. } Qed.
+
+  Lemma i_num_cliq_num (G G': @UG A)(n: nat): Compl G G'-> i_num G n -> cliq_num G' n.
+  Proof.  { intros h1 h2. 
+           assert (h1a: Compl G' G). auto.
+           assert (gg': nodes G = nodes G').
+           { apply h1. }
+           destruct h2 as [I h2].
+           destruct h2 as [h2a h2].
+           exists I. split.
+           { apply Max_K_in_intro.
+             { cut (Stable_in G I). apply stable_is_cliq; auto. auto. }
+             { intros K h3.
+               assert (h4: Stable_in G K).
+               { eapply cliq_is_stable; auto. exact h1a. auto. }
+               apply h2a. rewrite gg'.
+               cut (K [<=] G'). cut (IsOrd K). auto. apply h4. apply h3.
+               apply /stableP. auto. } }
+             auto. } Qed.
+
+  Hint Immediate stable_is_cliq cliq_is_stable cliq_num_i_num i_num_cliq_num: core.
    
 End MoreOnDecidableGraphs.
 
@@ -458,7 +525,7 @@ End MoreOnDecidableGraphs.
  Hint Resolve clrs_on_a_cliq: core.
  Hint Immediate nice_intro: core.
 
+ Hint Immediate stable_is_cliq cliq_is_stable cliq_num_i_num i_num_cliq_num: core.
 
- (* Hint Resolve nil_is_nice nil_is_perfect: core. *)
   
  
