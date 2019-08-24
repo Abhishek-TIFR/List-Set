@@ -35,24 +35,6 @@ Section WPGT.
 
   Context { A: ordType }.
 
-  Lemma compl_commute (G G': @UG A): Compl G G' -> Compl G' G.
-  Proof. Admitted.
-  
-
-  Lemma stable_is_cliq (G G': @UG A)(I: list A): Compl G G'-> Stable_in G I-> Cliq_in G' I.
-  Proof. Admitted.
-
-  Lemma cliq_is_stable (G G': @UG A)(K: list A): Compl G G' -> Cliq_in G K -> Stable_in G' K.
-  Proof. Admitted.
-
-  Lemma cliq_num_i_num (G G': @UG A)(n: nat): Compl G G' -> cliq_num G n -> i_num G' n.
-  Proof. Admitted.
-
-  Lemma i_num_cliq_num (G G': @UG A)(n: nat): Compl G G'-> i_num G n -> cliq_num G' n.
-  Proof. Admitted.
-  
-  Lemma ind_sub_eq_iso (H G: @UG A): Ind_subgraph H G -> nodes H = nodes G -> iso H G.
-  Proof. Admitted.
 
   Lemma sub_neq_exists (l s: list A):
     IsOrd l -> IsOrd s -> l [<=] s -> l <> s -> (exists x, (In x s /\ ~ In x l)).
@@ -97,7 +79,7 @@ Section WPGT.
         
         assert (h4: i_num G n').
         { (* cliq_num G' n' -> i_num G n' *)
-          eapply cliq_num_i_num with (G:= G').
+          eapply cliq_num_i_num with (G0:= G').
           apply compl_commute;auto. auto. }
         eapply nice_intro1. exact hn'.
         specialize (i_num_cliq_cover h2 h4) as h5.
