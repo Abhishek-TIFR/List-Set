@@ -26,10 +26,8 @@
  Ind_Subgraph G1 G2     ind_subgraph G1 G2     ind_subgraphP
   
 
- Definition Compl (G: UG): UG.
-    refine ({|nodes:= G.(nodes);
-             nodes_IsOrd := G.(nodes_IsOrd);
-             edg:= (compl G.(edg)); |}). all: auto. Defined.
+Definition Compl (G G': UG) :=
+ (nodes G = nodes G') /\ (forall x y, In x G -> In y G -> (edg G x y <-> ~ edg G' x y)).
 
 The following definition produces an induced subgraph of G at the set of vertices K.
 
@@ -397,6 +395,18 @@ Hint Resolve lt_graph_is_well_founded: core.
 
   Hint Immediate Compl_elim1 Compl_elim3 Compl_elim4 Compl_elim5: core.
 
+  Lemma compl_commute (G G': UG): Compl G G' -> Compl G' G.
+  Proof. { intros h1. unfold Compl.
+           split.
+           { symmetry;auto. }
+           { intros x y hx hy.
+             split.
+             { eauto. }
+             { replace (nodes G') with (nodes G) in hx, hy.
+               eauto. apply h1. } } } Qed.
+
+  Hint Immediate compl_commute: core.
+
    
   Definition ind_at (K: list A)(G: UG): UG.
      refine {|nodes:= (inter K G); edg:= (G.(edg) at_ (inter K G)); |}. all: auto. Defined.  
@@ -478,6 +488,7 @@ Hint Resolve no_edg1 no_edg2: core.
 
  Hint Resolve Compl_elim1a: core.
  Hint Immediate Compl_elim1 Compl_elim3 Compl_elim4 Compl_elim5: core.
+ Hint Immediate compl_commute: core.
 
 
  Hint Immediate induced_fact1 induced_fact2: core.
