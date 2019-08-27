@@ -187,7 +187,13 @@ Lemma non_zero_size (a:A)(l: list A): In a l -> |l| > 0.
          { simpl; tauto. }
          { intros. simpl. omega. } } Qed.
 
-Hint Resolve non_zero_size: core.  
+  Hint Resolve non_zero_size: core.
+
+ Lemma not_nil_has_element (l: list A): l <> nil -> (exists x, In x l).
+  Proof. destruct l as [| a l']. tauto. intros h1. exists a. auto. Qed.
+
+  Hint Immediate not_nil_has_element: core.
+  
  
 End BasicSetFacts.
 
@@ -215,4 +221,6 @@ Hint Immediate filter_elim1 filter_elim2 filter_intro: core.
 
 Hint Resolve lt_set_is_well_founded: core.
 
-Hint Resolve non_zero_size: core. 
+Hint Resolve non_zero_size: core.
+Hint Immediate not_nil_has_element: core.
+
