@@ -153,3 +153,29 @@ Hint Resolve leP ltP nat_reflexive nat_transitive: core.
 End NaturalNumbers.
 
 Hint Resolve leP ltP nat_reflexive nat_transitive: core.
+
+Section MoreOnNat.
+  Lemma mult_le (m n: nat): m * (S n) >= m.
+  Proof. replace (m * S n) with (m*n + m). remember (m*n) as k. omega. auto with arith. Qed.
+
+  Lemma mult_le1 (m n k: nat): m <= n -> m*k <= n*k.
+  Proof.  replace (m*k) with (k*m). replace (n*k) with (k*n).
+          induction k. simpl. auto.
+          intro h1. simpl. omega. all: auto with arith. Qed.
+  Lemma mult_le2 (m n k: nat): m <= n -> k*m <= k*n.
+  Proof.  induction k. simpl. auto.
+          intro h1. simpl. omega.  Qed.
+
+  Lemma mult_dist (m n k: nat): m * (n + k) = m*n + m*k.
+  Proof. replace ( m * (n + k)) with ( (n + k) * m).
+         replace (m*n) with (n*m). replace (m*k) with (k*m).
+         auto with arith. all: auto with arith. Qed.
+
+  Lemma mult_dist1 (m n: nat): m * (S n) = m + m*n.
+  Proof. replace (m + m * n) with (m * n + m). auto with arith. omega. Qed.
+  
+    
+  Hint Immediate mult_le mult_le1 mult_le2 mult_dist mult_dist1: arith.
+End MoreOnNat.
+
+Hint Immediate mult_le mult_le1 mult_le2 mult_dist mult_dist1: arith.
