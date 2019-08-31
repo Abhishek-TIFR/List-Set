@@ -577,10 +577,66 @@ Section OrderedSet.
              subst x;auto. eauto.  } } Qed.
 
   Hint Resolve add_rmv rmv_add: core.
+
+
+
+ Notation "s [i] t" := (inter s t) (at level 67, left associativity).
+Notation "s [u] t" := (union s t) (at level 68, left associativity).
+Notation "s [\] t" := (diff s t)  (at level 68, left associativity).
+
+(*-------- operator distribution properties--------------- *)
+
+Lemma int_dist_over_union (x y z: list A): x [i] (y [u] z) = (x [i] y) [u] (x [i] z).
+Proof. { apply set_equal. all: auto.
+         split.
+         { intros a h1.
+           assert (h2: In a x). eauto.
+           assert (h3: In a (y [u] z)). eauto.
+           assert (h3a: In a y \/ In a z). auto.
+           destruct h3a as [h3a | h3b].
+           { cut (In a (x [i] y)). all: auto. }
+           { cut (In a (x [i] z)). all: auto. } }
+         { intros a h1.
+           assert (h1a: In a (x [i] y) \/ In a (x [i] z)). auto.
+           destruct h1a as [h1a |h1b].
+           { cut (In a x). cut (In a (y [u] z)). auto. cut (In a y).
+             auto. eauto. eauto. }
+           { cut (In a x). cut (In a (y [u] z)). auto. cut (In a z).
+             auto. eauto. eauto. } } } Qed.
   
-             
+  Lemma int_over_u_nil_elim1 (x y z: list A): x [i] (y [u] z) = nil -> x [i] y = nil.
+  Proof. { intros h1. apply set_equal.
+           all: auto. constructor.
+           split.
+           { intros a h2.
+             assert (h3: In a ( x [i] (y [u] z))).
+             { cut (In a x). cut (In a (y [u] z)). auto.
+               cut (In a y). auto. eauto. eauto. }
+             rewrite h1 in h3. auto. }
+           { auto. } } Qed.
+
+   Lemma int_over_u_nil_elim2 (x y z: list A): x [i] (y [u] z) = nil -> x [i] z = nil.
+  Proof.  { intros h1. apply set_equal.
+           all: auto. constructor.
+           split.
+           { intros a h2.
+             assert (h3: In a ( x [i] (y [u] z))).
+             { cut (In a x). cut (In a (y [u] z)). auto.
+               cut (In a z). auto. eauto. eauto. }
+             rewrite h1 in h3. auto. }
+           { auto. } } Qed.
+
+  Lemma int_over_u_nil_intro(x y z: list A):x [i] y = nil-> x [i] z = nil-> x [i] (y [u] z) = nil.
+  Proof. { intros h1 h2.
+           replace ( x [i] (y [u] z)) with ((x [i] y) [u] (x [i] z)).
+           rewrite h1. rewrite h2. simpl. auto.
+           symmetry; apply int_dist_over_union. } Qed.
+
+  Hint Immediate int_over_u_nil_elim1 int_over_u_nil_elim2 int_over_u_nil_intro : core.
+  Hint Immediate int_dist_over_union: core.
+
   
-          
+   (*------- write some more distribution properties ---------*)                    
 End OrderedSet.
 
 Hint Immediate set_rmv_elim1 set_rmv_elim set_rmv_elim2 set_rmv_elim3: core.
@@ -623,6 +679,10 @@ Hint Resolve filter_IsOrd: core.
 Notation "s [i] t" := (inter s t) (at level 67, left associativity).
 Notation "s [u] t" := (union s t) (at level 68, left associativity).
 Notation "s [\] t" := (diff s t)  (at level 68, left associativity).
+
+Hint Immediate int_over_u_nil_elim1 int_over_u_nil_elim2 int_over_u_nil_intro : core.
+ Hint Immediate int_dist_over_union: core.
+
 
 
 Section MoreOrdSet.
@@ -736,7 +796,7 @@ Section MoreOrdSet.
              assert (h3:  (| l [u] y |) = (| l |) + (| y |)). eauto. rewrite h3.
              omega. } } Qed.
 
-
+  Hint Immediate inc_exc1: core.
  
 
     
@@ -749,7 +809,7 @@ Hint Resolve y_as_disj_sum y_as_disj_sum1 y_as_disj_sum2: core.
 
  Hint Immediate union_minus_x union_minus_y union_as_disjoint_x union_as_disjoint_y: core.
  Hint Resolve x_disj_with y_disj_with xy_disj_with yx_disj_with : core.
-
+Hint Immediate inc_exc1: core.
 
  Section Inc_Exc.
 
@@ -767,7 +827,11 @@ Hint Resolve y_as_disj_sum y_as_disj_sum1 y_as_disj_sum2: core.
               eapply inc_exc1. auto. auto. symmetry. auto. }
            assert (h3: | x [i] y | = | y [i] x |).
            { replace (x [i] y) with (y [i] x). auto. auto. } omega. } Qed.
+  Lemma inclusion_exclusion1:  | x [u] y | <= |x| + |y|.
+  Proof. specialize (inclusion_exclusion) as h1.
+         rewrite h1. omega. Qed.
+  
   
  End Inc_Exc.
 
- Hint Immediate inclusion_exclusion: core.
+ Hint Immediate inclusion_exclusion inclusion_exclusion1: core.
