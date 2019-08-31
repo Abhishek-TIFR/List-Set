@@ -1,4 +1,4 @@
-
+ 
 
 (*-------------Description ------------------------------------------------------  
 
@@ -54,6 +54,111 @@ Require Export Omega.
 Require Export OrdSet.
 
 Set Implicit Arguments.
+
+
+
+Section OrderOnPairs.
+
+  Context { A B: ordType }.
+
+  (* ------------ Definition of decidable equality on pair of elements from A*B ----------- *)
+  
+  Definition eqbp (p q: A*B):= (fst p == fst q) && (snd p == snd q).
+
+  Lemma eqbp_refl (p: A*B): eqbp p p.
+  Proof. unfold eqbp. split_; auto. Qed.
+  
+  Lemma eqbp_elim (p q: A*B): eqbp p q -> p = q.
+  Proof. unfold eqbp. move /andP. destruct p , q. simpl.
+         intro h1. destruct h1 as [h1 h2].
+         move /eqP in h1. move /eqP in h2.  subst e;subst e0. auto. Qed.
+  Lemma eqbp_intro (p q: A*B): p = q -> eqbp p q.
+  Proof. intro H; subst p; apply eqbp_refl. Qed.
+  Lemma eqbpP (p q: A*B): reflect (p = q)(eqbp p q).
+  Proof. apply reflect_intro. split. apply eqbp_intro. apply eqbp_elim. Qed.
+  
+  
+  Canonical pair_eqType: eqType:=
+    {| Decidable.E:= (A*B); Decidable.eqb:= eqbp; Decidable.eqP:=eqbpP |}.
+  
+  (*------------ Definition and properties of less than relation on lists of A----------- *)
+  
+  Definition ltbp (p q: A*B) := match (comp (fst p) (fst q)) with
+                                | Eq => (snd p) <b (snd q)
+                                | Lt => true
+                                | Gt => false
+                                end.
+
+  Lemma ltbp_elim (p q: A*B):
+    ltbp p q -> ((fst p <b fst q) \/ (fst p = fst q /\ snd p <b snd q )).
+  Proof. { unfold ltbp. destruct p as [p1 p2];destruct q as [q1 q2].
+           simpl. match_up p1 q1.
+           { intros h1. right; split;auto. }
+           { intros h1. left; auto. }
+           { intros h1; inversion h1. } } Qed.
+
+  Lemma ltbp_intro (p q: A*B):
+    ((fst p <b fst q) \/ (fst p = fst q /\ snd p <b snd q )) -> ltbp p q.
+  Proof. { unfold ltbp. destruct p as [p1 p2];destruct q as [q1 q2].
+           simpl. match_up p1 q1.
+           { intros h1. destruct h1 as [h1 |h1]. by_conflict. apply h1. }
+           { intros h1. auto.  }
+           { intros h1.  destruct h1 as [h1 |h1]. by_conflict.
+             destruct h1.  subst p1. by_conflict. } } Qed.
+              
+    
+Lemma ltbp_irefl (p : A*B): ltbp p p = false.
+Proof. destruct p. unfold ltbp. simpl.  match_up e e. switch; auto.
+       rewrite <-H. switch; auto. auto.  Qed.
+
+Hint Resolve ltbp_irefl: core.
+
+Lemma ltbp_antisym (x y: A*B):  x <> y -> ltbp x y = ~~ ltbp y x.
+Proof. { destruct x as [x1 x2]. destruct y as [y1 y2].
+       unfold ltbp. simpl. intro h1. 
+       match_up x1 y1; match_up y1 x1.
+       { cut (x2 <> y2).  eapply ltb_antisym0. intros h2.
+         subst x1;subst x2. auto. }
+       { subst x1; absurd (y1 <b y1);auto. }
+       { subst x1; absurd (y1 <b y1);auto. }
+       { subst x1; absurd (y1 <b y1);auto. }
+       { by_conflict. } 
+       { simpl; auto. }
+       { subst x1; absurd (y1 <b y1);auto. }
+       { simpl; auto. }
+       { by_conflict. } } Qed.
+
+Hint Resolve ltbp_antisym: core.
+
+
+Lemma ltbp_trans (x y z: A*B):  ltbp x y -> ltbp y z -> ltbp x z.
+Proof. { intros h1 h2.
+         specialize (ltbp_elim x y h1) as h1a.
+         specialize (ltbp_elim y z h2) as h2a.
+         destruct x as [x1 x2];destruct y as [y1 y2];destruct z as [z1 z2].
+         simpl in h1a, h2a. apply ltbp_intro. simpl.
+         destruct h1a as [h1a | h1b]; destruct h2a as [h2a | h2b].
+         { left; auto. }
+         { left. destruct h2b. subst y1;auto. }
+         { left. destruct h1b. subst y1;auto. }
+         { right. destruct h1b;destruct h2b. split;auto. subst x1;auto. } } Qed.
+
+Hint Resolve ltbp_trans: core.
+
+Canonical pair_ordType: ordType:= {| Order.D:= pair_eqType;
+                                     Order.ltb:= ltbp;
+                                     Order.ltb_irefl:= ltbp_irefl;
+                                     Order.ltb_antisym := ltbp_antisym;
+                                     Order.ltb_trans := ltbp_trans  |}.
+
+Hint Immediate ltbp_elim ltbp_intro: core.
+  
+End OrderOnPairs.
+
+Hint Immediate ltbp_elim ltbp_intro: core.
+
+
+
 
 Section OrderOnLists.
 
@@ -470,3 +575,7 @@ Section MoreOnPower.
 End MoreOnPower.
 
 Hint Immediate max_subs_of_intro max_subs_of_elim: core.
+
+
+
+
