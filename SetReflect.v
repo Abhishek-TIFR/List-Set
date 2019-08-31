@@ -374,6 +374,12 @@ Hint Immediate equal_elim equal_intro: core.
    Proof. apply forall_exists_EM; intro x;destruct (f x); auto. Qed.
    Lemma exists_em_forall (f: A-> bool) (l: list A): (exists x, In x l /\ f x) \/ (forall x, In x l ->  ~ f x).
    Proof. apply exists_forall_EM; intro x; destruct (f x); auto. Qed.
+   Lemma not_forall_exists (f: A-> bool) (l: list A): ~ (forall x, In x l -> f x) -> (exists x, In x l /\ ~ f x).
+   Proof.  specialize (forall_em_exists f l) as h1. intro h2.
+           destruct h1 as [h1 | h1]. contradiction. auto. Qed.
+   Lemma not_exists_forall (f: A-> bool) (l: list A): ~(exists x, In x l /\ f x)-> (forall x, In x l ->  ~ f x).
+   Proof.  specialize (exists_em_forall f l) as h1. intro h2.
+           destruct h1 as [h1 | h1].  contradiction. auto. Qed.  
      
 End SetReflections.
 
@@ -390,6 +396,8 @@ Hint Immediate noDup_elim noDup_intro: core.
 Hint Immediate empty_elim empty_intro: core.
 Hint Immediate subset_intro subset_elim: core.
 Hint Immediate equal_elim equal_intro: core.
+
+Hint Immediate not_forall_exists not_exists_forall: core.
 
 
 
@@ -410,7 +418,15 @@ Section MoreReflection.
          unfold forall_yxb; auto. all: auto. Qed.
   Lemma forall_xy_EM (B: A-> A-> bool)(l: list A):
     (forall x y, In x l -> In y l -> B x y) \/ (exists x y, In x l /\ In y l /\ ~ B x y).
-  Proof. Admitted.
+  Proof. { destruct (forall_xyb B l) eqn: h.
+          move /forall_xyP in h.
+          { left. auto. }
+          { right. move /forallbP in h.
+            apply not_forall_exists in h as h1.
+            destruct h1 as [x h1]. destruct h1 as [h1 h2].
+            switch_in h2. move /forallbP in h2.
+            apply not_forall_exists in h2 as h3.
+            destruct h3 as [y h3]. exists x. exists y. split;auto. } } Qed.
   
   
 End MoreReflection.
