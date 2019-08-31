@@ -152,8 +152,6 @@ Section SetCover.
 
   Notation "l [,] n" := (fix_nat n l) (at level 65).
 
-  (*------- To Do ----  connect (A* N) to eqType and ordtype --------*)
-
 
   (*---- Definition of (mk_disj C) which makes each list in C disjoint with each other------*)
 
@@ -193,11 +191,132 @@ Section SetCover.
   Proof. { unfold Set_cover. intros h1 h2 x h3. subst l.
            eapply union_over_intro; eauto. } Qed.
 
+  Lemma Set_cover_elim1 (C: list (list A)) (l: list A)(x: A):
+    Set_cover C l -> In x l-> (exists c, In c C /\ In x c).
+  Proof. unfold Set_cover. intro h1. subst l. auto. Qed.
+  
+
   Lemma Set_cover_IsOrd (C: list (list A)) (l: list A): Set_cover C l -> IsOrd l.
   Proof. unfold Set_cover;intros;subst l;auto. Qed.
 
   Hint Resolve Set_cover_IsOrd: core.
+  Hint Immediate Set_cover_elim Set_cover_elim1: core.
+
+  Lemma cover_dij_intro (C: list (list A)) (c: list A):
+    (forall y, In y C -> (c [i] y = nil))-> (c [i] (union_over C) = nil).
+  Proof. { intros h1.
+           assert (h2: (c [i] union_over C = nil) \/ ~(c [i] union_over C = nil)).
+           { eauto. }
+           destruct h2 as [h2 | h2].
+           { auto. }
+           { assert (h3: exists x, In x (c [i] union_over C)). auto.
+             destruct h3 as [x h3].
+             assert (h3a: In x c). eauto.
+             assert (h3b: In x (union_over C)). eauto.
+             assert (h3c: exists c', In c' C /\ In x c'). auto.
+             destruct h3c as [c' h3c]. destruct h3c as [h3c h3d].
+             specialize (h1 c' h3c) as h4.
+             absurd (In  x (c [i] c')). rewrite h4. auto. auto. } } Qed.
+
+ 
   
+
+   Lemma cover_dij_elim (C: list (list A)) (c: list A):
+     (c [i] (union_over C) = nil) -> (forall y, In y C -> (c [i] y = nil)).
+   Proof. { induction C as [| c' C'].
+            { simpl. auto. }
+            { simpl. intros h1 y h2.
+              destruct h2 as [h2 | h2].
+              { subst y.  eauto. }
+              { apply IHC'. eauto. auto. } } } Qed.
+
+                
+Hint Immediate cover_dij_elim cover_dij_intro: core.
+  
+
+  (*------------- Cardinalities and set covers ------------------------------------------*)
+
+
+  Lemma disj_cover_card (C: list (list A))(l: list A)(n: nat):
+    Set_cover C l -> NoDup C-> (forall x, In x C -> (IsOrd x /\ |x|=n))->
+    (forall x y, In x C -> In y C-> x <> y -> x [i] y = nil)-> |l| = |C| * n.
+  Proof. { revert l. induction C as [|c C'].
+           { intros l h1 h2 h3 h4. unfold Set_cover in h1.
+             subst l. simpl. auto. }
+           { intros l h1 h2 h3 h4. unfold Set_cover in h1.
+             subst l. simpl.
+             replace (| c [u] union_over C' |) with (|c| + |union_over C'|).
+             set (l':= union_over C').
+             assert (h5: Set_cover C' l').
+             { unfold Set_cover. subst l'. auto. }
+             assert (h6: (|l'|) = (|C'|)* n).
+             { apply IHC'. auto. eauto.
+               intros x h6. apply h3. auto.
+               intros x y hx hy. apply h4. all: auto. } 
+             rewrite h6. cut (|c| = n). omega.
+             apply h3. auto. symmetry; apply inc_exc1.
+             apply h3. auto. apply cover_dij_intro.
+             intros y h5. apply h4. auto. auto. intro h6; subst c.
+             absurd (In y C'); auto. } } Qed.
+ 
+   
+  Lemma large_set_in_cover (C: list (list A))(l: list A):
+   l <> nil-> (forall x, In x C -> IsOrd x)-> Set_cover C l -> (exists x, In x C /\ (|x| * |C|) >= |l|).
+  Proof. { revert l. induction C as [| c C'].
+           { intros l h1 h2.  unfold Set_cover in h2. simpl in h2. contradiction. }
+           { intros l h1 h2 hl.
+             set (l':= union_over C').
+             assert (h3: l = c [u] l').
+             { unfold Set_cover in hl. subst l;subst l'. simpl. auto. }
+             assert (h4: l' = nil \/ l' <> nil). eauto.
+             destruct h4 as [h4 | h4].
+             { (* ----l' = nil--- *) 
+               exists c. split. auto. rewrite h4 in h3.
+               replace (c [u] nil) with (nil [u] c) in h3. simpl in h3.
+               subst l. simpl. auto using mult_le.
+               apply union_equal. constructor. auto. }
+             { (*-----  l' <> nil -----*)
+               specialize (IHC' l' h4) as h4a.
+               assert (h6: exists x : list A, In x C' /\ (| x |) * (| C' |) >= (| l' |)).
+               { apply h4a. intros x h6. apply h2. auto.
+                 unfold Set_cover. subst l';auto. }
+               destruct h6 as [x' h6].
+               
+               assert (h7: (|c| <= |x'|) \/ ~ (|c| <= |x'|)). eauto.
+               destruct h7 as [h7 | h7].
+               {(*-- (| c |) <= (| x' |) --*)
+                 exists x'.
+                 split.
+                 { cut (In x' C'). auto. apply h6. }
+                 { destruct h6 as [h6 h6a]. simpl. rewrite h3.
+                   assert (h8: (| c [u] l' |) <= (|c|) + (|l'|)).
+                   { cut (IsOrd c). cut (IsOrd l'). auto.
+                     subst l'. auto. auto. }
+                   assert (h9: (| c |) + (| l' |) <=  (| c |) + (| x' |) * (| C' |) ).
+                   omega.
+                   assert (h10: (| c |) + (| x' |) * (| C' |) <= (| x' |) + (| x' |) * (| C' |)).
+                   omega.
+                   replace ((| x' |) * S (| C' |)) with ((| x' |) * (| C' |) + |x'|).
+                   omega. auto with arith. } }
+               {(*--- ~ (| c |) <= (| x' |) ----*)
+                 assert (h7a: |c| > |x'|). omega.
+                 exists c.
+                 split.
+                 { auto. }
+                 { destruct h6 as [h6 h6a]. simpl. rewrite h3.
+                   assert (h8: (| c [u] l' |) <= (|c|) + (|l'|)).
+                   { cut (IsOrd c). cut (IsOrd l'). auto.
+                     subst l'. auto. auto. }
+                   assert (h9: (| c |) + (| l' |) <=  (| c |) + (| x' |) * (| C' |) ).
+                   omega.
+                   assert (h9a:  (| x' |) * (| C' |) <=  (| c |) * (| C' |) ).
+                   { apply mult_le1. omega. }
+                   assert (h10: (| c |) + (| x' |) * (| C' |) <= (| c |) + (| c |) * (| C' |)).
+                   omega.
+                   replace ((| c |) * S (| C' |)) with ((| c |) * (| C' |) + |c|).
+                   omega. auto with arith. } } } } } Qed. 
+
+ 
 End SetCover.
 
 
@@ -217,13 +336,15 @@ Hint Resolve Set_cover_IsOrd: core.
 
 Notation "l [,] n" := (fix_nat n l) (at level 65).
 
+ Hint Immediate cover_dij_elim cover_dij_intro: core.
+
 
 Section LocateInC.
 
   Context { A: ordType }.
   
 
-  (*--- Following function (idc x C) finds the location of set in C in which x lies------*)
+  (*--- Following function (idc x C) finds the location of set in C which contains x ----*)
   Fixpoint idc (x:A)(C: list (list A)):= match C with
                                 |nil => 0
                                 |c::C' => match (memb x c) with
