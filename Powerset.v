@@ -159,7 +159,6 @@ Hint Immediate ltbp_elim ltbp_intro: core.
 
 
 
-
 Section OrderOnLists.
 
   Context { A: ordType }.
