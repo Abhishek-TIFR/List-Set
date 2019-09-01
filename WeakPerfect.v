@@ -12,16 +12,129 @@ Require Export LovaszExp.
 Require Export GraphCovers.
 Set Implicit Arguments.
 
+Section MeetsDef.
+  Context { A: ordType }.
+  
+  Definition meets (K I: list A):= exists a:A, In a K /\ In a I.
+
+  End MeetsDef.
+
+
+Section ExistsCliq.
+  
+  Context { A: ordType }.
+  Variable G: (@UG A).
+
+  
+  Hypothesis Gnil: (nodes G) <> nil.
+  Hypothesis GPerfect: Perfect G.
+
+  
+  Let C:= max_subs_of G (fun I => stable G I).
+  Let C':= mk_disj C.
+
+  Let N:= union_over C.
+  Let N':= union_over C'.
+
+  Let H:= (ind_at N G).
+  Let E:= (edg H).
+
+  Let g:= fun (x: A*nat) => fst x.
+  
+  Let E1:= fun (x y: A*nat) => match (g x == g y) with
+                          | true => match (snd x == snd y) with
+                                   |true => false
+                                   |false => true
+                                   end
+                          |false => E (g x) (g y)
+                          end.
+
+  Lemma N'IsOrd: IsOrd N'.
+  Proof. subst N'. auto. Qed.
+  Lemma E1_irefl: irefl E1.
+  Proof. unfold irefl. intro p. unfold E1.
+         replace (g p == g p) with true. 
+         assert (h1: snd p == snd p). apply /eqP;auto.
+         rewrite h1. auto. symmetry;auto. Qed.
+         
+  Lemma E1_sym: sym E1.
+  Proof. { unfold sym. intros x y. unfold E1.
+         destruct (g x == g y) eqn: h1; destruct (snd x == snd y) eqn: h2.
+         { move /eqP in h1. symmetry in h1. move /eqP in h1. rewrite h1. rewrite h2.
+           move /eqP in h2. symmetry in h2. move /eqP in h2. rewrite h2. auto. }
+         { rewrite h2. move /eqP in h1. symmetry in h1. move /eqP in h1. rewrite h1.
+           assert (h3: (snd y == snd x) = false). 
+           switch. switch_in h2. intro h3; apply h2; eauto. rewrite h3;auto. }
+         { move /eqP in h2. symmetry in h2. move /eqP in h2. rewrite h2.
+           assert (h3: (g y == g x) = false). 
+           switch. switch_in h1. intro h3; apply h1; eauto. rewrite h3.
+           unfold E. auto. }
+         { assert (h3: (g y == g x) = false). 
+           switch. switch_in h1. intro h3; apply h1; eauto. rewrite h3.
+           unfold E. auto. } } Qed.
+
+  Let E':= E1 at_ N'.
+         
+  Lemma E'_out: E' only_at N'.
+  Proof. unfold E'. auto. Qed.
+
+  Lemma E'_irefl: irefl E'.
+  Proof. unfold E'. cut (irefl E1). auto. apply E1_irefl. Qed.
+
+  Lemma E'_sym: sym E'.
+  Proof. unfold E'. cut (sym E1). auto. apply E1_sym. Qed.
+
+  
+  Definition H' := ({| nodes:= N'; edg:= E'; nodes_IsOrd:= N'IsOrd;
+                       edg_irefl:= E'_irefl; edg_sym:= E'_sym; out_edg:= E'_out |}).
+
+  Lemma N_sub_G: N [<=] G.
+  Proof. Admitted.
+  Lemma NG_N: N [i] G = N.
+  Proof. Admitted.
+
+  Hint Resolve N_sub_G NG_N.
+
+  Lemma C_and_C': (nodes H) = img g H'.
+  Proof. Admitted.
+
+  Hint Resolve C_and_C'.
+  
+  
+  Lemma H'_exp_of_H: Exp_of H H' g.
+  Proof. { unfold Exp_of.
+           split.
+           {(*- H = img g H' ---*)
+             auto. }
+           split.
+           { (*- In x H' -> In y H' -> x <> y -> g x = g y -> edg H' x y -*)
+             admit. }
+           { (*- In x H' -> In y H' -> g x <> g y -> edg H (g x) (g y) = edg H' x y -*)
+             admit. } } Admitted.
+
+  Lemma PerfectH': Perfect H'.
+  Proof. cut (Perfect H). eapply LovaszExpLemma. apply H'_exp_of_H.
+         cut (Ind_subgraph H G). eauto. unfold H. auto. Qed.
+  
+  Lemma K'_meets_all_in_C': (exists K', Cliq_in H' K' /\ (forall I, In I C' -> meets K' I)).
+  Proof. Admitted.
+  
+  Lemma K_meets_all_in_C: (exists K, Cliq_in H K /\ (forall I, In I C -> meets K I)).
+  Proof. Admitted.
+  
+  Lemma Cliq_meets_all_MaxI: (exists K, Cliq_in G K /\ (forall I, Max_I_in G I -> meets K I)).
+  Proof. Admitted.
+
+End ExistsCliq.
+
+
+
+
 Section WPerfect.
   
   Context { A: ordType }.
 
-  Definition meets (K I: list A):= exists a:A, In a K /\ In a I. 
-
-  Lemma Cliq_meets_all_MaxI (G: @UG A):
-    (nodes G)<> nil-> Perfect G -> (exists K, Cliq_in G K /\ (forall I, Max_I_in G I -> meets K I)).
-  Proof. Admitted.
-
+ 
   Lemma cliq_meets_stable_once (G: @UG A)(K: list A)(I: list A)(x y: A):
     Cliq G K -> Stable G I -> In x K -> In y K -> In x I -> In y I -> x = y.
   Proof. { intros h1 h2 hxk hyk hxi hyi. unfold Cliq in h1;unfold Stable in h2.
