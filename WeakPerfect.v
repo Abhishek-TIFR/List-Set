@@ -73,6 +73,24 @@ Section ExistsCliq.
            switch. switch_in h1. intro h3; apply h1; eauto. rewrite h3.
            unfold E. auto. } } Qed.
 
+  (*-----Some  more properties of the new edg relation (E1 x y)------------*)
+  Lemma E1_P1: forall x y, x <> y -> g x = g y -> E1 x y.
+  Proof. { intros x y h1 h2. unfold E1.
+           replace (g x == g y) with true. replace (snd x == snd y) with false.
+           auto. symmetry;switch. move /eqP. intro h3.
+           absurd (x = y). auto.
+           destruct x as [x1 x2]; destruct y as [y1 y2]; simpl in h2,h3.
+           subst x1; subst x2. auto. symmetry;auto. } Qed.
+
+  Lemma E1_P2: forall x y, g x <> g y -> E1 x y = E (g x) (g y).
+  Proof. { intros x y h1. unfold E1. replace ( g x == g y) with false. auto.
+           symmetry;auto. } Qed.
+           
+  Hint Immediate E1_P1 E1_P2.
+
+
+  (*------ The edge relation E1 when restricted to N' is denoted as E' --------*)
+
   Let E':= E1 at_ N'.
          
   Lemma E'_out: E' only_at N'.
@@ -98,7 +116,17 @@ Section ExistsCliq.
   Lemma C_and_C': (nodes H) = img g H'.
   Proof. Admitted.
 
+  Lemma E'_P1: forall x y, In x H' -> In y H' -> x <> y -> g x = g y -> edg H' x y.
+  Proof. intros x y hx hy h1 h2. simpl. replace ( E' x y) with (E1 x y).
+         Focus 2. unfold E'. simpl in hx, hy. auto. auto. Qed.
+
+  Lemma E'_P2:  forall x y, In x H' -> In y H' -> g x <> g y -> edg H (g x) (g y) = edg H' x y.
+  Proof. intros x y hx hy h1. symmetry. simpl (edg H' x y).
+         replace ( E' x y) with (E1 x y). Focus 2. unfold E'. simpl in hx, hy. auto.
+         auto. Qed.
+   
   Hint Resolve C_and_C'.
+  Hint Immediate E'_P1 E'_P2.
   
   
   Lemma H'_exp_of_H: Exp_of H H' g.
@@ -108,9 +136,9 @@ Section ExistsCliq.
              auto. }
            split.
            { (*- In x H' -> In y H' -> x <> y -> g x = g y -> edg H' x y -*)
-             admit. }
+             apply E'_P1. }
            { (*- In x H' -> In y H' -> g x <> g y -> edg H (g x) (g y) = edg H' x y -*)
-             admit. } } Admitted.
+             apply E'_P2. } } Qed.
 
   Lemma PerfectH': Perfect H'.
   Proof. cut (Perfect H). eapply LovaszExpLemma. apply H'_exp_of_H.
@@ -123,7 +151,15 @@ Section ExistsCliq.
   Proof. Admitted.
   
   Lemma Cliq_meets_all_MaxI: (exists K, Cliq_in G K /\ (forall I, Max_I_in G I -> meets K I)).
-  Proof. Admitted.
+  Proof. { destruct K_meets_all_in_C as [K h1].
+           destruct h1 as [h1 h2].
+           exists K.
+           split.
+           { (*-- Cliq_in H K -> Cliq_in G K --*)
+             assert (h3: Ind_subgraph H G). subst H. auto. eauto. }
+           { (*-- forall I : list A, Max_I_in G I -> meets K I --*)
+             intros I h3. apply h2. subst C. apply max_subs_of_intro.
+             auto. unfold Max_I_in in h3. auto. } } Qed.
 
 End ExistsCliq.
 
