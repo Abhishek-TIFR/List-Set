@@ -124,6 +124,16 @@ Section Set_maps.
   Hint Resolve IsOrd_img NoDup_img : core.
   Hint Resolve img_intro1 img_intro2 img_elim: core.
   Hint Resolve img_elim2 img_elim3 img_elim4: core.
+
+  Lemma map_is_img (f: A-> B)(l: list A): IsOrd (map f l) -> (map f l) = (img f l).
+  Proof. { intro h1. apply set_equal. auto. auto.
+           split.
+           { intros y h2. assert (h3: exists x, In x l /\ y = f x). auto.
+             destruct h3 as [x h3]; destruct h3 as [h3a h3]. subst y; auto. }
+           { intros y h2. assert (h3: exists x, In x l /\ y = f x). auto.
+             destruct h3 as [x h3]; destruct h3 as [h3a h3]. subst y; auto. } } Qed.
+
+  Hint Immediate map_is_img: core.
   
   Lemma funP (f: A->B)(x y: A): f x <> f y -> x <> y.
   Proof. intros H H1. apply H;rewrite H1; auto. Qed.
@@ -373,6 +383,8 @@ Hint Resolve IsOrd_img NoDup_img : core.
 Hint Resolve img_intro1 img_intro2 img_elim: core.
 Hint Resolve img_elim2 img_elim3 img_elim4 : core.
 Hint Immediate one_oneP1: core.
+
+Hint Immediate map_is_img: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
 Hint Immediate one_one_on_intro one_one_on_intro1: core.
 Hint Resolve one_one_onP: core.
