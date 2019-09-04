@@ -51,6 +51,12 @@ Section ExistsCliq.
 
   Lemma N'IsOrd: IsOrd N'.
   Proof. subst N'. auto. Qed.
+
+  Lemma NIsOrd: IsOrd N.
+  Proof. subst N. auto. Qed.
+
+  Hint Resolve N'IsOrd NIsOrd.
+  
   Lemma E1_irefl: irefl E1.
   Proof. unfold irefl. intro p. unfold E1.
          replace (g p == g p) with true. 
@@ -106,15 +112,31 @@ Section ExistsCliq.
   Definition H' := ({| nodes:= N'; edg:= E'; nodes_IsOrd:= N'IsOrd;
                        edg_irefl:= E'_irefl; edg_sym:= E'_sym; out_edg:= E'_out |}).
 
+  (*-------- nodes of H and H' are related via stable sets in C and C' respectievly ------*)
+
   Lemma N_sub_G: N [<=] G.
-  Proof. Admitted.
+  Proof. subst N. cut (forall I, In I C -> I [<=] G). auto.
+         intros I h1. subst C. eauto. Qed.
+
+  Hint Resolve N_sub_G.
+  
   Lemma NG_N: N [i] G = N.
-  Proof. Admitted.
+  Proof. symmetry. cut (N [<=] G). all: auto. Qed.
 
   Hint Resolve N_sub_G NG_N.
 
+  Lemma mem_of_C': forall I, In I C -> In (I [,] (idx I C)) C'.
+  Proof. subst C'. intros I h1.  apply mk_disj_intro. auto. Qed.
+  
+
+  Lemma C'_map_to_C: forall I, In I C -> I = img g (I [,] (idx I C)).
+  Proof. intros I h1. unfold g. apply fix_nat_prop2.
+         subst C. cut (IsOrd G). eauto. auto. Qed.
+
+  Hint Resolve mem_of_C' C'_map_to_C.
+
   Lemma C_and_C': (nodes H) = img g H'.
-  Proof. Admitted.
+  Proof. simpl. rewrite NG_N. subst N. subst N'. subst C'. unfold g.  auto.  Qed.
 
   Lemma E'_P1: forall x y, In x H' -> In y H' -> x <> y -> g x = g y -> edg H' x y.
   Proof. intros x y hx hy h1 h2. simpl. replace ( E' x y) with (E1 x y).
@@ -148,7 +170,45 @@ Section ExistsCliq.
   Proof. Admitted.
   
   Lemma K_meets_all_in_C: (exists K, Cliq_in H K /\ (forall I, In I C -> meets K I)).
-  Proof. Admitted.
+  Proof. { destruct K'_meets_all_in_C' as [K' h1].
+           destruct h1 as [h1 h2].
+           set (K:= img g K').
+           exists K.
+           split.
+           { (*-- Cliq_in H K --*)
+             unfold Cliq_in.
+             assert (h3: K [<=] H).
+             { rewrite C_and_C'. subst K. cut (K' [<=] H'). auto. auto. }
+             split.
+             { auto. }
+             split.
+             { subst K. auto. }
+             { unfold Cliq. intros gx gy h4 h5.
+               assert (h4a: exists x, In x K' /\ gx = g x).
+               { unfold K in h4. auto. }
+               assert (h5a: exists y, In y K' /\ gy = g y).
+               { unfold K in h5. auto. }
+               destruct h4a as [x h4a]. destruct h4a as [h4a h4b].
+               destruct h5a as [y h5a]. destruct h5a as [h5a h5b].
+               assert (h6: gx = gy \/ gx <> gy). eauto.
+               destruct h6 as [h6 | h6].
+               { left. auto. }
+               { right. subst gx. subst gy.
+                 replace (edg H (g x) (g y)) with (edg H' x y).
+                 unfold Cliq_in in h1. unfold Cliq in h1.
+                 assert (h7: x = y \/ edg H' x y). apply h1;auto.
+                 destruct h7 as [h7 |h7]. subst x.
+                 absurd (g y = g y);auto. auto.
+                 assert (h7: K' [<=] H'). apply h1.
+                 symmetry. apply E'_P2. all: eauto. } } }
+           { (*--- forall I : list A, In I C -> meets K I -- *)
+             intros I h3.
+             specialize (C'_map_to_C I h3) as h4.
+             set (I':=  (I [,] idx I C)).
+             assert (h5: meets K' I').
+             { apply h2. unfold C'. unfold I'. auto. }
+             destruct h5 as [x h5]. destruct h5 as [h5 h6].
+             exists (g x). split. subst K. auto. rewrite h4. fold I'. auto. } } Qed.
   
   Lemma Cliq_meets_all_MaxI: (exists K, Cliq_in G K /\ (forall I, Max_I_in G I -> meets K I)).
   Proof. { destruct K_meets_all_in_C as [K h1].
