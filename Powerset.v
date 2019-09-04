@@ -1,4 +1,3 @@
- 
 
 (*-------------Description ------------------------------------------------------  
 
@@ -105,7 +104,13 @@ Section OrderOnPairs.
            { intros h1. auto.  }
            { intros h1.  destruct h1 as [h1 |h1]. by_conflict.
              destruct h1.  subst p1. by_conflict. } } Qed.
-              
+
+   Lemma ltbp_intro1 (p q: A*B): (fst p <b fst q) -> ltbp p q.
+   Proof. intro h1. apply ltbp_intro. left;auto. Qed.
+
+    Lemma ltbp_intro2 (p q: A*B): (fst p = fst q /\ snd p <b snd q ) -> ltbp p q.
+    Proof.  intro h1. apply ltbp_intro. right;auto. Qed.
+                  
     
 Lemma ltbp_irefl (p : A*B): ltbp p p = false.
 Proof. destruct p. unfold ltbp. simpl.  match_up e e. switch; auto.
@@ -155,7 +160,7 @@ Hint Immediate ltbp_elim ltbp_intro: core.
   
 End OrderOnPairs.
 
-Hint Immediate ltbp_elim ltbp_intro: core.
+Hint Immediate ltbp_elim ltbp_intro ltbp_intro1 ltbp_intro2: core.
 
 
 
