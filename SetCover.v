@@ -144,6 +144,13 @@ Section SetCover.
              destruct h1 as [h1 | h1].
              left;inversion h1;auto. right;auto. } } Qed.
 
+  Lemma fix_nat_elim1 (n m: nat)(l: list A)(x: A): In (x, m) (fix_nat n l)-> m = n.
+  Proof. induction l as [|a l'].
+         { simpl. auto. }
+         { simpl. intro h1. destruct h1 as [h1 | h1].
+           inversion h1. auto. auto. } Qed.
+  
+
   Lemma fix_nat_size (n: nat)(l: list A): | l | = | fix_nat n l |.
   Proof.  { induction l as [|a l' ].
            { simpl. auto. }
@@ -152,6 +159,30 @@ Section SetCover.
 
   Notation "l [,] n" := (fix_nat n l) (at level 65).
 
+  Lemma fix_nat_IsOrd (n: nat)(l: list A): IsOrd l -> IsOrd (l [,] n).
+  Proof. { revert n. induction l as [| a l'].
+           { simpl;intros. constructor. }
+           { intros n h1. simpl. apply IsOrd_intro.
+           apply IHl'. eauto.
+           intros x h2. destruct x as [x' m].
+           assert (h3: m = n). eapply fix_nat_elim1. apply h2.
+           subst m.
+           assert (h3: In x' l'). eapply fix_nat_elim. apply h2.
+           assert (h4: a <b x'). eauto.
+           apply ltbp_intro1. simpl. auto. } } Qed.
+
+  Lemma fix_nat_prop1 (n: nat)(l: list A): l = map fst (l [,] n).
+  Proof. { induction l as [| a l'].
+           { simpl. auto. }
+           { simpl. rewrite <- IHl'. auto. } } Qed.
+
+  Lemma fix_nat_prop2 (n: nat)(l: list A): IsOrd l -> l = img fst (l [,] n).
+  Proof. { intro h1. replace (img fst (l [,] n)) with (map fst (l [,] n)).
+           apply fix_nat_prop1. apply map_is_img. rewrite <- fix_nat_prop1. auto. } Qed.
+
+  Hint Immediate fix_nat_elim fix_nat_elim1 fix_nat_IsOrd fix_nat_prop1 fix_nat_prop2: core.
+  Hint Immediate fix_nat_intro: core.
+         
 
   (*---- Definition of (mk_disj C) which makes each list in C disjoint with each other------*)
 
@@ -176,6 +207,7 @@ Section SetCover.
 
   Lemma mk_disj_size (C: list (list A)): | C | = | mk_disj C |.
   Proof. { unfold mk_disj. symmetry. apply map_length. } Qed.
+
 
   (*--------------- Definition of (set_cover C l) ---------------------------------------*)
 
@@ -218,10 +250,7 @@ Section SetCover.
              specialize (h1 c' h3c) as h4.
              absurd (In  x (c [i] c')). rewrite h4. auto. auto. } } Qed.
 
- 
-  
-
-   Lemma cover_dij_elim (C: list (list A)) (c: list A):
+  Lemma cover_dij_elim (C: list (list A)) (c: list A):
      (c [i] (union_over C) = nil) -> (forall y, In y C -> (c [i] y = nil)).
    Proof. { induction C as [| c' C'].
             { simpl. auto. }
@@ -316,19 +345,20 @@ Hint Immediate cover_dij_elim cover_dij_intro: core.
                    replace ((| c |) * S (| C' |)) with ((| c |) * (| C' |) + |c|).
                    omega. auto with arith. } } } } } Qed. 
 
- 
+
 End SetCover.
+
 
 
 
 
 Hint Resolve in_map map_cons map_length: core.
 Hint Immediate in_map_iff: core.
-
 Hint Resolve union_over_intro3 union_over_intro4: core.
 Hint Immediate union_over_elim union_over_elim1: core.
-Hint Immediate union_over_intro2: core.
+Hint Immediate union_over_intro2 union_over_intro: core.
 Hint Resolve union_over_IsOrd: core.
+Hint Resolve mk_disj_intro: core.                                                                                                     
 
 
 Hint Resolve Set_cover_elim:core.
@@ -336,12 +366,55 @@ Hint Resolve Set_cover_IsOrd: core.
 
 Notation "l [,] n" := (fix_nat n l) (at level 65).
 
+Hint Immediate fix_nat_elim fix_nat_elim1 fix_nat_IsOrd fix_nat_prop1 fix_nat_prop2: core.
+ Hint Immediate fix_nat_intro: core.
+
  Hint Immediate cover_dij_elim cover_dij_intro: core.
+
+
+
+ Section UnionOverDisj.
+
+  Context { A: ordType }.
+
+   Lemma union_over_mk_disj (C: list (list A)):
+     union_over C = img fst (union_over (mk_disj C)).
+   Proof. { apply set_equal. all: auto.
+            split.
+            { intros x h1.
+              assert (h2: exists I, In I C /\ In x I). auto.
+              destruct h2 as [I h2]. destruct h2 as [h2a h2b].
+              set (n:= idx I C).
+              assert (h3: In (I [,] n) (mk_disj C)).
+              { subst n. auto. }
+              assert (h4: In (x,n) (union_over (mk_disj C))).
+              { cut (In (x,n) (I [,] n)). intro h4.
+                eapply union_over_intro. apply h4. auto. auto. }
+              replace (x) with (fst (x,n)). auto.
+              simpl. auto. }
+            { intros x h1.
+              assert (h2: exists p, In p (union_over (mk_disj C)) /\ x = fst p).
+              auto. destruct h2 as [p h2]. destruct h2 as [h2a h2b].
+              assert (h3: exists I', In I' (mk_disj C) /\ In p I'). auto.
+              destruct h3 as [I' h3]. destruct h3 as [h3 h4].
+              specialize (mk_disj_elim C I' h3) as h5.
+              destruct h5 as [I h5]. destruct h5 as [h5 h6].
+              subst I'.
+              assert (h6: In (fst p) I).
+              { destruct p as [p1 p2]. simpl in h2b.
+                simpl. replace (idx I C) with p2 in h4. eauto.
+                eapply fix_nat_elim1. apply h4. }
+              subst x.  eauto. } } Qed. 
+   
+ End UnionOverDisj.
+
+ Hint Resolve union_over_mk_disj: core.
+
 
 
 Section LocateInC.
 
-  Context { A: ordType }.
+   Context { A: ordType }.
   
 
   (*--- Following function (idc x C) finds the location of set in C which contains x ----*)
@@ -432,6 +505,8 @@ Proof. { intros h1 h2. specialize (idc_eq_both_in x y C h1 h2) as h3.
            intros;omega. apply h3a. apply h1a. }
          subst c2. exists c1.
          split. apply h1a.  split. apply h1a. apply h3a. } Qed.
+
+
 
 
          
