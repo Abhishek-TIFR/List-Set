@@ -162,14 +162,68 @@ Section ExistsCliq.
            { (*- In x H' -> In y H' -> g x <> g y -> edg H (g x) (g y) = edg H' x y -*)
              apply E'_P2. } } Qed.
 
+  Lemma Stable_in_H': forall I, In I C' -> Max_I_in H' I.
+  Proof. Admitted.
+  
+
   Lemma PerfectH': Perfect H'.
   Proof. cut (Perfect H). eapply LovaszExpLemma. apply H'_exp_of_H.
          cut (Ind_subgraph H G). eauto. unfold H. auto. Qed.
+
+  
   
   Lemma K'_meets_all_in_C': (exists K', Cliq_in H' K' /\ (forall I, In I C' -> meets K' I)).
-  Proof. Admitted.
+  Proof. { destruct (i_num_of G) as [n h1].
+           assert (h2: i_num H n).
+           { destruct h1 as [I h1]. exists I.
+             split. Focus 2. apply h1.
+             destruct h1 as [h1a h1].
+             apply Max_I_in_intro. cut (I [<=] H). cut (Stable_in G I).
+             cut (Ind_subgraph H G). eauto. unfold H. auto. auto.
+             simpl. rewrite NG_N. unfold N.
+             cut (In I C). intros h2 x h3. eauto. unfold C. auto.
+             intros I' h2.
+             assert (h3: Stable_in G I').
+             { eapply Stable_in_HG with (H0:= H). unfold H. auto. auto. }
+             eapply Max_I_in_elim. apply h1a. auto. }
+           
+           assert (h3: i_num H' n). admit.
+           
+           assert (h4: Perfect H').
+           { apply PerfectH'. }
+           
+           assert (h5: chrom_num H' (|C'|)). admit.
+           
+           assert (h6: cliq_num H' (|C'|)).
+           {  assert (h6: Nice H'). auto.
+              apply nice_elim;auto. }
+              
+
+           destruct h6 as [K' h6]. destruct h6 as [h6a h6].
+           exists K'. split. auto. intros I h7.
+           unfold meets. eapply php_eq with (s:= C'). 
+           { eauto. }
+           { unfold C'. cut (IsOrd C). auto.
+             unfold C. unfold max_subs_of. auto. }
+           { auto. }
+           { intros x h8. unfold Max_K_in in h6a.
+             assert (h6b: K' [<=] H'). apply h6a.
+             assert (h8a: In x H'). auto.
+             unfold H' in h8a. simpl in h8a. unfold N' in h8a.
+             apply union_over_elim. auto.  }
+           { intros x y I1 hxk hyk h8 hxi hyi.
+             assert (h9: Cliq H' K').
+             { cut(Cliq_in H' K'). auto. auto. }
+             assert (h9a: Stable H' I1).
+             { cut (Stable_in H' I1). auto. cut (Max_I_in H' I1).
+               auto. apply Stable_in_H'. auto. }
+             unfold Cliq in h9. unfold Stable in h9a.
+             specialize (h9 x y hxk hyk) as h9b.
+             destruct h9b as [h9b | h9b].
+             auto. absurd (edg H' x y). switch. all: auto. } auto. } Admitted.
+           
   
-  Lemma K_meets_all_in_C: (exists K, Cliq_in H K /\ (forall I, In I C -> meets K I)).
+   Lemma K_meets_all_in_C: (exists K, Cliq_in H K /\ (forall I, In I C -> meets K I)).
   Proof. { destruct K'_meets_all_in_C' as [K' h1].
            destruct h1 as [h1 h2].
            set (K:= img g K').
