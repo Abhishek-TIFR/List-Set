@@ -552,5 +552,64 @@ End One_one_onto.
 Hint Resolve one_one_onto: core.
 
 
+Section PHP.
+
+  Context {A B: ordType}.
+
+  Variable R: A -> B-> Prop.
+
+  Lemma php_eq (l: list A)(s: list B):
+    IsOrd l -> IsOrd s -> (|l| = |s|) -> (forall x, In x l -> (exists y, In y s /\ R x y))->
+                                (forall x y z, In x l -> In y l -> In z s -> R x z -> R y z -> x = y)->
+                                (forall y, In y s -> (exists x, In x l /\ R x y )).
+  Proof. { revert s. induction l as [|a l'].
+           { intros s h1 h2 h3 h4 h5.
+             assert (h6: s = nil).
+             { symmetry in h3. destruct s.
+               simpl. auto. simpl in h3. inversion h3. }
+             subst s. simpl. tauto. }
+           { intros s h1 h2 h3 h4 h5.
+             assert (h4a: exists b : B, In b s /\ R a b).
+             { apply h4. auto. }
+             destruct h4a as [b h4a].
+             set (s':= rmv b s).
+             assert (hs: s = add b s').
+             { subst s'. cut (In b s). auto. apply h4a. }
+             assert (h6: |l'| = |s'|).
+             { rewrite hs in h3.
+               replace (| add b s'|) with (S (|s'|)) in h3. simpl in h3.
+               omega. symmetry. cut (~ In b s'). auto. subst s'.
+               apply set_rmv_elim3. auto. }
+             
+             assert (h7: forall y : B, In y s' -> exists x : A, In x l' /\ R x y ).
+             { apply IHl'. eauto. subst s'. eauto. auto.
+               { (*--  forall x : A, In x l' -> exists y : B, In y s' /\ R x y --*)
+                 intros x h7.
+                 assert (h4b: exists y : B, In y s /\ R x y).
+                 { apply h4. auto. }
+                 destruct h4b as [b' h4b]. destruct h4b as [h4b h4c].
+                 exists b'. split. Focus 2.  auto.
+                 rewrite hs in h4b.
+                 assert (h8: b' = b \/ In b' s'). auto.
+                 destruct h8 as [h8 |h8].  
+                 { absurd ( x = a). intro h9. subst x.
+                   absurd (In a l'); auto. subst b'.
+                   eapply h5. all: auto. apply h4a. auto. apply h4a. }
+                 auto. }
+               intros x y z hx hy hz h7. eapply h5. all: auto.
+               rewrite hs. auto. }
+
+             intros y h8.
+             assert (h8a: y = b \/ In y s').
+             { rewrite hs in h8. auto. }
+             destruct h8a as [h8a | h8b].
+             { exists a. split. auto. subst y. apply h4a. }
+             { specialize (h7 y h8b) as h7a. destruct h7a as [x h7a].
+               exists x. split. cut (In x l'). auto. all: apply h7a. } } } Qed.
+             
+                                                                          
+  End PHP.
+
+
 
  
