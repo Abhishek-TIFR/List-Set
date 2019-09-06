@@ -144,6 +144,11 @@ Section MoreOnDecidableGraphs.
          destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
          repeat try (split;auto). unfold Stable. intros x y h4 h5.
          replace (edg G x y) with (edg H x y). apply h1;auto. auto. } Qed.
+
+  Lemma Stable_in_GH (H G:UG)(I: list A):
+    Ind_subgraph H G-> Stable_in G I-> I [<=] H-> Stable_in H I.
+  Proof. Admitted.
+  
   
   Lemma i_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> i_num H m -> i_num G n-> m<=n.
   Proof. { intro h. unfold i_num. intros h1 h2.
@@ -153,7 +158,7 @@ Section MoreOnDecidableGraphs.
          { cut (Stable_in H I). eauto using Stable_in_HG. auto. }
          subst n. subst m.  eapply Max_I_in_elim; eauto. } Qed.
    
-  Hint Immediate Stable_in_HG i_num_HG:core.
+  Hint Immediate Stable_in_HG Stable_in_GH i_num_HG:core.
     
   (*-----  Cliq and the Cliq number for a given graph G ----------------------*)
   
@@ -253,6 +258,13 @@ Section MoreOnDecidableGraphs.
          destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
          repeat try (split;auto). unfold Cliq. intros x y h4 h5.
          replace (edg G x y) with (edg H x y). apply h1;auto. auto. } Qed.
+
+  Lemma Cliq_in_GH (H G:UG)(K: list A):
+    Ind_subgraph H G-> Cliq_in G K -> K [<=] H-> Cliq_in H K.
+  Proof. Admitted.
+  
+
+  
   Lemma cliq_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> cliq_num H m -> cliq_num G n-> m<=n.
   Proof. { intro h. unfold cliq_num. intros h1 h2.
          destruct h1 as [I h1]. destruct h1 as [h1 hm].
@@ -261,7 +273,7 @@ Section MoreOnDecidableGraphs.
          { cut (Cliq_in H I). eauto using Cliq_in_HG. auto. }
          subst n. subst m.  eapply Max_K_in_elim; eauto. } Qed.
    
-  Hint Immediate Cliq_in_HG cliq_num_HG:core.
+  Hint Immediate Cliq_in_HG Cliq_in_GH cliq_num_HG:core.
  
    
    (*------ Concepts of Coloring and the chromatic number of a graph G ------------------*)
@@ -401,6 +413,11 @@ Section MoreOnDecidableGraphs.
             { auto. }
             rewrite HR. intro f1. apply more_clrs_than_cliq_num;auto. }
           { auto. } } Qed.
+   Lemma nice_elim (G: UG)(n: nat): Nice G -> chrom_num G n -> cliq_num G n.
+   Proof.  { intros h1 h2. destruct (cliq_num_of G) as [m h3].
+             unfold Nice in h1. assert (h4: chrom_num G m).
+             apply h1. auto. assert (h5: m = n).
+             eapply chrom_num_same; eauto. subst m. auto. } Qed.
             
    Hint Immediate perfect_sub_perfect more_clrs_than_cliq_size more_clrs_than_cliq_num: core.
    Hint Immediate nice_intro: core.
@@ -508,14 +525,14 @@ End MoreOnDecidableGraphs.
  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
  Hint Resolve Max_I_in_elim: core.
  Hint Resolve i_num_same:core.
- Hint Immediate Stable_in_HG i_num_HG:core.
+ Hint Immediate Stable_in_HG Stable_in_GH i_num_HG:core.
 
  Hint Resolve Cliq_in_elim Cliq_in_elim1 Cliq_in_elim2: core.
  Hint Resolve  Cliq_elim cliqP nil_is_cliq: core.
  Hint Resolve max_K_inP exists_Max_K_in  Max_K_in_elim1 Max_K_in_elim2: core.
  Hint Resolve Max_K_in_elim: core.
  Hint Resolve cliq_num_same:core.
- Hint Immediate Cliq_in_HG cliq_num_HG:core.
+ Hint Immediate Cliq_in_HG Cliq_in_GH cliq_num_HG:core.
  
  Hint Resolve chrom_num_same clrs_of_inc clrs_of_inc1: core.
  Hint Immediate coloring_of_HG chrom_num_HG: core.
