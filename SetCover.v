@@ -208,6 +208,11 @@ Section SetCover.
   Lemma mk_disj_size (C: list (list A)): | C | = | mk_disj C |.
   Proof. { unfold mk_disj. symmetry. apply map_length. } Qed.
 
+  Lemma mk_disj_IsOrd (C: list (list A)): IsOrd C -> IsOrd (mk_disj C).
+  Proof. Admitted.
+
+  Hint Resolve mk_disj_IsOrd: core.
+
 
   (*--------------- Definition of (set_cover C l) ---------------------------------------*)
 
@@ -358,7 +363,8 @@ Hint Resolve union_over_intro3 union_over_intro4: core.
 Hint Immediate union_over_elim union_over_elim1: core.
 Hint Immediate union_over_intro2 union_over_intro: core.
 Hint Resolve union_over_IsOrd: core.
-Hint Resolve mk_disj_intro: core.                                                                                                     
+Hint Resolve mk_disj_intro: core.
+ Hint Resolve mk_disj_IsOrd: core.
 
 
 Hint Resolve Set_cover_elim:core.
