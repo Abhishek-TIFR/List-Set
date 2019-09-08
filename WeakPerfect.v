@@ -164,6 +164,13 @@ Section ExistsCliq.
 
   Lemma Stable_in_H': forall I, In I C' -> Max_I_in H' I.
   Proof. Admitted.
+
+  Lemma Stable_cover_C'_H': Stable_cover C' H'.
+  Proof. Admitted.
+
+  Lemma C'_is_disj: forall I1 I2, In I1 C' -> In I2 C' -> I1 <> I2 -> I1 [i] I2 = nil.
+  Proof. Admitted.
+  
   
 
   Lemma PerfectH': Perfect H'.
@@ -174,6 +181,8 @@ Section ExistsCliq.
   
   Lemma K'_meets_all_in_C': (exists K', Cliq_in H' K' /\ (forall I, In I C' -> meets K' I)).
   Proof. { destruct (i_num_of G) as [n h1].
+           assert (hn: n >= 1).
+           { eapply i_num_gt; eauto. }
            assert (h2: i_num H n).
            { destruct h1 as [I h1]. exists I.
              split. Focus 2. apply h1.
@@ -186,13 +195,105 @@ Section ExistsCliq.
              assert (h3: Stable_in G I').
              { eapply Stable_in_HG with (H0:= H). unfold H. auto. auto. }
              eapply Max_I_in_elim. apply h1a. auto. }
-           
-           assert (h3: i_num H' n). admit.
+            
+           assert (h3: i_num H' n).
+           { destruct h1 as [I h1].  destruct h1 as [h1a h1].
+             assert (h2b: In I C).
+             { unfold C. auto. }
+             apply mem_of_C' in h2b as h3.
+             set(I':=  (I [,] idx I C)). fold I' in h3.
+             assert (h4: |I| = |I'|).
+             { unfold I'. apply fix_nat_size. }
+             exists I'. split. apply Stable_in_H'. auto.
+             subst n. symmetry. apply h4. }
            
            assert (h4: Perfect H').
            { apply PerfectH'. }
            
-           assert (h5: chrom_num H' (|C'|)). admit.
+           assert (h5: chrom_num H' (|C'|)).
+           { assert (h6: exists f, Coloring_of H' f /\ |clrs_of f H'| = |C'|).
+             { eapply disj_cover_to_color. 
+               { apply Stable_cover_C'_H'. }
+               { cut (IsOrd C'). auto. unfold C'. cut (IsOrd C).
+                 auto. unfold C. unfold max_subs_of. auto. }
+               { apply C'_is_disj. }
+               { intros I h5 h6.
+                 specialize (Stable_in_H' I h5) as h7.
+                 destruct h3 as [I' h3]. destruct h3 as [h3a h3].
+                 assert(h8: n <= |I|).
+                 { rewrite <- h3. apply h7.
+                   cut (I' [<=] H'). cut (IsOrd I').  eauto. eauto. auto.
+                   apply /stableP. auto. }
+                 subst I. simpl in h8. omega. } }
+             
+             destruct h6 as [f h6]. destruct h6 as [h6a h6].
+             exists f. split.
+             { unfold Best_coloring_of.
+               split.
+               auto.
+               intros f1 h7. rewrite h6.
+               assert (h8: (| C' |) <= (| clrs_of f1 H' |) \/ ~ (| C' |) <= (| clrs_of f1 H' |)).
+               eauto. destruct h8 as [h8 |h8]. auto.
+               assert (h8a: (| C' |) > (| clrs_of f1 H' |)). omega.
+               specialize (color_to_cover h7) as h9.
+               destruct h9 as [C1 h9]. destruct h9 as [h9a h9b].
+               rewrite <- h9b. rewrite <- h9b in h8a.
+               assert (h9c:  exists I1, In I1 C1 /\ (|I1| * |C1|) >= |N'|).
+               { (*- proof using lemma large_set_in_cover --*)
+                 apply large_set_in_cover.
+                 { (*-- N' <> nil -*)
+                   destruct h1 as [I h1]. destruct h1 as [h1a h1].
+                   destruct I as [|a I'] eqn: HI. rewrite <- h1 in hn.
+                   simpl in hn. inversion hn.
+                   assert (h1b: In I C).
+                   { unfold C.  apply max_subs_of_intro. auto.
+                     rewrite <- HI in h1a. auto. }
+                   assert (h1c: In a I).
+                   { subst I. auto. }
+                   set (i:= idx I C).
+                   assert (h1d: In (a,i) (I [,] i)).
+                   { unfold i. auto. }
+                   assert (h1e: In (I [,] i) C').
+                   { unfold C'. unfold i. auto. }
+                   assert (h1f: In (a,i) N').
+                   { unfold N'. eauto. }
+                   intro h10. rewrite h10 in h1f. simpl in h1f. auto. }
+                 { (*-- In x C1 -> IsOrd x -*)
+                   intros I hI. cut(Stable_in H' I). eauto. eauto. }
+                 { apply h9a. } }
+               
+               destruct h9c as [I1 h9c]. destruct h9c as [h9c h9d].
+               
+               assert (h9e: Stable_in H' I1).
+               { eauto. }
+
+               assert (h9f: |I1| <= n).
+               { destruct h3 as [I h3]. destruct h3 as [h3a h3b].
+                 rewrite <- h3b. apply h3a. cut (I1 [<=] H'). cut (IsOrd I1).
+                 auto. eauto. eauto. apply /stableP. auto. }
+               
+               assert (h10: Stable_cover C' H').
+               { apply Stable_cover_C'_H'. }
+               
+               assert (h10a:  |N'| = |C'| * n). Check disj_cover_card.
+               { (*-- proof using lemma disj_cover_card ---*)
+                 apply disj_cover_card.
+                 { unfold Stable_cover in h10. apply h10. }
+                 { unfold C'. cut (IsOrd C). auto.
+                   unfold C. unfold max_subs_of. auto. }
+                 { intros I h11. apply Stable_in_H' in h11 as h12.
+                   split. eauto.  symmetry. eauto. }
+                 { apply C'_is_disj. } }
+
+               rewrite h10a in h9d.
+               assert(h11: (| I1 |) * (| C1 |) <= n * (| C1 |)).
+               { auto with arith. }
+               assert (h12:  n * (| C1 |) <  n * (| C' |)).
+               { auto with arith. }
+               assert (h13:  (| I1 |) * (| C1 |) < (| C' |) * n).
+               { replace ((| C' |) * n) with (n*(| C' |)). omega.
+                 auto with arith. } omega. }
+             { auto. } }
            
            assert (h6: cliq_num H' (|C'|)).
            {  assert (h6: Nice H'). auto.
@@ -220,7 +321,7 @@ Section ExistsCliq.
              unfold Cliq in h9. unfold Stable in h9a.
              specialize (h9 x y hxk hyk) as h9b.
              destruct h9b as [h9b | h9b].
-             auto. absurd (edg H' x y). switch. all: auto. } auto. } Admitted.
+             auto. absurd (edg H' x y). switch. all: auto. } auto. } Qed.
            
   
    Lemma K_meets_all_in_C: (exists K, Cliq_in H K /\ (forall I, In I C -> meets K I)).
