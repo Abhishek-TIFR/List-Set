@@ -185,6 +185,22 @@ Section Set_maps.
   
   Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
   Hint Immediate one_one_on_intro one_one_on_intro1: core.
+
+
+  Lemma NoDup_map (f:A->B) (l:list A): NoDup l-> one_one_on l f-> NoDup (map f l).
+  Proof. { induction l as [| a l'].
+           { simpl. auto. }
+           { intros h1 h2. simpl.
+             apply nodup_intro.
+             { intro h3.
+               assert (h3a: exists b, In b l' /\ (f a) = (f b)).
+               { auto. } destruct h3a as [b h3a]. destruct h3a as [h3a h3b].
+               unfold one_one_on in h2.
+               absurd (f a = f b). apply h2. auto. auto. intros h4. subst b.
+               absurd (In a l'); auto. auto. }
+             apply IHl'. eauto. eauto. } } Qed.
+
+  Hint Resolve NoDup_map: core.
    
 
   Fixpoint one_one_onb (l: list A) (f: A->B): bool:=
@@ -383,6 +399,8 @@ Hint Resolve IsOrd_img NoDup_img : core.
 Hint Resolve img_intro1 img_intro2 img_elim: core.
 Hint Resolve img_elim2 img_elim3 img_elim4 : core.
 Hint Immediate one_oneP1: core.
+
+  Hint Resolve NoDup_map: core.
 
 Hint Immediate map_is_img: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
