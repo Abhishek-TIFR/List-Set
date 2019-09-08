@@ -166,6 +166,20 @@ Section MoreOnNat.
   Proof.  induction k. simpl. auto.
           intro h1. simpl. omega.  Qed.
 
+  Lemma mult_lt1 (m n k: nat): k > 0 -> m < n -> k*m < k*n.
+  Proof. { case k as [|k].
+           { simpl. auto. }
+           induction k as [| k].
+           { simpl. omega. }
+           { intros h1 h2. simpl. simpl in IHk.
+             cut (m + k * m < n + k * n). omega.
+             apply IHk. omega. auto. } } Qed.
+
+  Lemma mult_lt2 (m n k: nat): k > 0 -> m < n -> m*k < n*k.
+  Proof. { replace (m*k) with (k*m). replace (n*k) with (k*n).
+           apply mult_lt1. all: auto with arith. } Qed.
+  
+
   Lemma mult_dist (m n k: nat): m * (n + k) = m*n + m*k.
   Proof. replace ( m * (n + k)) with ( (n + k) * m).
          replace (m*n) with (n*m). replace (m*k) with (k*m).
@@ -179,3 +193,4 @@ Section MoreOnNat.
 End MoreOnNat.
 
 Hint Immediate mult_le mult_le1 mult_le2 mult_dist mult_dist1: arith.
+Hint Immediate mult_lt1 mult_lt2: arith.
