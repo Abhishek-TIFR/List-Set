@@ -139,6 +139,9 @@ Section MoreOnDecidableGraphs.
 
   Hint Resolve i_num_same : core.
 
+  Lemma i_num_max_I (G: UG)(n :nat)(I: list A): i_num G n -> Max_I_in G I ->  n = |I|.
+  Proof. Admitted.
+
   Lemma Stable_in_HG (H G:UG)(I: list A): Ind_subgraph H G-> Stable_in H I-> Stable_in G I.
   Proof. { unfold Stable_in. intros h0 h1. unfold Ind_subgraph in h0.
          destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
@@ -159,6 +162,11 @@ Section MoreOnDecidableGraphs.
          subst n. subst m.  eapply Max_I_in_elim; eauto. } Qed.
    
   Hint Immediate Stable_in_HG Stable_in_GH i_num_HG:core.
+  
+  Lemma i_num_gt (G: UG)(n:nat): (nodes G) <> nil -> i_num G n -> n >= 1.
+  Proof. Admitted.
+
+  Hint Immediate i_num_gt: core.
     
   (*-----  Cliq and the Cliq number for a given graph G ----------------------*)
   
@@ -274,6 +282,11 @@ Section MoreOnDecidableGraphs.
          subst n. subst m.  eapply Max_K_in_elim; eauto. } Qed.
    
   Hint Immediate Cliq_in_HG Cliq_in_GH cliq_num_HG:core.
+
+   Lemma cliq_num_gt (G: UG)(n:nat): (nodes G) <> nil -> cliq_num G n -> n >= 1.
+  Proof. Admitted.
+
+  Hint Immediate cliq_num_gt: core.
  
    
    (*------ Concepts of Coloring and the chromatic number of a graph G ------------------*)
@@ -524,8 +537,9 @@ End MoreOnDecidableGraphs.
  Hint Resolve stableP nil_is_stable: core.
  Hint Resolve max_I_inP exists_Max_I_in Max_I_in_elim1 Max_I_in_elim2 : core.
  Hint Resolve Max_I_in_elim: core.
- Hint Resolve i_num_same:core.
+ Hint Resolve i_num_same i_num_max_I:core.
  Hint Immediate Stable_in_HG Stable_in_GH i_num_HG:core.
+ Hint Immediate i_num_gt: core.
 
  Hint Resolve Cliq_in_elim Cliq_in_elim1 Cliq_in_elim2: core.
  Hint Resolve  Cliq_elim cliqP nil_is_cliq: core.
@@ -533,6 +547,7 @@ End MoreOnDecidableGraphs.
  Hint Resolve Max_K_in_elim: core.
  Hint Resolve cliq_num_same:core.
  Hint Immediate Cliq_in_HG Cliq_in_GH cliq_num_HG:core.
+ Hint Immediate cliq_num_gt: core.
  
  Hint Resolve chrom_num_same clrs_of_inc clrs_of_inc1: core.
  Hint Immediate coloring_of_HG chrom_num_HG: core.
