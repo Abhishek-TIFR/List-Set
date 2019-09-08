@@ -74,7 +74,8 @@ Section GraphCover.
            destruct h1 as [h1a h1b]. specialize (h1b I h2) as h3.
            destruct h3 as [h3a h3b]. split. eauto. split;auto. } Qed.
 
-Hint Resolve Stable_cover_elim: core.        
+  
+     Hint Resolve Stable_cover_elim: core.
 
   (*---------  Cliq cover for a graph G -------------------------------*)
 
@@ -205,9 +206,88 @@ Hint Resolve Stable_cover_elim: core.
                symmetry;apply h5. }
              assert (h3: NoDup (clrs_of f G )).
              { unfold clrs_of. auto. }
-             assert (h4: |C| = |Nc|).
+             assert (h4: |C| = |Nc|). 
              { unfold Nc. auto. }
              rewrite h4. auto. } } Qed.
+ 
+  Lemma disj_cover_to_color (G:UG) (C: list (list A)):
+    Stable_cover C G -> NoDup C-> (forall I1 I2, In I1 C-> In I2 C-> I1 <> I2 -> (I1 [i] I2) = nil )->
+    (forall I, In I C -> I <> nil)->  ( exists f, Coloring_of G f /\ |clrs_of f G| = |C|).
+  
+  Proof. { intros h1 H0 H1 H2. 
+           set (f:= fun x => idc x C).
+           set (cl:= clrs_of f G).
+           set (Nc:= map (fun c => idx c C) C).
+           exists f. split.
+           { (*-- Coloring_of G f ---*)
+             unfold Coloring_of.
+             destruct h1 as [h1 h1a]. unfold Set_cover in h1.
+             intros x y hx hy hxy h2.
+             assert (h3: exists c, In c C /\ In x c /\ In y c).
+             { apply idc_eq_same_set. rewrite <- h1. auto.
+               unfold f in h2. auto. }
+             destruct h3 as [c h3].
+             assert (h4: Stable G c).
+             { apply h1a. apply h3. }
+             unfold Stable in h4.
+             absurd ( edg G x y). switch. apply h4;apply h3. auto. }
+           
+           assert (hle: (| clrs_of f G |) <= (| C |)).
+           { (*--  (| clrs_of f G |) <= (| C |) --*)
+             assert (h2: clrs_of f G [<=] Nc).
+             { unfold clrs_of. intros n h3.
+               assert (h4: exists x, In x G /\ n = f x). auto.
+               destruct h4 as [x h4]. destruct h4 as [h4a h4].
+               unfold f in h4.
+               assert (h5:  exists c, In c C /\  In x c /\ idc x C = idx c C).
+               { apply idc_from_idx. unfold Stable_cover in h1.
+                 destruct h1 as [h1 h1a]. unfold Set_cover in h1.
+                 rewrite <- h1;auto. }
+               destruct h5 as [c h5]. subst n.
+               replace (idc x C) with (idx c C).
+               unfold Nc. set (f1:= (fun c0 : list_eqType => idx c0 C)).
+               replace (idx c C) with (f1 c).
+               cut (In c C). auto. apply h5. unfold f1;simpl;auto.
+               symmetry;apply h5. }
+             assert (h3: NoDup (clrs_of f G )).
+             { unfold clrs_of. auto. }
+             assert (h4: |C| = |Nc|).
+             { unfold Nc. auto. }
+             rewrite h4. auto. }
+           
+           assert (hge: (| C |) <= (| clrs_of f G |)).
+            { (*--   (| C |) <= (| clrs_of f G |) --*)
+             assert (h2: Nc [<=] clrs_of f G).
+             { intros n h2.
+               assert (h2a: exists I, In I C /\ n = (idx I C)).
+               { unfold Nc in h2. auto. }
+               destruct h2a as [I h2a]. destruct h2a as [h2a h2b].
+               assert (H2a: I <> nil).
+               { auto. }
+               assert (H2b: exists a, In a I). auto.
+               destruct H2b as [a H2b].
+               assert (H2c: In a (union_over C)). eauto.
+               eapply idc_from_idx in H2c as H2d.
+               destruct H2d as [I' H2d]. destruct H2d as [H2d H2e].
+               destruct H2e as [H2e H2f].
+               assert (h3: I = I').
+               { assert (hI: I = I' \/ I <> I'). eauto.
+                 destruct hI as [hI |hI]. auto.
+                 assert (h3: I [i] I' = nil).
+                 { apply H1. all: auto. }
+                 assert (h4: In a (I [i] I')). auto.
+                 rewrite h3 in h4. simpl in h4. auto. } 
+               subst I'. subst n.  unfold clrs_of.
+               rewrite <- H2f. replace (idc a C) with (f a).
+               cut (In a G).  auto. unfold Stable_cover in h1.
+               destruct h1 as [h1 h1a]. unfold Set_cover in h1.
+               rewrite h1. auto. unfold f. auto.  }
+             assert (h3: NoDup Nc).
+             { unfold Nc. apply NoDup_map. auto. eauto.
+               unfold one_one_on. intros x y. apply diff_index. } 
+             assert (h4: |C| = |Nc|).
+             { unfold Nc. auto. }
+             rewrite h4. auto. }     omega.   } Qed.
 
 
  Lemma nice_intro1 (G: UG)(n:nat): cliq_num G n -> (exists C, Stable_cover C G /\ | C | = n) -> Nice G.
