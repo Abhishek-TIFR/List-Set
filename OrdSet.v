@@ -584,6 +584,22 @@ Section OrderedSet.
 Notation "s [u] t" := (union s t) (at level 68, left associativity).
 Notation "s [\] t" := (diff s t)  (at level 68, left associativity).
 
+
+ Lemma sub_neq_exists (l s: list A):
+    IsOrd l -> IsOrd s -> l [<=] s -> l <> s -> (exists x, (In x s /\ ~ In x l)).
+  Proof. { intros h1 h2 h3 h4.
+           assert (h5: (forall x, In x s -> In x l)\/ (exists x, In x s /\ ~ In x l)). eauto.
+           destruct h5 as [h5 | h5].
+           { absurd (l = s). auto.
+             apply set_equal;auto. }
+           { auto. } } Qed.
+         
+  
+  Lemma sub_neq_lt (l s: list A): IsOrd l -> IsOrd s -> l [<=] s -> l <> s -> |l| < |s|.
+  Proof. { intros h1 h2 h3 h4.  specialize (sub_neq_exists h1 h2 h3 h4) as h5.
+           destruct h5 as [x h5]. eapply subset_cardinal_lt with (a := x).
+           all: ( auto || apply h5). } Qed.
+  
 (*-------- operator distribution properties--------------- *)
 
 Lemma int_dist_over_union (x y z: list A): x [i] (y [u] z) = (x [i] y) [u] (x [i] z).
