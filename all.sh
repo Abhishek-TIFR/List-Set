@@ -64,6 +64,11 @@ coqc LovaszRep.v
 printf ‘LovaszExp
 coqc LovaszExp.v
 
+printf ‘WeakPerfect
+coqc WeakPerfect.v
+
+
+
 
 echo \
     
