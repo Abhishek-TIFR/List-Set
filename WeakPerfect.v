@@ -58,10 +58,10 @@ Section ExistsCliq.
   Hint Resolve N'IsOrd NIsOrd.
   
   Lemma E1_irefl: irefl E1.
-  Proof. unfold irefl. intro p. unfold E1.
-         replace (g p == g p) with true. 
-         assert (h1: snd p == snd p). apply /eqP;auto.
-         rewrite h1. auto. symmetry;auto. Qed.
+  Proof. { unfold irefl. intro p. unfold E1.
+           replace (g p == g p) with true. 
+           assert (h1: snd p == snd p). apply /eqP;auto.
+           rewrite h1. auto. symmetry;auto. } Qed.
          
   Lemma E1_sym: sym E1.
   Proof. { unfold sym. intros x y. unfold E1.
@@ -125,6 +125,23 @@ Section ExistsCliq.
 
   Hint Resolve N_sub_G NG_N.
 
+  Lemma mem_of_C: forall I, In I C -> Max_I_in G I.
+  Proof.  intros I h1. unfold C in h1. unfold Max_I_in.
+          apply max_subs_of_elim; auto. Qed.
+
+  Lemma max_I_of_H: forall I, In I C -> Max_I_in H I.
+  Proof. { intros I h1.
+           assert (h2: I [<=] H).
+           { simpl. rewrite NG_N. unfold N.
+             intros x h2. eapply union_over_intro;eauto. }
+           apply mem_of_C in h1 as h3.
+           apply Max_I_in_intro.
+           eapply Stable_in_GH with (G0:= G).
+           unfold H. auto. auto. auto.
+           intros I' h4. cut (Stable_in G I'). eauto.
+           eapply Stable_in_HG with (H0:= H). unfold H. all: auto. } Qed.
+  
+
   Lemma mem_of_C': forall I, In I C -> In (I [,] (idx I C)) C'.
   Proof. subst C'. intros I h1.  apply mk_disj_intro. auto. Qed.
   
@@ -133,7 +150,7 @@ Section ExistsCliq.
   Proof. intros I h1. unfold g. apply fix_nat_prop2.
          subst C. cut (IsOrd G). eauto. auto. Qed.
 
-  Hint Resolve mem_of_C' C'_map_to_C.
+  Hint Resolve mem_of_C max_I_of_H mem_of_C' C'_map_to_C.
 
   Lemma C_and_C': (nodes H) = img g H'.
   Proof. simpl. rewrite NG_N. subst N. subst N'. subst C'. unfold g.  auto.  Qed.
@@ -162,23 +179,127 @@ Section ExistsCliq.
            { (*- In x H' -> In y H' -> g x <> g y -> edg H (g x) (g y) = edg H' x y -*)
              apply E'_P2. } } Qed.
 
-  Lemma Stable_in_H': forall I, In I C' -> Max_I_in H' I.
-  Proof. Admitted.
-
-  Lemma Stable_cover_C'_H': Stable_cover C' H'.
-  Proof. Admitted.
+  Hint Resolve H'_exp_of_H.
 
   Lemma C'_is_disj: forall I1 I2, In I1 C' -> In I2 C' -> I1 <> I2 -> I1 [i] I2 = nil.
-  Proof. Admitted.
+  Proof. { intros I1' I2' h1 h2 h3.
+           assert (h4:  I1' [i] I2' = nil \/  I1' [i] I2' <> nil). eauto.
+           destruct h4 as [h4 |h4].
+           { auto. }
+           assert (h4a: exists y, In y (I1' [i] I2')). auto.
+           destruct h4a as [y h4a]. 
+           assert (h4b: In y I1'). eauto. assert (h4c: In y I2'). eauto.
+           unfold C' in h1, h2.
+           apply mk_disj_elim in h1 as h1a.
+           apply mk_disj_elim in h2 as h2a.
+           destruct h1a as [I1 h1a]; destruct h1a as [h1a h1b].
+           destruct h2a as [I2 h2a]; destruct h2a as [h2a h2b].
+           subst I1'. subst I2'. destruct y as [y1 y2].
+           assert (h5: I1 <> I2).
+           { intros h5. subst I1.
+             absurd (I2 [,] idx I2 C = I2 [,] idx I2 C);auto. }
+           assert (h6a: y2 = idx I1 C).
+           eapply fix_nat_elim1. apply h4b.
+           assert (h6b: y2 = idx I2 C).
+           eapply fix_nat_elim1. apply h4c.
+           assert (h7: I1 = I2).
+           { cut (idx I1 C = idx I2 C).
+             eapply same_index;auto. omega. }
+           contradiction. } Qed.
+           
   
-  
+  Lemma Stable_cover_C'_H': Stable_cover C' H'.
+  Proof. { unfold Stable_cover.
+           split.
+           { simpl. unfold Set_cover. unfold N';auto. }
+           { intros I' h1. unfold C' in h1.
+             apply mk_disj_elim in h1 as h1a.
+             destruct h1a as [I h1a]. destruct h1a as [h1a h1b].
+             split. Focus 2. rewrite h1b. cut (IsOrd I). auto.
+             assert (h1c: Max_I_in G I). auto. eauto.
+             assert (h2: I = img g I').
+             { rewrite h1b. auto. }
+             assert (h3: Exp_of H H' g). auto.
+             assert (h4: Stable_in H I). auto.
+             assert (h5: I' [<=] H').
+             { simpl. unfold N'. unfold C'.
+               intros x h5. eapply union_over_intro;eauto. }
+             unfold Stable. intros x y hx hy.
+             destruct h4 as [h4a h4]. unfold Stable in h4.
+             assert (h6: g x = g y \/ g x <> g y). eauto.
+             destruct h6 as [h6a | h6b].
+             { assert (h6b: x = y).
+               { destruct x as [x1 x2]; destruct y as [y1 y2].
+                 cut (x1 = y1). cut (x2 = y2).
+                 intros h7 h8;subst x1;subst x2; auto.
+                 subst I'. replace y2 with (idx I C). eapply fix_nat_elim1; apply hx.
+                 symmetry; eapply fix_nat_elim1; apply hy. simpl in h6a. auto. }
+               rewrite h6b. auto. }
+             { replace ( edg H' x y) with ( edg H (g x) (g y)).
+               apply h4; subst I;auto. apply E'_P2;auto. } } } Qed.
 
+  Lemma C'_mem_stable: forall I, In I C' -> Stable_in H' I.
+  Proof. intros I h1. specialize Stable_cover_C'_H' as h2. eauto. Qed.
+             
+  Hint Resolve Stable_cover_C'_H' C'_mem_stable.
+
+  Lemma g_one_one_on_I': forall I', Stable_in H' I' -> one_one_on I' g.
+  Proof. { intros I' h1. unfold one_one_on.
+           destruct h1 as [h1 h2]. unfold Stable in h2.
+           intros x y hx hy h3 h4.
+           absurd (edg H' x y). switch. apply h2;auto.
+           apply E'_P1. all: eauto. } Qed.
+
+  Lemma img_of_I'_is_I: forall I', Stable_in H' I' -> Stable_in H (img g I').
+  Proof. { intros I' h1.
+           assert (H1: one_one_on I' g).
+           { apply g_one_one_on_I';auto. }
+           assert (h1a: I' [<=] H'). auto.
+           assert (h2: (nodes H) = img g H'). auto.
+           unfold Stable_in.
+           assert (h3: img g I' [<=] H).
+           { rewrite h2;auto. } split. auto.
+           split. cut (IsOrd I'); auto. eauto.
+           unfold Stable. intros gx gy h4 h5.
+           assert (h4a: exists x, In x I' /\ gx = g x). auto.
+           destruct h4a as [x h4a]. destruct h4a as [h4a h4b].
+           assert (h5a: exists y, In y I' /\ gy = g y). auto.
+           destruct h5a as [y h5a]. destruct h5a as [h5a h5b].
+           subst gx; subst gy.
+           destruct h1 as [h1b h1]. unfold Stable in h1.
+           assert (h6: x = y \/ x <> y). eauto.
+           destruct h6 as [h6a | h6b].
+           { subst x. auto. }
+           { replace (edg H (g x) (g y)) with (edg H' x y).
+             apply h1;auto. symmetry;apply E'_P2;auto. } } Qed.
+             
+  
+  
+  Lemma Stable_in_H': forall I, In I C' -> Max_I_in H' I.
+  Proof. { intros I' h1. apply Max_I_in_intro. auto.
+           intros I1 h2.
+           assert (h3: exists I, In I C /\ I' = I [,] (idx I C)). auto.
+           destruct h3 as [I h3]. destruct h3 as [h3a h3].
+           assert (h4: I = img g I'). rewrite h3. auto.
+           apply max_I_of_H in h3a as h3b.
+           set (I0 := img g I1).
+           assert (h5: Stable_in H I0).
+           { unfold I0. apply img_of_I'_is_I. auto. }
+           assert (hI': Stable_in H' I'). auto.
+           assert (h8: one_one_on I' g).
+           { apply g_one_one_on_I'; auto. }
+            assert (h9: one_one_on I1 g).
+           { apply g_one_one_on_I'; auto. }
+           assert (h6: |I'| = |I|).
+           { subst I. cut(IsOrd I'). auto. eauto. }
+           assert (h7: |I1| = |I0|).
+           { subst I0. cut(IsOrd I1). auto. eauto. }
+           rewrite h6; rewrite h7. eauto. } Qed.
+           
   Lemma PerfectH': Perfect H'.
   Proof. cut (Perfect H). eapply LovaszExpLemma. apply H'_exp_of_H.
          cut (Ind_subgraph H G). eauto. unfold H. auto. Qed.
 
-  
-  
   Lemma K'_meets_all_in_C': (exists K', Cliq_in H' K' /\ (forall I, In I C' -> meets K' I)).
   Proof. { destruct (i_num_of G) as [n h1].
            assert (hn: n >= 1).
@@ -275,7 +396,7 @@ Section ExistsCliq.
                assert (h10: Stable_cover C' H').
                { apply Stable_cover_C'_H'. }
                
-               assert (h10a:  |N'| = |C'| * n). Check disj_cover_card.
+               assert (h10a:  |N'| = |C'| * n). 
                { (*-- proof using lemma disj_cover_card ---*)
                  apply disj_cover_card.
                  { unfold Stable_cover in h10. apply h10. }
@@ -557,22 +678,6 @@ Section WPGT.
 
   Context { A: ordType }.
 
-
-  Lemma sub_neq_exists (l s: list A):
-    IsOrd l -> IsOrd s -> l [<=] s -> l <> s -> (exists x, (In x s /\ ~ In x l)).
-  Proof. { intros h1 h2 h3 h4.
-           assert (h5: (forall x, In x s -> In x l)\/ (exists x, In x s /\ ~ In x l)). eauto.
-           destruct h5 as [h5 | h5].
-           { absurd (l = s). auto.
-             apply set_equal;auto. }
-           { auto. } } Qed.
-         
-  
-  Lemma sub_neq_lt (l s: list A): IsOrd l -> IsOrd s -> l [<=] s -> l <> s -> |l| < |s|.
-  Proof. { intros h1 h2 h3 h4.  specialize (sub_neq_exists h1 h2 h3 h4) as h5.
-           destruct h5 as [x h5]. eapply subset_cardinal_lt with (a := x).
-           all: ( auto || apply h5). } Qed.
-  
 
   Lemma wpgt (G G': @UG A): Perfect G -> Compl G G'-> Perfect G'.
   Proof.
