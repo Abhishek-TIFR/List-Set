@@ -25,6 +25,7 @@
 
 Require Export Lists.List.
 Require Export GenReflect SetSpecs OrdType.
+Require Export DecList.
 
 Set Implicit Arguments.
 
@@ -204,6 +205,31 @@ Section OrderedLists.
              exact H. auto. }
            assert (H5: a <=b e). eapply IsOrd_Subset_elim1;eauto.
            by_conflict. auto. } } Qed.
+
+  Lemma idx_IsOrd (l: list A)(x y: A): IsOrd l -> In x l-> In y l-> x <b y -> idx x l < idx y l.
+  Proof. { induction l as [| a l'].
+           { simpl. tauto. }
+           { intros h1 h2 h3 h4.
+             assert (h5: x = a \/ x <> a). eauto.
+             assert (h6: y = a \/ y <> a). eauto.
+             destruct h5 as [h5 |h5]; destruct h6 as [h6 |h6].
+             { subst x; subst y. by_conflict. }
+             { assert (h3a: In y l'). eauto.
+               assert (h3b: idx y l' > 0). auto.
+               simpl. replace (x == a) with true.
+               replace (y == a) with false. replace (memb y l') with true.
+               omega. symmetry; apply /membP;auto. all: symmetry;auto. }
+             { assert (h3a: In x l'). eauto.
+               assert (h3b: a <b x). eauto. subst y. by_conflict. }
+             { assert (h2a: In x l'); eauto.
+               assert (h2b: idx x l' > 0); auto.
+               assert (h3a: In y l'); eauto.
+               assert (h3b: idx y l' > 0); auto.
+               simpl. replace (x == a) with false.
+               replace (y == a) with false. replace (memb y l') with true.
+               replace (memb x l') with true.
+               cut (idx x l' < idx y l'). omega. apply IHl';auto. eauto.
+               symmetry; apply /membP;auto. all: symmetry;auto. } } } Qed.
   
 
 End OrderedLists.
@@ -220,6 +246,8 @@ Hint Immediate head_equal tail_equal set_equal length_equal: core.
 Hint Resolve IsOrd_NoDup: core.
 
 Hint Resolve nodup_Subset_elim IsOrd_Subset_elim1 IsOrd_Subset_elim2:core.
+
+Hint Resolve idx_IsOrd:core.
 
 
 
