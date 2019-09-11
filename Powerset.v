@@ -79,6 +79,7 @@ Section OrderOnPairs.
   
   Canonical pair_eqType: eqType:=
     {| Decidable.E:= (A*B); Decidable.eqb:= eqbp; Decidable.eqP:=eqbpP |}.
+
   
   (*------------ Definition and properties of less than relation on lists of A----------- *)
   
@@ -97,7 +98,7 @@ Section OrderOnPairs.
            { intros h1; inversion h1. } } Qed.
 
   Lemma ltbp_intro (p q: A*B):
-    ((fst p <b fst q) \/ (fst p = fst q /\ snd p <b snd q )) -> ltbp p q.
+    ((fst p <b fst q) \/ (fst p = fst q /\ snd p <b snd q )) -> ltbp p q. 
   Proof. { unfold ltbp. destruct p as [p1 p2];destruct q as [q1 q2].
            simpl. match_up p1 q1.
            { intros h1. destruct h1 as [h1 |h1]. by_conflict. apply h1. }
@@ -157,10 +158,26 @@ Canonical pair_ordType: ordType:= {| Order.D:= pair_eqType;
                                      Order.ltb_trans := ltbp_trans  |}.
 
 Hint Immediate ltbp_elim ltbp_intro: core.
+
+Lemma ltbp_intro3 (a: A)(b c: B): b <b c -> (a, b) <b (a, c).
+Proof.  intros h1. apply ltbp_intro. simpl. right. split;auto. Qed.
+
+Lemma ltbp_intro4 (a b: A)(c d: B): a <b b -> (a, c) <b (b, d).
+Proof. intros h1. apply ltbp_intro. simpl. left;auto. Qed.
+
+
+Lemma ltbp_elim1  (a: A)(b c: B):(a, b) <b (a, c) -> (b <b c).
+Proof. { intros h1. apply ltbp_elim in h1 as h2. simpl in h2.
+         destruct h2 as [h2 |h2].
+         by_conflict. apply h2. } Qed.
+
+
   
 End OrderOnPairs.
 
-Hint Immediate ltbp_elim ltbp_intro ltbp_intro1 ltbp_intro2: core.
+Hint Immediate ltbp_elim ltbp_intro ltbp_intro1 ltbp_intro2 ltbp_intro4: core.
+
+Hint Immediate ltbp_intro3 ltbp_elim1: core.
 
 
 
@@ -251,8 +268,20 @@ Canonical list_ordType: ordType:= {| Order.D:= list_eqType;
                                      Order.ltb_irefl:= ltbl_irefl;
                                      Order.ltb_antisym := ltbl_antisym;
                                      Order.ltb_trans := ltbl_trans  |}.
+
+Lemma ltbl_intro (a: A)(l1 l2: list A): l1 <b l2 -> (a::l1) <b (a::l2).
+Proof. { intros h1. simpl. match_up a a. apply h1. auto. by_conflict. } Qed.
+
+Lemma ltbl_intro1 (a b: A)(l1 l2: list A): a <b b -> (a::l1) <b (b::l2).
+Proof. { intros h1. simpl. match_up a b. by_conflict. auto. by_conflict. } Qed.
+
+Lemma ltbl_elim (a: A)(l1 l2: list A): (a::l1) <b (a::l2) -> (l1 <b l2).
+Proof. { intros h1. simpl in h1. match_up a a. apply h1. all: by_conflict. } Qed.
+
   
 End OrderOnLists.
+
+Hint Immediate ltbl_intro ltbl_intro1 ltbl_elim: core.
 
 
 Section Append.
