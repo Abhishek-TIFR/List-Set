@@ -140,7 +140,14 @@ Section MoreOnDecidableGraphs.
   Hint Resolve i_num_same : core.
 
   Lemma i_num_max_I (G: UG)(n :nat)(I: list A): i_num G n -> Max_I_in G I ->  n = |I|.
-  Proof. Admitted.
+  Proof. { intros h1 h2. destruct h1 as [I' h1]. destruct h1 as [h1 h3].
+           subst n. cut ((| I' |) <= (| I |) ). cut ((| I' |) >= (| I |)).
+           omega.
+           { apply h1. cut (I [<=] G). cut (IsOrd I). all: auto.
+             eauto. apply /stableP. auto. }
+           { apply h2. cut (I' [<=] G). cut (IsOrd I'). all: auto.
+             eauto. apply /stableP. auto. } } Qed.
+           
 
   Lemma Stable_in_HG (H G:UG)(I: list A): Ind_subgraph H G-> Stable_in H I-> Stable_in G I.
   Proof. { unfold Stable_in. intros h0 h1. unfold Ind_subgraph in h0.
@@ -150,7 +157,10 @@ Section MoreOnDecidableGraphs.
 
   Lemma Stable_in_GH (H G:UG)(I: list A):
     Ind_subgraph H G-> Stable_in G I-> I [<=] H-> Stable_in H I.
-  Proof. Admitted.
+  Proof. { unfold Stable_in. intros h0 h1 H0. unfold Ind_subgraph in h0.
+         destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
+         repeat try (split;auto). unfold Stable. intros x y h4 h5.
+         replace (edg H x y) with (edg G x y). apply h1;auto. symmetry;auto. } Qed.
   
   
   Lemma i_num_HG (H G: UG)(m n:nat): Ind_subgraph H G-> i_num H m -> i_num G n-> m<=n.
@@ -163,8 +173,20 @@ Section MoreOnDecidableGraphs.
    
   Hint Immediate Stable_in_HG Stable_in_GH i_num_HG:core.
   
-  Lemma i_num_gt (G: UG)(n:nat): (nodes G) <> nil -> i_num G n -> n >= 1.
-  Proof. Admitted.
+  Lemma i_num_gt (G: UG)(n:nat): (nodes G) <> nil -> i_num G n -> n >= 1. 
+  Proof. { intros h1 h2.
+           assert (h1a: exists a, In a G). auto.
+           destruct h1a as [a h1a].
+           set(I0:= a::nil). destruct h2 as [I h2]. destruct h2 as [h2 h3].
+           subst n. assert (h3: |I0| = 1). simpl; auto. rewrite <- h3.
+           apply h2. cut (I0 [<=] G). cut (IsOrd I0). auto.
+           unfold I0. constructor. subst I0. intros x h4.
+           destruct h4. subst x;auto. inversion H.
+           apply /stableP. unfold Stable. subst I0.
+           intros x y hx hy. simpl in hx;simpl in hy.
+           destruct hx as [hx |hx]; destruct hy as [hy |hy].
+           { subst x;subst y;auto. } all: auto. } Qed.
+           
 
   Hint Immediate i_num_gt: core.
     
@@ -269,7 +291,10 @@ Section MoreOnDecidableGraphs.
 
   Lemma Cliq_in_GH (H G:UG)(K: list A):
     Ind_subgraph H G-> Cliq_in G K -> K [<=] H-> Cliq_in H K.
-  Proof. Admitted.
+  Proof. { unfold Cliq_in. intros h0 h1 H0. unfold Ind_subgraph in h0.
+         destruct h0 as [h0 h]. destruct h1 as [h2 h1]. destruct h1 as [h3 h1].
+         repeat try (split;auto). unfold Cliq. intros x y h4 h5.
+         replace (edg H x y) with (edg G x y). apply h1;auto. symmetry;auto. } Qed.
   
 
   
@@ -284,7 +309,18 @@ Section MoreOnDecidableGraphs.
   Hint Immediate Cliq_in_HG Cliq_in_GH cliq_num_HG:core.
 
    Lemma cliq_num_gt (G: UG)(n:nat): (nodes G) <> nil -> cliq_num G n -> n >= 1.
-  Proof. Admitted.
+  Proof. { intros h1 h2.
+           assert (h1a: exists a, In a G). auto.
+           destruct h1a as [a h1a].
+           set(I0:= a::nil). destruct h2 as [I h2]. destruct h2 as [h2 h3].
+           subst n. assert (h3: |I0| = 1). simpl; auto. rewrite <- h3.
+           apply h2. cut (I0 [<=] G). cut (IsOrd I0). auto.
+           unfold I0. constructor. subst I0. intros x h4.
+           destruct h4. subst x;auto. inversion H.
+           apply /cliqP. unfold Cliq. subst I0.
+           intros x y hx hy. simpl in hx;simpl in hy.
+           destruct hx as [hx |hx]; destruct hy as [hy |hy].
+           { subst x;subst y;auto. } all: auto. } Qed.
 
   Hint Immediate cliq_num_gt: core.
  
