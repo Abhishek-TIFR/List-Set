@@ -182,7 +182,19 @@ Section SetCover.
 
   Hint Immediate fix_nat_elim fix_nat_elim1 fix_nat_IsOrd fix_nat_prop1 fix_nat_prop2: core.
   Hint Immediate fix_nat_intro: core.
-         
+
+  Lemma fix_nat_prop3 (l1 l2:list A)(n1 n2:nat): l1 <b l2 -> n1 <= n2 -> (l1 [,] n1) <b (l2 [,] n2).
+  Proof. { intros h1 h2. revert h1. revert l2.
+           induction l1 as [| a1 l1]. 
+           { intros l2. unfold fix_nat. destruct l2. auto. simpl; auto. }
+           { intros l2. destruct l2 as [| a2 l2]. simpl; auto.
+             intros h3. simpl in h3. match_up a1 a2.
+             { subst a1. simpl. match_up (a2, n1) (a2, n2).
+               apply IHl1. apply h3. auto.
+               assert (h4: n2 <b n1). eauto. move /ltP in h4. omega. }
+             { apply ltbl_intro1. auto. }
+             { inversion h3. } } } Qed.
+             
 
   (*---- Definition of (mk_disj C) which makes each list in C disjoint with each other------*)
 
@@ -208,8 +220,16 @@ Section SetCover.
   Lemma mk_disj_size (C: list (list A)): | C | = | mk_disj C |.
   Proof. { unfold mk_disj. symmetry. apply map_length. } Qed.
 
+  
+
   Lemma mk_disj_IsOrd (C: list (list A)): IsOrd C -> IsOrd (mk_disj C).
-  Proof. Admitted.
+  Proof. { unfold mk_disj.
+           set (f:= fun l => l [,] (idx l C)).
+           intros h1. apply map_IsOrd. auto.
+           intros l1 l2 h2 h3 h4. unfold f.
+           apply fix_nat_prop3. auto.
+           cut ( idx l1 C < idx l2 C). auto with arith.
+           eapply idx_IsOrd;auto. } Qed.
 
   Hint Resolve mk_disj_IsOrd: core.
 
@@ -352,9 +372,6 @@ Hint Immediate cover_dij_elim cover_dij_intro: core.
 
 
 End SetCover.
-
-
-
 
 
 Hint Resolve in_map map_cons map_length: core.
