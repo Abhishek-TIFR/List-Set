@@ -201,6 +201,18 @@ Section Set_maps.
              apply IHl'. eauto. eauto. } } Qed.
 
   Hint Resolve NoDup_map: core.
+
+  Lemma map_IsOrd (f: A->B)(l:list A):
+    IsOrd l -> (forall x y, In x l-> In y l-> x <b y -> f x <b f y)-> IsOrd (map f l).
+  Proof. { induction l as [|a l'].
+           { intros h1 h2. simpl. constructor. }
+           { intros h1 h2. simpl. apply IsOrd_intro.
+             apply IHl'. eauto. intros x y hx hy;apply h2;eauto.
+             intros fx h3. assert(h4: exists x, In x l' /\ fx = f x). auto.
+             destruct h4 as [x h4]. destruct h4 as [h4 h5].
+             subst fx. apply h2;eauto. } } Qed.
+
+  Hint Resolve map_IsOrd: core.
    
 
   Fixpoint one_one_onb (l: list A) (f: A->B): bool:=
@@ -400,7 +412,8 @@ Hint Resolve img_intro1 img_intro2 img_elim: core.
 Hint Resolve img_elim2 img_elim3 img_elim4 : core.
 Hint Immediate one_oneP1: core.
 
-  Hint Resolve NoDup_map: core.
+Hint Resolve NoDup_map: core.
+Hint Resolve map_IsOrd: core.
 
 Hint Immediate map_is_img: core.
 Hint Immediate one_one_on_nil one_one_on_elim one_one_on_elim1 one_one_on_elim2 : core.
