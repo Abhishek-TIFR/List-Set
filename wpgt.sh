@@ -1,17 +1,16 @@
 #!/bin/bash
 
+printf ‘UG
+coqc UG.v
 
-printf ‘Repeat
-coqc Repeat.v
+printf ‘MoreUG
+coqc MoreUG.v
 
-printf ‘LovaszRep
-coqc LovaszRep.v
+printf ‘GenIso
+coqc GenIso.v
 
-printf ‘LovaszExp
-coqc LovaszExp.v
-
-printf ‘WeakPerfect
-coqc WeakPerfect.v
+printf ‘PreLovasz
+coqc PreLovasz.v
 
 
 echo \

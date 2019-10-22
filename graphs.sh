@@ -6,10 +6,7 @@ coqc UG.v
 printf ‘MoreUG
 coqc MoreUG.v
 
-printf ‘GenIso
-coqc GenIso.v
-
-printf ‘GraphCovers
-coqc GraphCovers.v
+printf ‘IsoUG
+coqc IsoUG.v
 
 echo \
