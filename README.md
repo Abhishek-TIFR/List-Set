@@ -1,7 +1,6 @@
 # List-Set 
-Formalisation of Perfect Graph theorems in Coq Proof Assistant 
+Towards a formal verification of perfect garph theorems in Coq Proof Assistant 
 
-This work aims to formally verify perfect graph theorems (WPGT and SPGT) in the coq proof assistant. 
 The project is split into the following files: 
 
 1. GenReflect.v: Contains common results on reflection techniques.
